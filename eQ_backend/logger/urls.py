@@ -1,0 +1,15 @@
+
+from django.urls import path, include
+from .views import GymViewSet, WallViewSet
+from rest_framework_nested import routers
+
+router = routers.DefaultRouter()
+router.register(r'gyms', GymViewSet, basename='gyms')
+
+gyms_router = routers.NestedDefaultRouter(router, r'gyms', lookup='gym')
+gyms_router.register(r'walls', WallViewSet, basename='gym-walls')
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('', include(gyms_router.urls)),
+]
