@@ -33,6 +33,7 @@ class Boulder(models.Model):
     color = models.CharField(max_length=30, blank=True)
     date_set = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    num_ascents = models.PositiveIntegerField(default=0)
 
 
     class Meta:

@@ -13,6 +13,8 @@ class GymSerializer(serializers.ModelSerializer):
         if request and request.parser_context and request.parser_context.get('kwargs', {}).get('pk'):
             from .serializers import WallSerializer
             rep['walls'] = WallSerializer(instance.walls.all(), many=True).data
+            boulders_qs = Boulder.objects.filter(wall__gym=instance, is_active=True)
+            rep['boulders'] = BoulderSerializer(boulders_qs, many=True).data
         return rep
 
 class WallSerializer(serializers.ModelSerializer):
@@ -25,7 +27,23 @@ class BoulderSerializer(serializers.ModelSerializer):
         model = Boulder
         fields = '__all__'
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        request = self.context.get('request')
+        #Only include ascents for detail view
+        if request and request.parser_context and request.parser_context.get('kwargs', {}).get('pk'):
+            from .serializers import AscentSerializerWithoutBoulder
+            rep['ascents'] = AscentSerializerWithoutBoulder(instance.ascents.all(), many=True).data
+        return rep
+
 class AscentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ascent
         fields = '__all__'
+
+
+class AscentSerializerWithoutBoulder(serializers.ModelSerializer):
+    class Meta:
+        model = Ascent
+        # include all fields except `boulder`
+        exclude = ('boulder',)
