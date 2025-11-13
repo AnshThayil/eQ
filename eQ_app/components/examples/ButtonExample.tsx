@@ -6,6 +6,7 @@ import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button } from '../Button';
+import { PlusIcon } from '../icons';
 import { ThemedText } from '../ThemedText';
 
 export function ButtonExample() {
@@ -46,6 +47,24 @@ export function ButtonExample() {
           onPress={() => {}}
           variant="secondary"
           disabled
+        />
+      </View>
+
+      <View style={styles.section}>
+        <ThemedText variant="body2" style={styles.sectionTitle}>
+          Buttons with Icons
+        </ThemedText>
+        <Button
+          text="Add Item"
+          onPress={() => console.log('Add item pressed')}
+          variant="primary"
+          icon={<PlusIcon size={12} color="white" />}
+        />
+        <Button
+          text="Create New"
+          onPress={() => console.log('Create new pressed')}
+          variant="secondary"
+          icon={<PlusIcon size={12} color={Theme.colors.primary[500]} />}
         />
       </View>
 
