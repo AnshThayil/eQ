@@ -1,3 +1,11 @@
+import { Redirect } from 'expo-router';
+
+export default function Index() {
+  return <Redirect href="/routes" />;
+}
+
+// DESIGN SYSTEM SHOWCASE BELOW - Commented out for production
+/*
 import { ThemedTextExample } from "@/components/examples";
 import { ActionPillExample } from "@/components/examples/ActionPillExample";
 import { AscentLogExample } from "@/components/examples/AscentLogExample";
@@ -10,7 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-export default function Index() {
+export default function DesignSystemShowcase() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
@@ -119,3 +127,4 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 });
+*/

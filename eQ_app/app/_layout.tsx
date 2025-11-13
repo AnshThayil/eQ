@@ -1,14 +1,18 @@
+import { BottomNavBar } from "@/components/BottomNavBar";
 import {
-    Montserrat_600SemiBold,
+  Montserrat_600SemiBold,
 } from '@expo-google-fonts/montserrat';
 import {
-    Rubik_300Light,
-    Rubik_500Medium,
+  Rubik_300Light,
+  Rubik_400Regular,
+  Rubik_500Medium,
+  Rubik_600SemiBold,
 } from '@expo-google-fonts/rubik';
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Tabs } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -17,7 +21,9 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     'Montserrat-SemiBold': Montserrat_600SemiBold,
     'Rubik-Light': Rubik_300Light,
+    'Rubik-Regular': Rubik_400Regular,
     'Rubik-Medium': Rubik_500Medium,
+    'Rubik-SemiBold': Rubik_600SemiBold,
   });
 
   useEffect(() => {
@@ -34,5 +40,45 @@ export default function RootLayout() {
     return null;
   }
 
-  return <Stack />;
+  return (
+    <SafeAreaProvider>
+      <Tabs
+        tabBar={(props) => <BottomNavBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            href: null, // Hide from tabs
+          }}
+        />
+        <Tabs.Screen
+          name="routes"
+          options={{
+            title: "Routes",
+          }}
+        />
+        <Tabs.Screen
+          name="leaderboard"
+          options={{
+            title: "Leaderboard",
+          }}
+        />
+        <Tabs.Screen
+          name="events"
+          options={{
+            title: "Events",
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+          }}
+        />
+      </Tabs>
+    </SafeAreaProvider>
+  );
 }
