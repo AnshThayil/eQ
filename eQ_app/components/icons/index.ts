@@ -3,6 +3,7 @@ export { AscentUncompletedIcon } from './AscentUncompletedIcon';
 export { CaretDownIcon } from './CaretDownIcon';
 export { CheckboxSelectedIcon } from './CheckboxSelectedIcon';
 export { CheckboxUnselectedIcon } from './CheckboxUnselectedIcon';
+export { CloseIcon } from './CloseIcon';
 export { EmailIcon } from './EmailIcon';
 export { EventsSelectedIcon } from './EventsSelectedIcon';
 export { EventsUnselectedIcon } from './EventsUnselectedIcon';

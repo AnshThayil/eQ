@@ -28,7 +28,8 @@ class WallViewSet(mixins.CreateModelMixin,
 		serializer.save(gym_id=gym_id)
 
 
-class BoulderViewSet(mixins.RetrieveModelMixin,
+class BoulderViewSet(mixins.ListModelMixin,
+					 mixins.RetrieveModelMixin,
 					 mixins.CreateModelMixin,
 					 mixins.UpdateModelMixin,
 					 mixins.DestroyModelMixin,
@@ -75,8 +76,16 @@ class BoulderAscentView(APIView):
 		ascent.save()
 
 		# The `post_save` signal in `logger.signals` will update `num_ascents`.
-		serializer = AscentSerializer(ascent, context={'request': request})
-		return Response(serializer.data, status=status.HTTP_201_CREATED)
+		ascent_serializer = AscentSerializer(ascent, context={'request': request})
+		
+		# Refresh boulder from DB to get updated num_ascents
+		boulder.refresh_from_db()
+		boulder_serializer = BoulderSerializer(boulder, context={'request': request})
+		
+		return Response({
+			'ascent': ascent_serializer.data,
+			'boulder': boulder_serializer.data
+		}, status=status.HTTP_201_CREATED)
 
 	@transaction.atomic
 	def delete(self, request, pk):
@@ -100,4 +109,95 @@ class BoulderAscentView(APIView):
 		ascent.delete()
 
 		# `post_delete` signal in `logger.signals` will decrement `num_ascents`.
-		return Response(status=status.HTTP_204_NO_CONTENT)
+		# Refresh boulder from DB to get updated num_ascents
+		boulder.refresh_from_db()
+		boulder_serializer = BoulderSerializer(boulder, context={'request': request})
+		
+		return Response({'boulder': boulder_serializer.data}, status=status.HTTP_200_OK)
+
+
+class LeaderboardView(APIView):
+	"""Returns a ranked list of climbers by total points."""
+	
+	def get(self, request):
+		from django.contrib.auth.models import User
+		from django.db.models import Sum
+		
+		# Aggregate total points per user
+		leaderboard = User.objects.annotate(
+			total_points=Sum('ascents__points')
+		).filter(
+			total_points__isnull=False
+		).order_by('-total_points').values(
+			'id', 'username', 'first_name', 'last_name', 'total_points'
+		)
+		
+		# Add rank
+		leaderboard_list = list(leaderboard)
+		for idx, entry in enumerate(leaderboard_list, start=1):
+			entry['rank'] = idx
+		
+		return Response(leaderboard_list)
+
+
+class UserProfileView(APIView):
+	"""Returns the authenticated user's profile with ascent history and stats."""
+	
+	def get(self, request):
+		user = request.user
+		if not user.is_authenticated:
+			return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+		
+		# User basic info
+		profile = {
+			'id': user.id,
+			'username': user.username,
+			'email': user.email,
+			'first_name': user.first_name,
+			'last_name': user.last_name,
+		}
+		
+		# Get user's ascents
+		ascents = Ascent.objects.filter(climber=user).select_related('boulder', 'boulder__wall', 'boulder__wall__gym')
+		ascent_data = []
+		total_points = 0
+		flash_count = 0
+		send_count = 0
+		
+		for ascent in ascents:
+			ascent_data.append({
+				'id': ascent.id,
+				'boulder_id': ascent.boulder.id,
+				'boulder_grade': ascent.boulder.setter_grade,
+				'boulder_color': ascent.boulder.color,
+				'wall_name': ascent.boulder.wall.name,
+				'gym_name': ascent.boulder.wall.gym.name,
+				'ascent_type': ascent.ascent_type,
+				'date_climbed': ascent.date_climbed,
+				'points': ascent.points,
+			})
+			total_points += ascent.points
+			if ascent.ascent_type == 'flash':
+				flash_count += 1
+			elif ascent.ascent_type == 'send':
+				send_count += 1
+		
+		profile['ascents'] = ascent_data
+		profile['stats'] = {
+			'total_ascents': len(ascent_data),
+			'total_points': total_points,
+			'flash_count': flash_count,
+			'send_count': send_count,
+		}
+		
+		return Response(profile)
+
+
+class LogoutView(APIView):
+	"""Logout endpoint for token blacklisting (if using token blacklist) or just client-side token removal."""
+	
+	def post(self, request):
+		# For JWT tokens, logout is typically handled client-side by removing tokens
+		# If using djangorestframework-simplejwt with token blacklist, you could blacklist the refresh token here
+		# For now, we'll just return a success response
+		return Response({'detail': 'Logout successful.'}, status=status.HTTP_200_OK)

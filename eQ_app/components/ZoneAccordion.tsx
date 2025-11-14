@@ -124,10 +124,10 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ scaleY: -1 }], // Flipped when closed (pointing right)
+    transform: [{ scaleY: 1 }], // Normal orientation when closed (pointing down)
   },
   caretOpen: {
-    transform: [{ scaleY: 1 }], // Normal orientation when open (pointing down)
+    transform: [{ scaleY: -1 }], // Flipped when open (pointing up)
   },
   routesContainer: {
     flexDirection: 'column',

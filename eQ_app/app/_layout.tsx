@@ -1,4 +1,5 @@
 import { BottomNavBar } from "@/components/BottomNavBar";
+import { AuthProvider } from "@/contexts/AuthContext";
 import {
   Montserrat_600SemiBold,
 } from '@expo-google-fonts/montserrat';
@@ -41,44 +42,52 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <Tabs
-        tabBar={(props) => <BottomNavBar {...props} />}
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            href: null, // Hide from tabs
+    <AuthProvider>
+      <SafeAreaProvider>
+        <Tabs
+          tabBar={(props) => <BottomNavBar {...props} />}
+          screenOptions={{
+            headerShown: false,
           }}
-        />
-        <Tabs.Screen
-          name="routes"
-          options={{
-            title: "Routes",
-          }}
-        />
-        <Tabs.Screen
-          name="leaderboard"
-          options={{
-            title: "Leaderboard",
-          }}
-        />
-        <Tabs.Screen
-          name="events"
-          options={{
-            title: "Events",
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: "Profile",
-          }}
-        />
-      </Tabs>
-    </SafeAreaProvider>
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              href: null, // Hide from tabs
+            }}
+          />
+          <Tabs.Screen
+            name="login"
+            options={{
+              href: null, // Hide from tabs
+            }}
+          />
+          <Tabs.Screen
+            name="routes"
+            options={{
+              title: "Routes",
+            }}
+          />
+          <Tabs.Screen
+            name="leaderboard"
+            options={{
+              title: "Leaderboard",
+            }}
+          />
+          <Tabs.Screen
+            name="events"
+            options={{
+              title: "Events",
+            }}
+          />
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: "Profile",
+            }}
+          />
+        </Tabs>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }

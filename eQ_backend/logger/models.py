@@ -25,12 +25,37 @@ class Wall(models.Model):
         return f"{self.name} at {self.gym}"
 
 class Boulder(models.Model):
+    DIFFICULTY_CHOICES = [
+        ("easy", "Easy"),
+        ("medium", "Medium"),
+        ("hard", "Hard"),
+    ]
+    
+    STYLE_CHOICES = [
+        ("technical", "Technical"),
+        ("power", "Power"),
+        ("slab", "Slab"),
+        ("coordination", "Coordination"),
+        ("electric", "Electric"),
+    ]
+
+    GRADE_CHOICES = [
+        ("L1", "L1"),
+        ("L2", "L2"),
+        ("L3", "L3"),
+        ("L4", "L4"),
+        ("L5", "L5"),
+        ("L6", "L6"),
+        ("L7", "L7"),
+        ("L8", "L8"),
+    ]
 
     wall = models.ForeignKey(Wall, on_delete=models.CASCADE, related_name="boulders")
     setter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='setter')
-    setter_grade = models.CharField(max_length=10, blank=True)
-    concensus_grade = models.CharField(max_length=10, blank=True)
+    setter_grade = models.CharField(max_length=10, choices=GRADE_CHOICES, blank=True)
     color = models.CharField(max_length=30, blank=True)
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, blank=True)
+    climbing_style = models.CharField(max_length=20, choices=STYLE_CHOICES, blank=True)
     date_set = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     num_ascents = models.PositiveIntegerField(default=0)

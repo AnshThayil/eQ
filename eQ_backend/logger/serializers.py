@@ -14,7 +14,7 @@ class GymSerializer(serializers.ModelSerializer):
             from .serializers import WallSerializer
             rep['walls'] = WallSerializer(instance.walls.all(), many=True).data
             boulders_qs = Boulder.objects.filter(wall__gym=instance, is_active=True)
-            rep['boulders'] = BoulderSerializer(boulders_qs, many=True).data
+            rep['boulders'] = BoulderSerializer(boulders_qs, many=True, context=self.context).data
         return rep
 
 class WallSerializer(serializers.ModelSerializer):
@@ -23,9 +23,18 @@ class WallSerializer(serializers.ModelSerializer):
         exclude = ('gym',)
 
 class BoulderSerializer(serializers.ModelSerializer):
+    user_has_sent = serializers.SerializerMethodField()
+
     class Meta:
         model = Boulder
         fields = '__all__'
+
+    def get_user_has_sent(self, obj):
+        """Check if the authenticated user has sent this boulder."""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return Ascent.objects.filter(climber=request.user, boulder=obj).exists()
+        return False
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)

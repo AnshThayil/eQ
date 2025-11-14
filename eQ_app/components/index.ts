@@ -4,6 +4,7 @@ export { AscentLog } from './AscentLog';
 export { BottomNavBar } from './BottomNavBar';
 export { Button } from './Button';
 export { Checkbox } from './Checkbox';
+export { FilterModal } from './FilterModal';
 export { InputField } from './InputField';
 export { RadioButton } from './RadioButton';
 export { RouteListItem } from './RouteListItem';
