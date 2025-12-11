@@ -6,6 +6,7 @@ export { CheckboxExample } from './CheckboxExample';
 export { InputFieldExample } from './InputFieldExample';
 export { RadioButtonExample } from './RadioButtonExample';
 export { RouteListItemExample } from './RouteListItemExample';
+export { SaveClimbExample } from './SaveClimbExample';
 export { StaticPillExample } from './StaticPillExample';
 export { ThemedTextExample } from './ThemedTextExample';
 export { ZoneAccordionExample } from './ZoneAccordionExample';

@@ -28,6 +28,7 @@ interface Route {
   climbingStyle: string;
   numberOfSends: number;
   isSent: boolean;
+  isSaved: boolean;
 }
 
 interface Zone {
@@ -207,6 +208,7 @@ export default function RoutesScreen() {
         climbingStyle: boulder.climbing_style ? capitalizeFirst(boulder.climbing_style) : 'Technical',
         numberOfSends: boulder.num_ascents,
         isSent: boulder.user_has_sent,
+        isSaved: false, // TODO: Connect to saved routes API
       });
     });
 
@@ -583,7 +585,9 @@ export default function RoutesScreen() {
                       climbingStyle={route.climbingStyle}
                       numberOfSends={route.numberOfSends}
                       isSent={route.isSent}
+                      isSaved={route.isSaved}
                       onAscentPress={() => handleAscentToggle(zone.id, route.id)}
+                      onSavePress={() => {/* TODO: Implement save functionality */}}
                     />
                   ))}
                 </ZoneAccordion>
@@ -606,9 +610,13 @@ export default function RoutesScreen() {
                   level={route.level}
                   difficulty={route.difficulty}
                   climbingStyle={route.climbingStyle}
+                  zone={route.zoneName}
+                  showZone={true}
                   numberOfSends={route.numberOfSends}
                   isSent={route.isSent}
+                  isSaved={route.isSaved}
                   onAscentPress={() => handleAscentToggle(route.zoneId, route.id)}
+                  onSavePress={() => {/* TODO: Implement save functionality */}}
                 />
               ))
             )}

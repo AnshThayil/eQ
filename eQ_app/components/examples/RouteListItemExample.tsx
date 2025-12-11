@@ -10,6 +10,7 @@ import { ThemedText } from '../ThemedText';
 
 export function RouteListItemExample() {
   const [sentRoutes, setSentRoutes] = useState<Set<string>>(new Set(['route2']));
+  const [savedRoutes, setSavedRoutes] = useState<Set<string>>(new Set(['route1', 'route3']));
 
   const routes = [
     {
@@ -18,6 +19,7 @@ export function RouteListItemExample() {
       level: 'L1',
       difficulty: 'Easy',
       climbingStyle: 'Slab',
+      zone: 'Z1',
       numberOfSends: 15,
     },
     {
@@ -26,6 +28,7 @@ export function RouteListItemExample() {
       level: 'L3',
       difficulty: 'Hard',
       climbingStyle: 'Technical',
+      zone: 'Z2',
       numberOfSends: 8,
     },
     {
@@ -34,6 +37,7 @@ export function RouteListItemExample() {
       level: 'L5',
       difficulty: 'V. Hard',
       climbingStyle: 'Overhang',
+      zone: 'Z1',
       numberOfSends: 3,
     },
     {
@@ -42,6 +46,7 @@ export function RouteListItemExample() {
       level: 'L2',
       difficulty: 'Moderate',
       climbingStyle: 'Crimpy',
+      zone: 'Z3',
       numberOfSends: 12,
     },
     {
@@ -50,12 +55,25 @@ export function RouteListItemExample() {
       level: 'L4',
       difficulty: 'Hard',
       climbingStyle: 'Dynamic',
+      zone: 'Z2',
       numberOfSends: 5,
     },
   ];
 
   const handleAscentPress = (routeId: string) => {
     setSentRoutes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(routeId)) {
+        newSet.delete(routeId);
+      } else {
+        newSet.add(routeId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSavePress = (routeId: string) => {
+    setSavedRoutes((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(routeId)) {
         newSet.delete(routeId);
@@ -74,7 +92,7 @@ export function RouteListItemExample() {
         </ThemedText>
         <ThemedText variant="body1" style={styles.description}>
           A list of climbing routes with different difficulties and styles.
-          Tap the ascent log button to mark routes as sent.
+          Tap the ascent log button to mark routes as sent, or the save button to save routes to your list.
         </ThemedText>
       </View>
 
@@ -86,11 +104,41 @@ export function RouteListItemExample() {
             level={route.level}
             difficulty={route.difficulty}
             climbingStyle={route.climbingStyle}
+            zone={route.zone}
             numberOfSends={route.numberOfSends}
             isSent={sentRoutes.has(route.id)}
+            isSaved={savedRoutes.has(route.id)}
             onAscentPress={() => handleAscentPress(route.id)}
+            onSavePress={() => handleSavePress(route.id)}
           />
         ))}
+      </View>
+
+      <View style={styles.section}>
+        <ThemedText variant="body2" style={styles.sectionTitle}>
+          With Zone Display (Sorted View)
+        </ThemedText>
+        <ThemedText variant="body1" style={styles.description}>
+          When routes are sorted by 'Most Climbed' or 'Level', zone information is displayed.
+        </ThemedText>
+        <View style={styles.routeList}>
+          {routes.slice(0, 3).map((route) => (
+            <RouteListItem
+              key={`zone-${route.id}`}
+              colour={route.colour}
+              level={route.level}
+              difficulty={route.difficulty}
+              climbingStyle={route.climbingStyle}
+              zone={route.zone}
+              showZone={true}
+              numberOfSends={route.numberOfSends}
+              isSent={sentRoutes.has(route.id)}
+              isSaved={savedRoutes.has(route.id)}
+              onAscentPress={() => handleAscentPress(route.id)}
+              onSavePress={() => handleSavePress(route.id)}
+            />
+          ))}
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -105,7 +153,9 @@ export function RouteListItemExample() {
             climbingStyle="Roof"
             numberOfSends={1}
             isSent={false}
+            isSaved={false}
             onAscentPress={() => console.log('Ascent pressed')}
+            onSavePress={() => console.log('Save pressed')}
           />
         </View>
       </View>

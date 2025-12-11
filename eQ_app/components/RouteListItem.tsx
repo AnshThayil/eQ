@@ -1,12 +1,15 @@
 /**
  * RouteListItem component - Displays a single route item
- * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=13-161
+ * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=307-2998
+ * With zone display: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=288-1411
  * 
  * Shows route information including:
  * - Route color icon (hold)
  * - Level and difficulty
+ * - Zone (optional, shown when sorted)
  * - Climbing style
  * - Number of sends
+ * - Save button
  * - Ascent log button
  */
 
@@ -15,6 +18,7 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { AscentLog } from './AscentLog';
 import { HoldIcon } from './icons';
+import { SaveClimb } from './SaveClimb';
 import { StaticPill } from './StaticPill';
 import { ThemedText } from './ThemedText';
 
@@ -40,6 +44,18 @@ export interface RouteListItemProps {
   climbingStyle: string;
   
   /**
+   * Zone identifier (e.g., "Z1", "Z2")
+   * Optional - only shown when showZone is true
+   */
+  zone?: string;
+  
+  /**
+   * Whether to show the zone information
+   * When true, displays zone and climbing style on a separate line
+   */
+  showZone?: boolean;
+  
+  /**
    * Number of sends for this route
    */
   numberOfSends: number;
@@ -50,9 +66,19 @@ export interface RouteListItemProps {
   isSent: boolean;
   
   /**
+   * Whether the current user has saved this route
+   */
+  isSaved: boolean;
+  
+  /**
    * Callback when ascent log button is pressed
    */
   onAscentPress?: () => void;
+  
+  /**
+   * Callback when save button is pressed
+   */
+  onSavePress?: () => void;
   
   /**
    * Additional style overrides
@@ -65,9 +91,13 @@ export function RouteListItem({
   level,
   difficulty,
   climbingStyle,
+  zone,
+  showZone = false,
   numberOfSends,
   isSent,
+  isSaved,
   onAscentPress,
+  onSavePress,
   style: styleProp,
 }: RouteListItemProps) {
   return (
@@ -80,7 +110,10 @@ export function RouteListItem({
         </View>
         
         {/* Route Details */}
-        <View style={styles.routeDetails}>
+        <View style={[
+          styles.routeDetails,
+          showZone && zone && styles.routeDetailsWithZone
+        ]}>
           {/* Level and Difficulty */}
           <View style={styles.routeLevel}>
             <ThemedText variant="body2" style={styles.levelText}>
@@ -89,27 +122,42 @@ export function RouteListItem({
             <StaticPill text={difficulty} size="small" />
           </View>
           
-          {/* Style */}
-          <View style={styles.routeStyle}>
-            <ThemedText variant="subtext2" style={styles.styleLabel}>
-              Style:
-            </ThemedText>
-            <ThemedText variant="subtext1" style={styles.styleValue}>
+          {/* Zone and Style */}
+          {showZone && zone ? (
+            <View style={styles.zoneRow}>
+              <ThemedText variant="subtext2" style={styles.zoneText}>
+                {zone}
+              </ThemedText>
+              <View style={styles.dotSeparator} />
+              <ThemedText variant="subtext2" style={styles.styleValue}>
+                {climbingStyle}
+              </ThemedText>
+            </View>
+          ) : (
+            <ThemedText variant="subtext2" style={styles.styleValue}>
               {climbingStyle}
             </ThemedText>
-          </View>
+          )}
         </View>
       </View>
       
       {/* Route Actions Section */}
       <View style={styles.routeActions}>
-        {/* Ascent Log Button */}
-        <AscentLog
-          completed={isSent}
-          onPress={() => onAscentPress?.()}
-          size={24}
-          accessibilityLabel={`Mark route ${level} as ${isSent ? 'not sent' : 'sent'}`}
-        />
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <SaveClimb
+            saved={isSaved}
+            onPress={() => onSavePress?.()}
+            size={24}
+            accessibilityLabel={`${isSaved ? 'Unsave' : 'Save'} route ${level}`}
+          />
+          <AscentLog
+            completed={isSent}
+            onPress={() => onAscentPress?.()}
+            size={24}
+            accessibilityLabel={`Mark route ${level} as ${isSent ? 'not sent' : 'sent'}`}
+          />
+        </View>
         
         {/* Number of Sends */}
         <ThemedText variant="subtext1" style={styles.sendsText}>
@@ -151,6 +199,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 87,
   },
+  routeDetailsWithZone: {
+    gap: 12,
+  },
   routeLevel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,25 +210,35 @@ const styles = StyleSheet.create({
   levelText: {
     color: Theme.semantic.text.primary,
   },
-  routeStyle: {
+  zoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-    height: 16,
+    gap: Theme.spacing.sm,
   },
-  styleLabel: {
+  zoneText: {
     color: Theme.semantic.text.primary,
-    width: 34,
+  },
+  dotSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Theme.colors.neutral[300],
   },
   styleValue: {
     color: Theme.semantic.text.primary,
-    flex: 1,
   },
   routeActions: {
     flexDirection: 'column',
     alignItems: 'flex-end',
+    gap: Theme.spacing.sm,
     minWidth: 45,
     flexShrink: 0,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    justifyContent: 'flex-end',
   },
   sendsText: {
     color: Theme.semantic.text.primary,

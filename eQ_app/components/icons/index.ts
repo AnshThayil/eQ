@@ -18,6 +18,8 @@ export { ProfileSelectedIcon } from './ProfileSelectedIcon';
 export { ProfileUnselectedIcon } from './ProfileUnselectedIcon';
 export { RoutesSelectedIcon } from './RoutesSelectedIcon';
 export { RoutesUnselectedIcon } from './RoutesUnselectedIcon';
+export { SaveIcon } from './SaveIcon';
+export { SaveIconSelected } from './SaveIconSelected';
 export { SearchIcon } from './SearchIcon';
 export { SortIcon } from './SortIcon';
 export type { IconProps } from './SortIcon';

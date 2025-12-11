@@ -172,7 +172,6 @@ export function AddAscentModal({
               text="Cancel"
               onPress={handleCancel}
               variant="secondary"
-              style={styles.cancelButton}
             />
             <Button
               text="Submit"
@@ -244,8 +243,5 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 20,
-  },
-  cancelButton: {
-    width: 150,
   },
 });

@@ -19,6 +19,7 @@ import { Theme } from '@/constants';
 import { ThemedText } from './ThemedText';
 import { CloseIcon } from './icons';
 import { Checkbox, CheckboxOption } from './Checkbox';
+import { Button } from './Button';
 
 export interface FilterModalProps {
   /**
@@ -79,26 +80,28 @@ export function FilterModal({
   const [localGrades, setLocalGrades] = React.useState<string[]>(selectedGrades);
   const [localStyles, setLocalStyles] = React.useState<string[]>(selectedStyles);
 
-  // Update local state when props change
+  // Update local state when modal becomes visible
   React.useEffect(() => {
-    setLocalGrades(selectedGrades);
-    setLocalStyles(selectedStyles);
-  }, [selectedGrades, selectedStyles, visible]);
+    if (visible) {
+      setLocalGrades(selectedGrades);
+      setLocalStyles(selectedStyles);
+    }
+  }, [visible, selectedGrades, selectedStyles]);
 
   const handleClose = () => {
     onClose();
   };
 
-  // Apply filters immediately when grades change
-  const handleGradesChange = (grades: string[]) => {
-    setLocalGrades(grades);
-    onApplyFilters(grades, localStyles);
+  const handleApply = () => {
+    onApplyFilters(localGrades, localStyles);
+    handleClose();
   };
 
-  // Apply filters immediately when styles change
-  const handleStylesChange = (styles: string[]) => {
-    setLocalStyles(styles);
-    onApplyFilters(localGrades, styles);
+  const handleClearAll = () => {
+    setLocalGrades([]);
+    setLocalStyles([]);
+    onApplyFilters([], []);
+    handleClose();
   };
 
   const handleBackdropPress = () => {
@@ -150,7 +153,7 @@ export function FilterModal({
                   <Checkbox
                     options={GRADE_OPTIONS}
                     values={localGrades}
-                    onValuesChange={handleGradesChange}
+                    onValuesChange={setLocalGrades}
                   />
                 </View>
               </View>
@@ -164,11 +167,27 @@ export function FilterModal({
                   <Checkbox
                     options={STYLE_OPTIONS}
                     values={localStyles}
-                    onValuesChange={handleStylesChange}
+                    onValuesChange={setLocalStyles}
                   />
                 </View>
               </View>
             </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={styles.buttonContainer}>
+              <Button
+                text="Apply"
+                variant="primary"
+                onPress={handleApply}
+                fullWidth
+              />
+              <Button
+                text="Clear All"
+                variant="secondary"
+                onPress={handleClearAll}
+                fullWidth
+              />
+            </View>
           </View>
         </View>
       </Pressable>
@@ -186,6 +205,7 @@ const styles = StyleSheet.create<{
   section: ViewStyle;
   sectionTitle: TextStyle;
   checkboxContainer: ViewStyle;
+  buttonContainer: ViewStyle;
 }>({
   backdrop: {
     flex: 1,
@@ -225,5 +245,9 @@ const styles = StyleSheet.create<{
   },
   checkboxContainer: {
     gap: 12,
+  },
+  buttonContainer: {
+    gap: 16,
+    paddingTop: 16,
   },
 });

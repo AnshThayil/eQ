@@ -8,6 +8,7 @@ export { FilterModal } from './FilterModal';
 export { InputField } from './InputField';
 export { RadioButton } from './RadioButton';
 export { RouteListItem } from './RouteListItem';
+export { SaveClimb } from './SaveClimb';
 export { StaticPill } from './StaticPill';
 export { ThemedText } from './ThemedText';
 export { ZoneAccordion } from './ZoneAccordion';
