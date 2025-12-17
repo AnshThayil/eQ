@@ -25,7 +25,7 @@ export default function LoginScreen() {
     try {
       const { access, refresh } = await login(username, password);
       await signIn(access, refresh);
-      router.replace('/routes');
+      router.replace('/(routes)');
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert(

@@ -82,11 +82,24 @@ export interface Boulder {
   num_ascents: number;
   user_has_sent: boolean;
   ascents?: Ascent[];
+  wall_details?: {
+    id: number;
+    name: string;
+  };
+}
+
+export interface User {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
 }
 
 export interface Ascent {
   id: number;
   climber: number;
+  climber_details?: User;
   boulder: number;
   ascent_type: 'flash' | 'send';
   date_climbed: string;

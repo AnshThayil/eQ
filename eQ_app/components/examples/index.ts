@@ -1,6 +1,7 @@
 export { ActionPillExample } from './ActionPillExample';
 export { AddAscentModalExample } from './AddAscentModalExample';
 export { AscentLogExample } from './AscentLogExample';
+export { AscentsListItemExample } from './AscentsListItemExample';
 export { ButtonExample } from './ButtonExample';
 export { CheckboxExample } from './CheckboxExample';
 export { InputFieldExample } from './InputFieldExample';

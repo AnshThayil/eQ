@@ -13,7 +13,7 @@ import { ZoneAccordion } from '@/components/ZoneAccordion';
 import { Theme } from '@/constants';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { getGyms, getGym, logAscent, deleteAscent, Gym, Boulder, Wall } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +42,7 @@ interface Zone {
 export default function RoutesScreen() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const isFocused = useIsFocused();
   const [zones, setZones] = useState<Zone[]>([]);
   const [activeView, setActiveView] = useState<'zones' | 'mostClimbed' | 'level'>('zones');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // For ascending/descending sort
@@ -59,6 +60,7 @@ export default function RoutesScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [lastFocusedTabRoute, setLastFocusedTabRoute] = useState<string | null>(null);
 
   // Load saved gym ID and fetch gyms on mount
   useEffect(() => {
@@ -112,13 +114,20 @@ export default function RoutesScreen() {
     }
   }, [selectedGymId]);
 
-  // Refresh gym details when tab becomes focused
+  // Refresh gym details only when switching between tabs (not when navigating back from stack)
   useFocusEffect(
     React.useCallback(() => {
-      if (selectedGymId) {
+      // Store the current route to track tab changes
+      const currentRoute = '(routes)';
+      
+      // Only refresh if we're coming from a different tab
+      if (selectedGymId && lastFocusedTabRoute !== null && lastFocusedTabRoute !== currentRoute) {
         loadGymDetails(selectedGymId);
       }
-    }, [selectedGymId])
+      
+      // Update the last focused tab route
+      setLastFocusedTabRoute(currentRoute);
+    }, [selectedGymId, lastFocusedTabRoute])
   );
 
   const loadGyms = async () => {
@@ -588,6 +597,7 @@ export default function RoutesScreen() {
                       isSaved={route.isSaved}
                       onAscentPress={() => handleAscentToggle(zone.id, route.id)}
                       onSavePress={() => {/* TODO: Implement save functionality */}}
+                      onPress={() => router.push(`/(routes)/route-detail?routeId=${route.id}&gymId=${selectedGymId}`)}
                     />
                   ))}
                 </ZoneAccordion>
@@ -617,6 +627,7 @@ export default function RoutesScreen() {
                   isSaved={route.isSaved}
                   onAscentPress={() => handleAscentToggle(route.zoneId, route.id)}
                   onSavePress={() => {/* TODO: Implement save functionality */}}
+                  onPress={() => router.push(`/(routes)/route-detail?routeId=${route.id}&gymId=${selectedGymId}`)}
                 />
               ))
             )}

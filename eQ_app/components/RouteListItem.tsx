@@ -15,7 +15,7 @@
 
 import { Theme } from '@/constants/Theme';
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle, TouchableOpacity } from 'react-native';
 import { AscentLog } from './AscentLog';
 import { HoldIcon } from './icons';
 import { SaveClimb } from './SaveClimb';
@@ -81,6 +81,11 @@ export interface RouteListItemProps {
   onSavePress?: () => void;
   
   /**
+   * Callback when the route item is pressed (for navigation)
+   */
+  onPress?: () => void;
+  
+  /**
    * Additional style overrides
    */
   style?: ViewStyle;
@@ -98,10 +103,17 @@ export function RouteListItem({
   isSaved,
   onAscentPress,
   onSavePress,
+  onPress,
   style: styleProp,
 }: RouteListItemProps) {
+  const Container = onPress ? TouchableOpacity : View;
+  
   return (
-    <View style={[styles.container, styleProp]}>
+    <Container 
+      style={[styles.container, styleProp]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
       {/* Route Info Section */}
       <View style={styles.routeInfo}>
         {/* Hold Icon */}
@@ -164,7 +176,7 @@ export function RouteListItem({
           {numberOfSends} {numberOfSends === 1 ? 'Send' : 'Sends'}
         </ThemedText>
       </View>
-    </View>
+    </Container>
   );
 }
 

@@ -10,7 +10,7 @@ import {
   Rubik_600SemiBold,
 } from '@expo-google-fonts/rubik';
 import { useFonts } from "expo-font";
-import { Tabs } from "expo-router";
+import { Stack, Tabs } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -63,7 +63,7 @@ export default function RootLayout() {
             }}
           />
           <Tabs.Screen
-            name="routes"
+            name="(routes)"
             options={{
               title: "Routes",
             }}

@@ -8,6 +8,7 @@ export { EmailIcon } from './EmailIcon';
 export { EventsSelectedIcon } from './EventsSelectedIcon';
 export { EventsUnselectedIcon } from './EventsUnselectedIcon';
 export { FilterIcon } from './FilterIcon';
+export { FlashIcon } from './FlashIcon';
 export { HoldIcon } from './HoldIcon';
 export { LeaderboardSelectedIcon } from './LeaderboardSelectedIcon';
 export { LeaderboardUnselectedIcon } from './LeaderboardUnselectedIcon';

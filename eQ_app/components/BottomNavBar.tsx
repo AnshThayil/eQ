@@ -22,8 +22,8 @@ interface TabConfig {
 }
 
 const tabConfigs: Record<string, TabConfig> = {
-  routes: {
-    name: 'routes',
+  '(routes)': {
+    name: '(routes)',
     label: 'Routes',
     SelectedIcon: RoutesSelectedIcon,
     UnselectedIcon: RoutesUnselectedIcon,

@@ -18,7 +18,7 @@ export default function Index() {
     return <Redirect href="/login" />;
   }
 
-  return <Redirect href="/routes" />;
+  return <Redirect href="/(routes)" />;
 }
 
 const styles = StyleSheet.create({
