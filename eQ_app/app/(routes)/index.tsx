@@ -513,6 +513,7 @@ export default function RoutesScreen() {
           style={styles.mapButton}
           accessibilityLabel="View map"
           accessibilityHint="Opens map view of routes"
+          onPress={() => router.push('./zone-map')}
         >
           <MapIcon size={40} color={Theme.colors.secondary[500]} />
         </TouchableOpacity>

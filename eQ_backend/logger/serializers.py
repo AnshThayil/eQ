@@ -1,5 +1,11 @@
 from rest_framework import serializers
 from .models import Gym, Wall, Boulder, Ascent
+from django.contrib.auth.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
 class GymSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,6 +30,7 @@ class WallSerializer(serializers.ModelSerializer):
 
 class BoulderSerializer(serializers.ModelSerializer):
     user_has_sent = serializers.SerializerMethodField()
+    wall_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Boulder
@@ -35,6 +42,12 @@ class BoulderSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user') and request.user.is_authenticated:
             return Ascent.objects.filter(climber=request.user, boulder=obj).exists()
         return False
+    
+    def get_wall_details(self, obj):
+        """Include wall details with id and name."""
+        if obj.wall:
+            return {'id': obj.wall.id, 'name': obj.wall.name}
+        return None
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -52,6 +65,8 @@ class AscentSerializer(serializers.ModelSerializer):
 
 
 class AscentSerializerWithoutBoulder(serializers.ModelSerializer):
+    climber_details = UserSerializer(source='climber', read_only=True)
+    
     class Meta:
         model = Ascent
         # include all fields except `boulder`

@@ -11,6 +11,7 @@ import { StyleSheet, View, ViewStyle } from 'react-native';
 import { ThemedText } from './ThemedText';
 
 export type PillSize = 'large' | 'small';
+export type PillShape = 'pill' | 'circle';
 
 export interface StaticPillProps {
   /**
@@ -23,6 +24,24 @@ export interface StaticPillProps {
    * @default 'large'
    */
   size?: PillSize;
+  
+  /**
+   * Shape of the pill
+   * @default 'pill'
+   */
+  shape?: PillShape;
+  
+  /**
+   * Optional background color
+   * @default Theme.colors.neutral[100]
+   */
+  color?: string;
+  
+  /**
+   * Optional text color
+   * @default Theme.semantic.text.primary
+   */
+  textColor?: string;
   
   /**
    * Optional icon to display on the right side
@@ -44,24 +63,30 @@ export interface StaticPillProps {
 export function StaticPill({
   text,
   size = 'large',
+  shape = 'pill',
+  color,
+  textColor,
   icon,
   fullWidth = false,
   style,
 }: StaticPillProps) {
   const isLarge = size === 'large';
+  const isCircle = shape === 'circle';
   
   return (
     <View
       style={[
         styles.pill,
         isLarge ? styles.largePill : styles.smallPill,
+        isCircle && (isLarge ? styles.largeCircle : styles.smallCircle),
         fullWidth && styles.fullWidth,
+        color && { backgroundColor: color },
         style,
       ]}
     >
       <ThemedText
         variant={isLarge ? 'body1' : 'subtext1'}
-        style={styles.text}
+        style={[styles.text, textColor && { color: textColor }]}
       >
         {text}
       </ThemedText>
@@ -90,6 +115,18 @@ const styles = StyleSheet.create({
   smallPill: {
     height: 24,
     paddingHorizontal: Theme.spacing.sm,
+  },
+  largeCircle: {
+    width: 32,
+    height: 32,
+    paddingHorizontal: 0,
+    borderRadius: 16,
+  },
+  smallCircle: {
+    width: 24,
+    height: 24,
+    paddingHorizontal: 0,
+    borderRadius: 12,
   },
   text: {
     color: Theme.semantic.text.primary,

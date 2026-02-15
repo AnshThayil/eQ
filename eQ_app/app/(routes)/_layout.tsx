@@ -24,6 +24,14 @@ export default function RoutesLayout() {
           gestureDirection: 'horizontal',
         }}
       />
+      <Stack.Screen
+        name="zone-map"
+        options={{
+          title: 'Zone Map',
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+        }}
+      />
     </Stack>
   );
 }
