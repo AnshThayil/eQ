@@ -5,9 +5,9 @@
 import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { SortIcon } from '../icons';
-import { StaticPill } from '../StaticPill';
-import { ThemedText } from '../ThemedText';
+import { SortIcon } from '../../icons';
+import { StaticPill } from '../../basic/StaticPill';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function StaticPillExample() {
   return (

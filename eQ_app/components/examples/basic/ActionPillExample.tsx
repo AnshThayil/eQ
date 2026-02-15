@@ -5,9 +5,9 @@
 import { Theme } from '@/constants/Theme';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ActionPill } from '../ActionPill';
-import { SortIcon } from '../icons';
-import { ThemedText } from '../ThemedText';
+import { ActionPill } from '../../basic/ActionPill';
+import { SortIcon } from '../../icons';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function ActionPillExample() {
   const [selectedLarge, setSelectedLarge] = useState(false);

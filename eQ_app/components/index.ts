@@ -1,17 +1,23 @@
-export { ActionPill } from './ActionPill';
-export { AddAscentModal } from './AddAscentModal';
-export { AscentLog } from './AscentLog';
-export { AscentsListItem } from './AscentsListItem';
-export { BottomNavBar } from './BottomNavBar';
-export { Button } from './Button';
-export { Checkbox } from './Checkbox';
-export { FilterModal } from './FilterModal';
-export { InputField } from './InputField';
-export { RadioButton } from './RadioButton';
-export { RouteListItem } from './RouteListItem';
-export { SaveClimb } from './SaveClimb';
-export { StaticPill } from './StaticPill';
-export { ThemedText } from './ThemedText';
-export { ZoneAccordion } from './ZoneAccordion';
+// Basic Building Blocks
+export { ActionPill } from './basic/ActionPill';
+export { Button } from './basic/Button';
+export { Checkbox } from './basic/Checkbox';
+export { InputField } from './basic/InputField';
+export { RadioButton } from './basic/RadioButton';
+export { StaticPill } from './basic/StaticPill';
+export { ThemedText } from './basic/ThemedText';
 
+// Layout Components
+export { BottomNavBar } from './layout/BottomNavBar';
+
+// Feature-Specific Components
+export { AddAscentModal } from './features/AddAscentModal';
+export { AscentLog } from './features/AscentLog';
+export { AscentsListItem } from './features/AscentsListItem';
+export { FilterModal } from './features/FilterModal';
+export { RouteListItem } from './features/RouteListItem';
+export { SaveClimb } from './features/SaveClimb';
+export { ZoneAccordion } from './features/ZoneAccordion';
+
+// Icons
 export * from './icons';

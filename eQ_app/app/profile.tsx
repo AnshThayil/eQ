@@ -1,7 +1,6 @@
 import { Theme } from '@/constants';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { Button } from '@/components/Button';
+import { ThemedText, Button } from '@/components';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserProfile } from '@/services/api';
 import { useEffect, useState } from 'react';

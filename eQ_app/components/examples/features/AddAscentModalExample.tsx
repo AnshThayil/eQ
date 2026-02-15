@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AddAscentModal } from '../AddAscentModal';
-import { Button } from '../Button';
-import { ThemedText } from '../ThemedText';
+import { AddAscentModal } from '../../features/AddAscentModal';
+import { Button } from '../../basic/Button';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function AddAscentModalExample() {
   const [modalVisible, setModalVisible] = useState(false);

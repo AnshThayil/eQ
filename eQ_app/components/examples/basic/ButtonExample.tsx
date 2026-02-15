@@ -5,9 +5,9 @@
 import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button } from '../Button';
-import { PlusIcon } from '../icons';
-import { ThemedText } from '../ThemedText';
+import { Button } from '../../basic/Button';
+import { PlusIcon } from '../../icons';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function ButtonExample() {
   return (

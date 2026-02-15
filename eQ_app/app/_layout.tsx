@@ -1,4 +1,4 @@
-import { BottomNavBar } from "@/components/BottomNavBar";
+import { BottomNavBar } from "@/components";
 import { AuthProvider } from "@/contexts/AuthContext";
 import {
   Montserrat_600SemiBold,

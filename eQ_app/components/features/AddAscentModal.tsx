@@ -20,11 +20,11 @@ import {
     View,
     ViewStyle,
 } from 'react-native';
-import { Button } from './Button';
-import { CaretDownIcon, HoldIcon } from './icons';
-import { InputField } from './InputField';
-import { RadioButton, RadioOption } from './RadioButton';
-import { ThemedText } from './ThemedText';
+import { Button } from '../basic/Button';
+import { CaretDownIcon, HoldIcon } from '../icons';
+import { InputField } from '../basic/InputField';
+import { RadioButton, RadioOption } from '../basic/RadioButton';
+import { ThemedText } from '../basic/ThemedText';
 
 export interface AddAscentModalProps {
   /**

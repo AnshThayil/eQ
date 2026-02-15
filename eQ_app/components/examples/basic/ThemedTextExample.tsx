@@ -5,7 +5,7 @@
 import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '../ThemedText';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function ThemedTextExample() {
   return (

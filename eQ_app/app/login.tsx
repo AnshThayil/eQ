@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
-import { InputField } from '@/components/InputField';
-import { Button } from '@/components/Button';
+import { ThemedText, InputField, Button } from '@/components';
 import { Colors } from '@/constants';
 import { login } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';

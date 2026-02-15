@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { AscentsListItem } from '../AscentsListItem';
-import { ThemedText } from '../ThemedText';
+import { AscentsListItem } from '../../features/AscentsListItem';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function AscentsListItemExample() {
   return (

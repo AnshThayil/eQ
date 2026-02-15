@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { SaveClimb } from '../SaveClimb';
-import { ThemedText } from '../ThemedText';
+import { SaveClimb } from '../../features/SaveClimb';
+import { ThemedText } from '../../basic/ThemedText';
 import { Theme } from '@/constants/Theme';
 
 export function SaveClimbExample() {

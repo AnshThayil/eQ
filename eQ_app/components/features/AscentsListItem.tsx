@@ -13,9 +13,9 @@
 import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import { FlashIcon } from './icons';
-import { StaticPill } from './StaticPill';
-import { ThemedText } from './ThemedText';
+import { FlashIcon } from '../icons';
+import { StaticPill } from '../basic/StaticPill';
+import { ThemedText } from '../basic/ThemedText';
 
 export interface AscentsListItemProps {
   /**

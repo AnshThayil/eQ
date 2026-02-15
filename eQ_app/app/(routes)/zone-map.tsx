@@ -3,9 +3,7 @@
  * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=49-484
  */
 
-import { CloseIcon } from '@/components/icons';
-import { StaticPill } from '@/components/StaticPill';
-import { ThemedText } from '@/components/ThemedText';
+import { CloseIcon, StaticPill, ThemedText } from '@/components';
 import { Theme } from '@/constants';
 import { useRouter } from 'expo-router';
 import React from 'react';

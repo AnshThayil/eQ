@@ -13,8 +13,8 @@
 import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
-import { CaretDownIcon } from './icons';
-import { ThemedText } from './ThemedText';
+import { CaretDownIcon } from '../icons';
+import { ThemedText } from '../basic/ThemedText';
 
 export interface ZoneAccordionProps {
   /**

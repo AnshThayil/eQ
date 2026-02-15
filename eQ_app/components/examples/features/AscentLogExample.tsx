@@ -5,8 +5,8 @@
 import { Theme } from '@/constants/Theme';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AscentLog } from '../AscentLog';
-import { ThemedText } from '../ThemedText';
+import { AscentLog } from '../../features/AscentLog';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function AscentLogExample() {
   const [completed1, setCompleted1] = useState(false);

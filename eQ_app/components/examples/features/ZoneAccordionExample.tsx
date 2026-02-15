@@ -5,9 +5,9 @@
 import { Colors } from '@/constants/Colors';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { RouteListItem } from '../RouteListItem';
-import { ThemedText } from '../ThemedText';
-import { ZoneAccordion } from '../ZoneAccordion';
+import { RouteListItem } from '../../features/RouteListItem';
+import { ThemedText } from '../../basic/ThemedText';
+import { ZoneAccordion } from '../../features/ZoneAccordion';
 
 export function ZoneAccordionExample() {
   const [openZones, setOpenZones] = useState<Set<string>>(new Set(['zone1']));

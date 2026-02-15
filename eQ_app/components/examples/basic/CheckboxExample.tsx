@@ -1,35 +1,35 @@
 /**
- * Example usage of the RadioButton component
+ * Example usage of the Checkbox component
  */
 
 import { Theme } from '@/constants/Theme';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { RadioButton } from '../RadioButton';
-import { ThemedText } from '../ThemedText';
+import { Checkbox } from '../../basic/Checkbox';
+import { ThemedText } from '../../basic/ThemedText';
 
-export function RadioButtonExample() {
-  const [value1, setValue1] = useState<string>('option1');
-  const [value2, setValue2] = useState<string>('medium');
+export function CheckboxExample() {
+  const [values1, setValues1] = useState<string[]>([]);
+  const [values2, setValues2] = useState<string[]>(['option2']);
 
   return (
     <View style={styles.container}>
       <ThemedText variant="heading2" style={styles.heading}>
-        Radio Buttons
+        Checkboxes
       </ThemedText>
 
       <View style={styles.section}>
         <ThemedText variant="body2" style={styles.sectionTitle}>
           Vertical Layout
         </ThemedText>
-        <RadioButton
+        <Checkbox
           options={[
             { value: 'option1', label: 'Option 1' },
             { value: 'option2', label: 'Option 2' },
             { value: 'option3', label: 'Option 3' },
           ]}
-          value={value1}
-          onValueChange={setValue1}
+          values={values1}
+          onValuesChange={setValues1}
         />
       </View>
 
@@ -37,14 +37,14 @@ export function RadioButtonExample() {
         <ThemedText variant="body2" style={styles.sectionTitle}>
           Horizontal Layout
         </ThemedText>
-        <RadioButton
+        <Checkbox
           options={[
-            { value: 'small', label: 'Small' },
-            { value: 'medium', label: 'Medium' },
-            { value: 'large', label: 'Large' },
+            { value: 'option1', label: 'One' },
+            { value: 'option2', label: 'Two' },
+            { value: 'option3', label: 'Three' },
           ]}
-          value={value2}
-          onValueChange={setValue2}
+          values={values2}
+          onValuesChange={setValues2}
           direction="horizontal"
         />
       </View>
@@ -53,12 +53,12 @@ export function RadioButtonExample() {
         <ThemedText variant="body2" style={styles.sectionTitle}>
           Disabled State
         </ThemedText>
-        <RadioButton
+        <Checkbox
           options={[
             { value: 'option1', label: 'Disabled Option 1' },
             { value: 'option2', label: 'Disabled Option 2' },
           ]}
-          value="option1"
+          values={['option1']}
           disabled
         />
       </View>

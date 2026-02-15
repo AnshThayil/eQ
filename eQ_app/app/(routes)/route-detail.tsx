@@ -3,11 +3,15 @@
  * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=290-2355
  */
 
-import { AddAscentModal } from '@/components/AddAscentModal';
-import { AscentsListItem } from '@/components/AscentsListItem';
-import { CaretDownIcon, LocationPinIcon, MapIcon } from '@/components/icons';
-import { InputField } from '@/components/InputField';
-import { RouteListItem } from '@/components/RouteListItem';
+import {
+  AddAscentModal,
+  AscentsListItem,
+  CaretDownIcon,
+  LocationPinIcon,
+  MapIcon,
+  InputField,
+  RouteListItem
+} from '@/components';
 import { Theme } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { Boulder, deleteAscent, getBoulder, getGyms, logAscent, Gym } from '@/services/api';
@@ -27,8 +31,7 @@ import {
   ViewStyle,
   RefreshControl,
 } from 'react-native';
-import { Button } from '@/components/Button';
-import { ThemedText } from '@/components/ThemedText';
+import { Button, ThemedText } from '@/components';
 
 interface AscentDisplay {
   id: number;

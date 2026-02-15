@@ -16,10 +16,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '@/constants';
-import { ThemedText } from './ThemedText';
-import { CloseIcon } from './icons';
-import { Checkbox, CheckboxOption } from './Checkbox';
-import { Button } from './Button';
+import { ThemedText } from '../basic/ThemedText';
+import { CloseIcon } from '../icons';
+import { Checkbox, CheckboxOption } from '../basic/Checkbox';
+import { Button } from '../basic/Button';
 
 export interface FilterModalProps {
   /**

@@ -5,8 +5,8 @@
 import { Colors } from '@/constants/Colors';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { RouteListItem } from '../RouteListItem';
-import { ThemedText } from '../ThemedText';
+import { RouteListItem } from '../../features/RouteListItem';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function RouteListItemExample() {
   const [sentRoutes, setSentRoutes] = useState<Set<string>>(new Set(['route2']));

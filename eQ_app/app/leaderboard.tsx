@@ -1,7 +1,7 @@
 import { Theme } from '@/constants';
 import { StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/Button';
+import { Button } from '@/components';
 import { useRouter } from 'expo-router';
 
 export default function LeaderboardScreen() {

@@ -17,10 +17,10 @@ import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View, ViewStyle, TouchableOpacity } from 'react-native';
 import { AscentLog } from './AscentLog';
-import { HoldIcon } from './icons';
+import { HoldIcon } from '../icons';
 import { SaveClimb } from './SaveClimb';
-import { StaticPill } from './StaticPill';
-import { ThemedText } from './ThemedText';
+import { StaticPill } from '../basic/StaticPill';
+import { ThemedText } from '../basic/ThemedText';
 
 export interface RouteListItemProps {
   /**

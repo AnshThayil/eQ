@@ -5,9 +5,9 @@
 import { Theme } from '@/constants/Theme';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CaretDownIcon, EmailIcon, LocationPinIcon, SearchIcon } from '../icons';
-import { InputField } from '../InputField';
-import { ThemedText } from '../ThemedText';
+import { CaretDownIcon, EmailIcon, LocationPinIcon, SearchIcon } from '../../icons';
+import { InputField } from '../../basic/InputField';
+import { ThemedText } from '../../basic/ThemedText';
 
 export function InputFieldExample() {
   const [textValue, setTextValue] = useState('');

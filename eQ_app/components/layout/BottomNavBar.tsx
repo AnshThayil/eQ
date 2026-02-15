@@ -12,7 +12,7 @@ import {
     ProfileUnselectedIcon,
     RoutesSelectedIcon,
     RoutesUnselectedIcon,
-} from './icons';
+} from '../icons';
 
 interface TabConfig {
   name: string;

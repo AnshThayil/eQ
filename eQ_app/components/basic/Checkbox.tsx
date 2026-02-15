@@ -6,7 +6,7 @@
 import { Theme } from '@/constants/Theme';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
-import { CheckboxSelectedIcon, CheckboxUnselectedIcon } from './icons';
+import { CheckboxSelectedIcon, CheckboxUnselectedIcon } from '../icons';
 import { ThemedText } from './ThemedText';
 
 export interface CheckboxOption {

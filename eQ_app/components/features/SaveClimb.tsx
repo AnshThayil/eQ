@@ -1,17 +1,18 @@
 /**
- * AscentLog component - Toggle button for marking climbing ascents
- * Shows ascent icon when not completed, check icon when completed
+ * SaveClimb component - Toggle button for saving/unsaving climbing routes
+ * Shows save icon with white fill and pink border when not saved
+ * Shows save icon with pink fill and white border when saved
  */
 
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { AscentCompletedIcon, AscentUncompletedIcon } from './icons';
+import { SaveIcon, SaveIconSelected } from '../icons';
 
-export interface AscentLogProps {
+export interface SaveClimbProps {
   /**
-   * Whether the ascent is marked as completed
+   * Whether the route is saved
    */
-  completed: boolean;
+  saved: boolean;
   
   /**
    * Callback when the component is pressed
@@ -35,13 +36,13 @@ export interface AscentLogProps {
   accessibilityHint?: string;
 }
 
-export function AscentLog({
-  completed,
+export function SaveClimb({
+  saved,
   onPress,
   size = 24,
   accessibilityLabel,
   accessibilityHint,
-}: AscentLogProps) {
+}: SaveClimbProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -50,14 +51,14 @@ export function AscentLog({
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel || (completed ? 'Ascent completed' : 'Ascent not completed')}
-      accessibilityState={{ checked: completed }}
-      accessibilityHint={accessibilityHint || `Tap to mark ascent as ${completed ? 'not completed' : 'completed'}`}
+      accessibilityLabel={accessibilityLabel || (saved ? 'Route saved' : 'Route not saved')}
+      accessibilityState={{ checked: saved }}
+      accessibilityHint={accessibilityHint || `Tap to ${saved ? 'unsave' : 'save'} route`}
     >
-      {completed ? (
-        <AscentCompletedIcon size={size} />
+      {saved ? (
+        <SaveIconSelected size={size} />
       ) : (
-        <AscentUncompletedIcon size={size} />
+        <SaveIcon size={size} />
       )}
     </Pressable>
   );

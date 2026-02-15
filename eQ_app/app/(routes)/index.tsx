@@ -3,13 +3,20 @@
  * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=13-144
  */
 
-import { ActionPill } from '@/components/ActionPill';
-import { AddAscentModal } from '@/components/AddAscentModal';
-import { FilterModal } from '@/components/FilterModal';
-import { CaretDownIcon, FilterIcon, LocationPinIcon, MapIcon, SortIcon } from '@/components/icons';
-import { InputField } from '@/components/InputField';
-import { RouteListItem } from '@/components/RouteListItem';
-import { ZoneAccordion } from '@/components/ZoneAccordion';
+import {
+  ActionPill,
+  AddAscentModal,
+  FilterModal,
+  InputField,
+  RouteListItem,
+  ZoneAccordion,
+  Button,
+  CaretDownIcon,
+  FilterIcon,
+  LocationPinIcon,
+  MapIcon,
+  SortIcon
+} from '@/components';
 import { Theme } from '@/constants';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl } from 'react-native';
@@ -17,7 +24,6 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { getGyms, getGym, logAscent, deleteAscent, Gym, Boulder, Wall } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/Button';
 import { useRouter } from 'expo-router';
 
 interface Route {
