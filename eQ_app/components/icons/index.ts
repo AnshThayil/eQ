@@ -1,12 +1,15 @@
 export { AscentCompletedIcon } from './AscentCompletedIcon';
 export { AscentUncompletedIcon } from './AscentUncompletedIcon';
+export { CardIcon } from './CardIcon';
 export { CaretDownIcon } from './CaretDownIcon';
 export { CheckboxSelectedIcon } from './CheckboxSelectedIcon';
 export { CheckboxUnselectedIcon } from './CheckboxUnselectedIcon';
 export { CloseIcon } from './CloseIcon';
+export { CompassIcon } from './CompassIcon';
+export { CompassFilledIcon } from './CompassFilledIcon';
 export { EmailIcon } from './EmailIcon';
-export { EventsSelectedIcon } from './EventsSelectedIcon';
-export { EventsUnselectedIcon } from './EventsUnselectedIcon';
+export { EventsIcon } from './EventsIcon';
+export { FacilitiesLadderIcon } from './FacilitiesLadderIcon';
 export { FilterIcon } from './FilterIcon';
 export { FlashIcon } from './FlashIcon';
 export { HoldIcon } from './HoldIcon';
@@ -22,6 +25,7 @@ export { RoutesUnselectedIcon } from './RoutesUnselectedIcon';
 export { SaveIcon } from './SaveIcon';
 export { SaveIconSelected } from './SaveIconSelected';
 export { SearchIcon } from './SearchIcon';
+export { ShopIcon } from './ShopIcon';
 export { SortIcon } from './SortIcon';
 export type { IconProps } from './SortIcon';
 

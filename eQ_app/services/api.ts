@@ -112,7 +112,8 @@ export interface LeaderboardEntry {
   first_name: string;
   last_name: string;
   total_points: number;
-  rank: number;
+  index: number; // Continuous numbering (1, 2, 3, 4, 5, 6...)
+  rank: number; // With ties (1, 2, 3, 4, 4, 6...)
 }
 
 export interface UserProfile {
@@ -242,8 +243,20 @@ export const deleteAscent = async (boulderId: number): Promise<{ boulder: Boulde
 };
 
 // Leaderboard
-export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
-  const response = await apiClient.get('/leaderboard/');
+export const getLeaderboard = async (params?: {
+  gym_id?: number | null;
+  only_active?: boolean;
+}): Promise<{ leaderboard: LeaderboardEntry[]; your_ranking: number | null; your_user_id: number | null }> => {
+  const queryParams = new URLSearchParams();
+  if (params?.gym_id) {
+    queryParams.append('gym_id', params.gym_id.toString());
+  }
+  if (params?.only_active !== undefined) {
+    queryParams.append('only_active', params.only_active.toString());
+  }
+  
+  const url = `/leaderboard/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await apiClient.get(url);
   return response.data;
 };
 

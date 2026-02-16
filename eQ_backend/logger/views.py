@@ -73,6 +73,7 @@ class BoulderAscentView(APIView):
 			return Response({'detail': 'Missing ascent_type.'}, status=status.HTTP_400_BAD_REQUEST)
 
 		ascent = Ascent(climber=climber, boulder=boulder, ascent_type=ascent_type)
+		ascent.points = ascent.calculate_points()
 		ascent.save()
 
 		# The `post_save` signal in `logger.signals` will update `num_ascents`.
@@ -117,27 +118,82 @@ class BoulderAscentView(APIView):
 
 
 class LeaderboardView(APIView):
-	"""Returns a ranked list of climbers by total points."""
+	"""Returns a ranked list of climbers by total points.
+	
+	Query parameters:
+	- only_active: If 'true', only counts ascents of active boulders
+	- gym_id: If provided, only counts ascents from boulders in that gym
+	"""
 	
 	def get(self, request):
 		from django.contrib.auth.models import User
-		from django.db.models import Sum
+		from django.db.models import Sum, Q, Max
 		
-		# Aggregate total points per user
-		leaderboard = User.objects.annotate(
-			total_points=Sum('ascents__points')
-		).filter(
-			total_points__isnull=False
-		).order_by('-total_points').values(
-			'id', 'username', 'first_name', 'last_name', 'total_points'
-		)
+		# Check if we should only count active boulders
+		only_active = request.query_params.get('only_active', 'false').lower() == 'true'
 		
-		# Add rank
+		# Check if we should filter by gym
+		gym_id = request.query_params.get('gym_id')
+		
+		# Build the filter conditionally
+		filters = Q()
+		if only_active:
+			filters &= Q(ascents__boulder__is_active=True)
+		if gym_id:
+			filters &= Q(ascents__boulder__wall__gym_id=gym_id)
+		
+		# Build the annotation with most recent ascent for tie-breaking
+		if filters:
+			leaderboard = User.objects.annotate(
+				total_points=Sum('ascents__points', filter=filters),
+				most_recent_ascent=Max('ascents__date_climbed', filter=filters)
+			).filter(
+				total_points__isnull=False
+			).order_by('-total_points', '-most_recent_ascent').values(
+				'id', 'username', 'first_name', 'last_name', 'total_points', 'most_recent_ascent'
+			)
+		else:
+			leaderboard = User.objects.annotate(
+				total_points=Sum('ascents__points'),
+				most_recent_ascent=Max('ascents__date_climbed')
+			).filter(
+				total_points__isnull=False
+			).order_by('-total_points', '-most_recent_ascent').values(
+				'id', 'username', 'first_name', 'last_name', 'total_points', 'most_recent_ascent'
+			)
+		
+		# Add index and rank (rank handles ties)
 		leaderboard_list = list(leaderboard)
+		current_rank = 1
 		for idx, entry in enumerate(leaderboard_list, start=1):
-			entry['rank'] = idx
+			entry['index'] = idx
+			
+			# If this is not the first entry, check for tie with previous
+			if idx > 1 and entry['total_points'] == leaderboard_list[idx - 2]['total_points']:
+				# Tie: use same rank as previous entry
+				entry['rank'] = leaderboard_list[idx - 2]['rank']
+			else:
+				# New rank: use current index
+				entry['rank'] = idx
+			
+			# Don't include most_recent_ascent in response (just used for sorting)
+			del entry['most_recent_ascent']
 		
-		return Response(leaderboard_list)
+		# Find the authenticated user's ranking and ID
+		your_ranking = None
+		your_user_id = None
+		if request.user and request.user.is_authenticated:
+			your_user_id = request.user.id
+			for entry in leaderboard_list:
+				if entry['id'] == request.user.id:
+					your_ranking = entry['rank']
+					break
+		
+		return Response({
+			'leaderboard': leaderboard_list,
+			'your_ranking': your_ranking,
+			'your_user_id': your_user_id
+		})
 
 
 class UserProfileView(APIView):

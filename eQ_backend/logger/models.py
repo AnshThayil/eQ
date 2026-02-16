@@ -74,6 +74,18 @@ class Ascent(models.Model):
         ("send", "Send"),
     ]
 
+    # Point values for each grade level
+    GRADE_POINTS = {
+        "L1": 10,
+        "L2": 20,
+        "L3": 30,
+        "L4": 40,
+        "L5": 50,
+        "L6": 60,
+        "L7": 70,
+        "L8": 80,
+    }
+
     climber = models.ForeignKey(User, on_delete=models.CASCADE, related_name="ascents")
     boulder = models.ForeignKey(Boulder, on_delete=models.CASCADE, related_name="ascents")
     ascent_type = models.CharField(max_length=20, choices=ASCENT_TYPES)
@@ -83,6 +95,11 @@ class Ascent(models.Model):
 
     class Meta:
         unique_together = ("climber", "boulder")
+    
+    def calculate_points(self):
+        """Calculate points based on boulder grade."""
+        grade = self.boulder.setter_grade
+        return self.GRADE_POINTS.get(grade, 0)
     
     def __str__(self):
         return f"{self.climber.username} - {self.boulder} ({self.ascent_type})"

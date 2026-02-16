@@ -4,8 +4,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-    EventsSelectedIcon,
-    EventsUnselectedIcon,
+    CompassFilledIcon,
+    CompassIcon,
     LeaderboardSelectedIcon,
     LeaderboardUnselectedIcon,
     ProfileSelectedIcon,
@@ -34,11 +34,11 @@ const tabConfigs: Record<string, TabConfig> = {
     SelectedIcon: LeaderboardSelectedIcon,
     UnselectedIcon: LeaderboardUnselectedIcon,
   },
-  events: {
-    name: 'events',
-    label: 'Events',
-    SelectedIcon: EventsSelectedIcon,
-    UnselectedIcon: EventsUnselectedIcon,
+  explore: {
+    name: 'explore',
+    label: 'Explore',
+    SelectedIcon: CompassFilledIcon,
+    UnselectedIcon: CompassIcon,
   },
   profile: {
     name: 'profile',

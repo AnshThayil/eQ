@@ -6,7 +6,7 @@ export interface IconProps {
   color?: string;
 }
 
-export function EventsUnselectedIcon({ size = 40, color = '#332F74' }: IconProps) {
+export function EventsIcon({ size = 40, color = '#332F74' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
       <Path

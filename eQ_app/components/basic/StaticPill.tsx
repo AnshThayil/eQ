@@ -7,7 +7,7 @@
 
 import { Theme } from '@/constants/Theme';
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
 import { ThemedText } from './ThemedText';
 
 export type PillSize = 'large' | 'small';
@@ -55,6 +55,11 @@ export interface StaticPillProps {
   fullWidth?: boolean;
   
   /**
+   * Additional style overrides for the text
+   */
+  textStyle?: TextStyle;
+  
+  /**
    * Additional style overrides
    */
   style?: ViewStyle;
@@ -68,6 +73,7 @@ export function StaticPill({
   textColor,
   icon,
   fullWidth = false,
+  textStyle,
   style,
 }: StaticPillProps) {
   const isLarge = size === 'large';
@@ -86,7 +92,7 @@ export function StaticPill({
     >
       <ThemedText
         variant={isLarge ? 'body1' : 'subtext1'}
-        style={[styles.text, textColor && { color: textColor }]}
+        style={[styles.text, textColor && { color: textColor }, textStyle]}
       >
         {text}
       </ThemedText>

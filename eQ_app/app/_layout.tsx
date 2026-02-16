@@ -75,9 +75,9 @@ export default function RootLayout() {
             }}
           />
           <Tabs.Screen
-            name="events"
+            name="explore"
             options={{
-              title: "Events",
+              title: "Explore",
             }}
           />
           <Tabs.Screen
