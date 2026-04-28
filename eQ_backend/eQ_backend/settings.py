@@ -17,6 +17,30 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _load_dotenv(dotenv_path: Path) -> None:
+    if not dotenv_path.exists():
+        return
+
+    with dotenv_path.open() as dotenv_file:
+        for raw_line in dotenv_file:
+            line = raw_line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if line.startswith('export '):
+                line = line[len('export '):].strip()
+            if '=' not in line:
+                continue
+
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip().strip('"\'\'')
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+_load_dotenv(BASE_DIR / '.env')
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -157,7 +181,6 @@ REST_FRAMEWORK = {
 }
 
 YOACTIV_API_KEY = os.environ.get('YOACTIV_API_KEY')
-YOACTIV_BRANCH_ID = os.environ.get('YOACTIV_BRANCH_ID')
 YOACTIV_BASE_URL = os.environ.get('YOACTIV_BASE_URL', 'https://api.yoactiv.com/')
 
 # JWT settings
