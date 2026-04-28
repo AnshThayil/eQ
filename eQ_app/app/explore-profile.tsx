@@ -1,5 +1,5 @@
 /**
- * Profile Page - Visual mockup matching Figma design (node-id=393-1143)
+ * Explore Profile Page - Visual mockup matching Figma design (node-id=393-1143)
  * Minimal styling with placeholder data for client presentation
  */
 
@@ -9,10 +9,10 @@ import {
   View,
   ScrollView,
   SafeAreaView,
-  TouchableOpacity,
+  Image,
   Text as RNText,
 } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
+import { ThemedText } from '@/components';
 
 const styles = StyleSheet.create({
   container: {
@@ -137,19 +137,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Theme.colors.neutral.white,
   },
-  logoutButton: {
-    marginTop: Theme.spacing.lg,
-    backgroundColor: Theme.colors.error[500],
-    paddingVertical: Theme.spacing.sm,
-    paddingHorizontal: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.sm,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Theme.colors.neutral.white,
-  },
   chartPlaceholder: {
     backgroundColor: Theme.colors.neutral[100],
     borderRadius: Theme.borderRadius.md,
@@ -176,9 +163,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function ProfileScreen() {
-  const { signOut } = useAuth();
-
+export default function ExploreProfile() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -205,10 +190,6 @@ export default function ProfileScreen() {
               <RNText style={styles.statValue}>Slab</RNText>
             </View>
           </View>
-
-          <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-            <RNText style={styles.logoutButtonText}>Logout</RNText>
-          </TouchableOpacity>
         </View>
 
         {/* Current Package Section */}

@@ -266,4 +266,9 @@ export const getUserProfile = async (): Promise<UserProfile> => {
   return response.data;
 };
 
+export const getExplore = async (): Promise<{ Results: any[] }> => {
+  const response = await apiClient.get('/explore/');
+  return response.data;
+};
+
 export default apiClient;

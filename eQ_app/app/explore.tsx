@@ -5,11 +5,13 @@
 
 import { Theme } from '@/constants';
 import { StyleSheet, View, ScrollView, SafeAreaView, StatusBar, Pressable, ImageSourcePropType, Dimensions } from 'react-native';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, ThemedText, InfoCardCarousel, NavSquare } from '@/components';
 import { useRouter } from 'expo-router';
 import { InfoCardProps } from '@/components/features/InfoCard';
 import { EventsIcon, CardIcon, FacilitiesLadderIcon, ShopIcon } from '@/components/icons';
+import { getExplore } from '@/services/api';
 
 // Example images - replace with actual images when available
 const planImage: ImageSourcePropType = require('@/assets/images/info-card-example.png');
@@ -23,6 +25,20 @@ const NAV_SQUARE_SIZE = (SCREEN_WIDTH - (Theme.spacing.lg * 2) - NAV_SQUARE_GAP)
 export default function ExploreScreen() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      const callExplore = async () => {
+        try {
+          const response = await getExplore();
+          console.log('Explore API response', response);
+        } catch (error) {
+          console.warn('Explore API request failed', error);
+        }
+      };
+      callExplore();
+    }
+  }, [isAuthenticated, isLoading]);
 
   if (!isLoading && !isAuthenticated) {
     return (
@@ -55,7 +71,7 @@ export default function ExploreScreen() {
       ],
       linkText: 'View Details',
       onLinkPress: () => {
-        console.log('View Details pressed for Climbfit');
+        router.push('/explore-class');
       },
       image: planImage,
     },
@@ -69,7 +85,7 @@ export default function ExploreScreen() {
       ],
       linkText: 'View Details',
       onLinkPress: () => {
-        console.log('View Details pressed for Boulder Basics');
+        router.push('/explore-class');
       },
       image: planImage,
     },
@@ -83,7 +99,7 @@ export default function ExploreScreen() {
       ],
       linkText: 'View Details',
       onLinkPress: () => {
-        console.log('View Details pressed for Advanced Training');
+        router.push('/explore-class');
       },
       image: planImage,
     },
@@ -181,7 +197,7 @@ export default function ExploreScreen() {
             text="Classes"
             Icon={EventsIcon}
             backgroundColor={Theme.colors.secondary[300]}
-            onPress={() => console.log('Classes pressed')}
+            onPress={() => router.push('/explore-classes')}
             size={NAV_SQUARE_SIZE}
           />
           <NavSquare

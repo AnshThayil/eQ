@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.md,
   },
   loadingText: {
-    color: Theme.colors.neutral[600],
+    color: Theme.colors.neutral[500],
   },
   emptyContainer: {
     flex: 1,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.xl,
   },
   emptyText: {
-    color: Theme.colors.neutral[600],
+    color: Theme.colors.neutral[500],
     textAlign: 'center',
   },
 });
