@@ -6,10 +6,35 @@ from django.contrib.auth.models import User
 class Gym(models.Model):
 
     name = models.CharField(max_length=100)
+    branch_id = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        unique=True,
+        help_text="YoActiv branch ID for this gym",
+    )
 
     def __str__(self):
 
         return self.name
+
+
+class UserProfile(models.Model):
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile',
+    )
+    phone_number = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text='Phone number used by the external CRM',
+    )
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
 
 
 class Wall(models.Model):

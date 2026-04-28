@@ -211,6 +211,7 @@ class UserProfileView(APIView):
 			'email': user.email,
 			'first_name': user.first_name,
 			'last_name': user.last_name,
+			'phone_number': getattr(getattr(user, 'profile', None), 'phone_number', None),
 		}
 		
 		# Get user's ascents

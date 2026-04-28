@@ -3,9 +3,15 @@ from .models import Gym, Wall, Boulder, Ascent
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
+    phone_number = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number']
+
+    def get_phone_number(self, obj):
+        profile = getattr(obj, 'profile', None)
+        return profile.phone_number if profile else None
 
 class GymSerializer(serializers.ModelSerializer):
     class Meta:
