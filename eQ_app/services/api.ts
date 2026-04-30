@@ -159,6 +159,8 @@ export interface ExploreClassVariation {
 
 export interface ExploreClassGroup {
   id: number;
+  gym: number;
+  gym_name: string;
   name: string;
   description: string;
   service_type: 'membership' | 'class' | 'event';
@@ -175,6 +177,10 @@ export interface ExploreResponse {
 
 export interface ExploreMembershipsResponse {
   memberships: ExploreClassGroup[];
+}
+
+export interface ExploreEventsResponse {
+  events: ExploreClassGroup[];
 }
 
 export interface ExploreActivePlan {
@@ -325,6 +331,11 @@ export const getExploreClasses = async (): Promise<ExploreResponse> => {
 
 export const getExploreMemberships = async (): Promise<ExploreMembershipsResponse> => {
   const response = await apiClient.get('/explore-memberships/');
+  return response.data;
+};
+
+export const getExploreEvents = async (): Promise<ExploreEventsResponse> => {
+  const response = await apiClient.get('/explore-events/');
   return response.data;
 };
 

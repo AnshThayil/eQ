@@ -11,7 +11,7 @@ import { Button, ThemedText, InfoCardCarousel, NavSquare } from '@/components';
 import { useRouter } from 'expo-router';
 import { InfoCardProps } from '@/components/features/InfoCard';
 import { EventsIcon, CardIcon, FacilitiesLadderIcon, ShopIcon } from '@/components/icons';
-import { getExploreActive } from '@/services/api';
+import { getExploreActive, getExploreEvents } from '@/services/api';
 
 // Example images - replace with actual images when available
 const planImage: ImageSourcePropType = require('@/assets/images/info-card-example.png');
@@ -27,6 +27,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [planItems, setPlanItems] = useState<InfoCardProps[]>([]);
   const [plansError, setPlansError] = useState<string | null>(null);
+  const [eventItems, setEventItems] = useState<InfoCardProps[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadActivePlans = useCallback(async () => {
@@ -64,6 +65,10 @@ export default function ExploreScreen() {
               router.push('/explore-classes');
               return;
             }
+            if (plan.service_type === 'event') {
+              router.push('/explore-events');
+              return;
+            }
             router.push('/explore');
           },
           image: planImage,
@@ -78,18 +83,49 @@ export default function ExploreScreen() {
     }
   }, [router]);
 
+  const loadEvents = useCallback(async () => {
+    try {
+      const response = await getExploreEvents();
+      const nextEventItems = response.events
+        .filter((group) => group.variations.length > 0)
+        .map((group) => {
+          const firstVariation = group.variations[0];
+          const numericPrice = Number(firstVariation.price);
+          const formattedPrice = Number.isNaN(numericPrice)
+            ? `Rs. ${firstVariation.price}`
+            : `Rs. ${numericPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+
+          return {
+            title: group.name,
+            details: [
+              { label: 'Location:', value: group.gym_name },
+              { label: firstVariation.name, value: '' },
+              { label: 'Price:', value: formattedPrice },
+            ],
+            linkText: 'View Details',
+            onLinkPress: () => router.push('/explore-events'),
+            image: eventImage,
+          };
+        });
+      setEventItems(nextEventItems);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+    }
+  }, [router]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadActivePlans();
+    await Promise.all([loadActivePlans(), loadEvents()]);
     setRefreshing(false);
-  }, [loadActivePlans]);
+  }, [loadActivePlans, loadEvents]);
 
   useEffect(() => {
     if (!isAuthenticated || isLoading) {
       return;
     }
     loadActivePlans();
-  }, [isAuthenticated, isLoading, loadActivePlans]);
+    loadEvents();
+  }, [isAuthenticated, isLoading, loadActivePlans, loadEvents]);
 
   if (!isLoading && !isAuthenticated) {
     return (
@@ -110,51 +146,8 @@ export default function ExploreScreen() {
     );
   }
   // Sample data for "Upcoming Events" carousel
-  const eventItems: InfoCardProps[] = [
-    {
-      title: 'Equinox',
-      details: [
-        { label: 'Date:', value: 'Feb 16, 2026' },
-        { label: 'Location:', value: 'EQ Hoodi' },
-        { label: 'Slots available:', value: '50' },
-      ],
-      linkText: 'Book Now',
-      onLinkPress: () => {
-        console.log('Book Now pressed for Equinox');
-      },
-      image: eventImage,
-    },
-    {
-      title: 'Summer Bouldering',
-      details: [
-        { label: 'Date:', value: 'Feb 23, 2026' },
-        { label: 'Location:', value: 'EQ Koramangala' },
-        { label: 'Slots available:', value: '30' },
-      ],
-      linkText: 'Book Now',
-      onLinkPress: () => {
-        console.log('Book Now pressed for Summer Bouldering');
-      },
-      image: eventImage,
-    },
-    {
-      title: 'Weekend Challenge',
-      details: [
-        { label: 'Date:', value: 'Mar 1, 2026' },
-        { label: 'Location:', value: 'EQ Indiranagar' },
-        { label: 'Slots available:', value: '25' },
-      ],
-      linkText: 'Book Now',
-      onLinkPress: () => {
-        console.log('Book Now pressed for Weekend Challenge');
-      },
-      image: eventImage,
-    },
-  ];
-
   const handleSeeAllEvents = () => {
-    console.log('See All events');
-    // Navigate to events page
+    router.push('/explore-events');
   };
 
   return (

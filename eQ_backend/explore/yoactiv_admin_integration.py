@@ -9,44 +9,32 @@ from typing import List, Tuple, Dict, Any
 from eQ_backend.yoactiv_service import YoActivClient, YoActivAPIError
 
 
-def get_yoactiv_api_credentials() -> Tuple[str, str]:
-    """
-    Get YoActiv API key and a default branch ID from environment.
-    
-    Returns:
-        Tuple of (api_key, branch_id)
-    
-    Raises:
-        ValueError: If required credentials are not set
-    """
+def _get_api_key() -> str:
+    """Return the YoActiv API key from the environment."""
     api_key = os.environ.get("YOACTIV_API_KEY")
-    branch_id = os.environ.get("YOACTIV_BRANCH_ID")
-    
     if not api_key:
         raise ValueError("YOACTIV_API_KEY environment variable is not set")
-    if not branch_id:
-        raise ValueError("YOACTIV_BRANCH_ID environment variable is not set")
-    
-    return api_key, branch_id
+    return api_key
 
 
-def fetch_yoactiv_services(branch_id: str = None) -> List[Dict[str, Any]]:
+def fetch_yoactiv_services(branch_id: str) -> List[Dict[str, Any]]:
     """
     Fetch all services from YoActiv for a given branch.
-    
+
     Args:
-        branch_id: YoActiv branch ID. If not provided, uses YOACTIV_BRANCH_ID from env.
-    
+        branch_id: YoActiv branch ID (must come from a Gym model instance).
+
     Returns:
         List of service dictionaries with 'serviceId' and 'serviceName' keys
-    
+
     Raises:
+        ValueError: If branch_id is not provided
         YoActivAPIError: If API call fails
     """
     if not branch_id:
-        _, branch_id = get_yoactiv_api_credentials()
-    
-    api_key, _ = get_yoactiv_api_credentials()
+        raise ValueError("branch_id is required and must come from a Gym model instance")
+
+    api_key = _get_api_key()
     client = YoActivClient(api_key=api_key, branch_id=branch_id)
     
     try:
@@ -79,26 +67,27 @@ def fetch_yoactiv_services(branch_id: str = None) -> List[Dict[str, Any]]:
 
 
 def fetch_yoactiv_variations(
-    service_id: str, 
-    branch_id: str = None
+    service_id: str,
+    branch_id: str,
 ) -> List[Dict[str, Any]]:
     """
     Fetch all variations for a specific service from YoActiv.
-    
+
     Args:
         service_id: YoActiv service ID
-        branch_id: YoActiv branch ID. If not provided, uses YOACTIV_BRANCH_ID from env.
-    
+        branch_id: YoActiv branch ID (must come from a Gym model instance).
+
     Returns:
         List of variation dictionaries with 'serviceId', 'ServiceVariation', and 'amount' keys
-    
+
     Raises:
+        ValueError: If branch_id is not provided
         YoActivAPIError: If API call fails
     """
     if not branch_id:
-        _, branch_id = get_yoactiv_api_credentials()
-    
-    api_key, _ = get_yoactiv_api_credentials()
+        raise ValueError("branch_id is required and must come from a Gym model instance")
+
+    api_key = _get_api_key()
     client = YoActivClient(api_key=api_key, branch_id=branch_id)
     
     try:
@@ -117,7 +106,9 @@ def fetch_yoactiv_variations(
         if isinstance(variations_data, list):
             for variation in variations_data:
                 if isinstance(variation, dict):
-                    variation_id = variation.get("serviceVariationId")
+                    variation_id = variation.get("serviceVariationid")  # actual YoActiv key
+                    if variation_id is None:
+                        variation_id = variation.get("serviceVariationId")
                     if variation_id is None:
                         variation_id = variation.get("ServiceVariationId")
                     if variation_id is None:
@@ -138,13 +129,13 @@ def fetch_yoactiv_variations(
         raise YoActivAPIError(f"Failed to fetch variations for service {service_id}: {e}")
 
 
-def get_service_choices(branch_id: str = None) -> List[Tuple[str, str]]:
+def get_service_choices(branch_id: str) -> List[Tuple[str, str]]:
     """
     Get service choices formatted for Django choice fields.
-    
+
     Args:
-        branch_id: YoActiv branch ID. If not provided, uses YOACTIV_BRANCH_ID from env.
-    
+        branch_id: YoActiv branch ID (must come from a Gym model instance).
+
     Returns:
         List of (service_id, display_name) tuples
     """
@@ -159,14 +150,14 @@ def get_service_choices(branch_id: str = None) -> List[Tuple[str, str]]:
         return []
 
 
-def get_variation_choices(service_id: str, branch_id: str = None) -> List[Tuple[str, str]]:
+def get_variation_choices(service_id: str, branch_id: str) -> List[Tuple[str, str]]:
     """
     Get service variation choices formatted for Django choice fields.
-    
+
     Args:
         service_id: YoActiv service ID
-        branch_id: YoActiv branch ID. If not provided, uses YOACTIV_BRANCH_ID from env.
-    
+        branch_id: YoActiv branch ID (must come from a Gym model instance).
+
     Returns:
         List of (variation_id, display_name) tuples
     """

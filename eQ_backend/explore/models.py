@@ -11,6 +11,12 @@ class ServiceGroup(models.Model):
     ]
     
     name = models.CharField(max_length=200, help_text="Service family name (e.g., 'Monthly Membership')")
+    gym = models.ForeignKey(
+        'logger.Gym',
+        related_name='service_groups',
+        on_delete=models.CASCADE,
+        help_text='Gym that owns this service group',
+    )
     description = models.TextField(blank=True)
     service_type = models.CharField(max_length=20, choices=SERVICE_TYPES)
     
@@ -29,13 +35,13 @@ class ServiceGroup(models.Model):
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(
-                fields=['name', 'yoactiv_service_id'],
-                name='unique_servicegroup_name_yoactiv_id',
+                fields=['gym', 'name', 'yoactiv_service_id'],
+                name='unique_servicegroup_gym_name_yoactiv_id',
             )
         ]
     
     def __str__(self):
-        return f"{self.name} ({self.get_service_type_display()})"
+        return f"{self.name} - {self.gym.name} ({self.get_service_type_display()})"
 
 
 class Service(models.Model):

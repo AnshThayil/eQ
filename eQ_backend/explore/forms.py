@@ -16,37 +16,45 @@ from .yoactiv_admin_integration import (
 
 class ServiceGroupAdminForm(forms.ModelForm):
     """
-    Custom form for ServiceGroup admin that provides a dropdown to select
-    from live YoActiv services instead of manually typing the ID.
+    Custom form for ServiceGroup admin. The yoactiv_service_id dropdown is
+    populated dynamically via JavaScript based on the selected gym, using
+    that gym's branch_id to query YoActiv instead of the env-var default.
     """
-    
-    yoactiv_service_id = forms.ChoiceField(
-        choices=[],  # Will be populated dynamically
+
+    # Use CharField+Select so JS can populate choices dynamically without
+    # Django performing choice-list validation on submit.
+    yoactiv_service_id = forms.CharField(
         required=True,
-        help_text="Select a service from YoActiv",
+        widget=forms.Select(choices=[]),
+        help_text="Select a gym first, then choose a service from YoActiv",
         label="YoActiv Service"
     )
-    
+
     class Meta:
         model = ServiceGroup
-        fields = ['name', 'description', 'service_type', 'yoactiv_service_id', 'is_active']
-    
+        fields = ['gym', 'name', 'description', 'service_type', 'yoactiv_service_id', 'is_active']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Populate service choices from YoActiv
-        try:
-            self.fields['yoactiv_service_id'].choices = [
-                ('', '--- Select a service ---'),
-            ] + get_service_choices()
-        except Exception as e:
-            # Gracefully handle API errors
-            self.fields['yoactiv_service_id'].help_text = (
-                f"Unable to fetch services from YoActiv: {str(e)}. "
-                "You can still enter the service ID manually."
-            )
-            self.fields['yoactiv_service_id'].widget = forms.TextInput()
-            self.fields['yoactiv_service_id'].choices = []
+
+        initial_choices = [('', '--- Select a gym first ---')]
+
+        # If editing an existing instance that already has a gym with a branch_id,
+        # pre-load the services for that gym so the dropdown has a value on page load.
+        if self.instance and self.instance.pk:
+            try:
+                gym = self.instance.gym
+                if gym and gym.branch_id:
+                    initial_choices = [
+                        ('', '--- Select a service ---'),
+                    ] + get_service_choices(branch_id=gym.branch_id)
+            except Exception:
+                pass
+
+        self.fields['yoactiv_service_id'].widget.choices = initial_choices
+
+    class Media:
+        js = ('admin/service_group_admin.js',)
 
 
 class ServiceAdminForm(forms.ModelForm):

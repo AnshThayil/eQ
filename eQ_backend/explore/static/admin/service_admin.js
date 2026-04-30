@@ -30,6 +30,25 @@
         // Store variation data for later use
         window.variationData = {};
 
+        // Error message element shown below the variation dropdown
+        let errorEl = document.getElementById('service-admin-variation-error');
+        if (!errorEl) {
+            errorEl = document.createElement('p');
+            errorEl.id = 'service-admin-variation-error';
+            errorEl.style.cssText = 'color:#ba2121;margin-top:4px;font-size:0.9em;';
+            variationField.parentNode.insertBefore(errorEl, variationField.nextSibling);
+        }
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+
+        function clearError() {
+            errorEl.textContent = '';
+            errorEl.style.display = 'none';
+        }
+
         /**
          * Fetch variations from API and populate the variation dropdown
          */
@@ -41,6 +60,7 @@
                 // Reset if no service group selected
                 variationField.innerHTML = '<option value="">--- Select a service group first ---</option>';
                 window.variationData = {};
+                clearError();
                 console.log('[Service Admin] No service group selected, reset dropdown');
                 return;
             }
@@ -57,12 +77,16 @@
             fetch(apiUrl)
                 .then(response => {
                     console.log('[Service Admin] API response status:', response.status);
+                    if (!response.ok) {
+                        console.error('[Service Admin] Non-2xx response:', response.status, response.statusText);
+                    }
                     return response.json();
                 })
                 .then(data => {
                     console.log('[Service Admin] API response data:', data);
                     
                     if (data.success && data.variations) {
+                        clearError();
                         // Clear dropdown
                         variationField.innerHTML = '<option value="">--- Select a variation ---</option>';
                         let selectedIdFound = false;
@@ -98,15 +122,17 @@
                         variationField.disabled = false;
                         console.log('[Service Admin] Loaded', data.variations.length, 'variations');
                     } else {
-                        variationField.innerHTML = '<option value="">Error loading variations</option>';
-                        if (data.error) {
-                            console.error('[Service Admin] API error:', data.error);
-                        }
+                        const errorMsg = data.error || 'Unknown error from server';
+                        console.error('[Service Admin] API error:', errorMsg);
+                        showError('Failed to load variations: ' + errorMsg);
+                        variationField.innerHTML = '<option value="">--- Error loading variations ---</option>';
+                        variationField.disabled = false;
                     }
                 })
                 .catch(error => {
                     console.error('[Service Admin] Failed to fetch variations:', error);
-                    variationField.innerHTML = '<option value="">Error loading variations</option>';
+                    showError('Network error loading variations: ' + error.message);
+                    variationField.innerHTML = '<option value="">--- Error loading variations ---</option>';
                     variationField.disabled = false;
                 });
         }

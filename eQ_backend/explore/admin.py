@@ -6,14 +6,14 @@ from .forms import ServiceGroupAdminForm, ServiceAdminForm
 @admin.register(ServiceGroup)
 class ServiceGroupAdmin(admin.ModelAdmin):
     form = ServiceGroupAdminForm
-    list_display = ['name', 'service_type', 'yoactiv_service_id', 'is_active']
-    list_filter = ['service_type', 'is_active']
-    search_fields = ['name', 'description', 'yoactiv_service_id']
+    list_display = ['name', 'gym', 'service_type', 'yoactiv_service_id', 'is_active']
+    list_filter = ['gym', 'service_type', 'is_active']
+    search_fields = ['name', 'gym__name', 'description', 'yoactiv_service_id']
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'service_type', 'description')
+            'fields': ('gym', 'name', 'service_type', 'description')
         }),
         ('YoActiv Integration', {
             'fields': ('yoactiv_service_id',),

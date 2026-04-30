@@ -4,8 +4,8 @@ import json
 get_services_url = "https://api.yoactiv.com/Billing/GetServices"
 get_variations_url = "https://api.yoactiv.com/Billing/GetServiceVariations"
 api_key = "a4edabc99c05415091f78b198ba7be696848c45ca3d54e1cb15bdf2efa54c24f"
-# branch_ids = ["6934", "6978", "7506"]
-branch_ids = ["7506"]
+branch_ids = ["6934", "6978", "7506"]
+# branch_ids = ["7506"]
 
 services_payload = {}
 
@@ -68,7 +68,7 @@ for branch_id in branch_ids:
                                                             if isinstance(variation, dict):
                                                                 var_name = variation.get("ServiceVariation", "Unknown")
                                                                 var_amount = variation.get("amount", "N/A")
-                                                                var_id = variation.get("sid")
+                                                                var_id = variation.get("serviceVariationId")
                                                                 print(f"      - {var_name} (₹{var_amount}) [ID: {var_id}]")
                                                             else:
                                                                 print(f"      - {variation}")

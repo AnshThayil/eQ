@@ -32,11 +32,14 @@ class ServiceGroupDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for service groups with all variations."""
     
     variations = ServiceSerializer(many=True, read_only=True)
+    gym_name = serializers.CharField(source='gym.name', read_only=True)
     
     class Meta:
         model = ServiceGroup
         fields = [
             'id',
+            'gym',
+            'gym_name',
             'name',
             'description',
             'service_type',
@@ -53,11 +56,14 @@ class ServiceGroupListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for service group listings."""
     
     variation_count = serializers.SerializerMethodField()
+    gym_name = serializers.CharField(source='gym.name', read_only=True)
     
     class Meta:
         model = ServiceGroup
         fields = [
             'id',
+            'gym',
+            'gym_name',
             'name',
             'service_type',
             'variation_count',
