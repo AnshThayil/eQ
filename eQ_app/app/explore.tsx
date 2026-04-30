@@ -3,15 +3,15 @@
  * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=375-1050
  */
 
+import React, { useCallback, useEffect, useState } from 'react';
 import { Theme } from '@/constants';
-import { StyleSheet, View, ScrollView, SafeAreaView, StatusBar, Pressable, ImageSourcePropType, Dimensions } from 'react-native';
-import { useEffect } from 'react';
+import { StyleSheet, View, ScrollView, SafeAreaView, StatusBar, Pressable, ImageSourcePropType, Dimensions, RefreshControl } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, ThemedText, InfoCardCarousel, NavSquare } from '@/components';
 import { useRouter } from 'expo-router';
 import { InfoCardProps } from '@/components/features/InfoCard';
 import { EventsIcon, CardIcon, FacilitiesLadderIcon, ShopIcon } from '@/components/icons';
-import { getExplore } from '@/services/api';
+import { getExploreActive } from '@/services/api';
 
 // Example images - replace with actual images when available
 const planImage: ImageSourcePropType = require('@/assets/images/info-card-example.png');
@@ -25,20 +25,71 @@ const NAV_SQUARE_SIZE = (SCREEN_WIDTH - (Theme.spacing.lg * 2) - NAV_SQUARE_GAP)
 export default function ExploreScreen() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [planItems, setPlanItems] = useState<InfoCardProps[]>([]);
+  const [plansError, setPlansError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadActivePlans = useCallback(async () => {
+    setPlansError(null);
+
+    try {
+      const response = await getExploreActive();
+
+      const nextPlanItems = response.active_plans.map((plan) => {
+        const details = [];
+
+        if (plan.purchase_date) {
+          details.push({ label: 'Purchased:', value: plan.purchase_date });
+        }
+        if (plan.expiry_date) {
+          details.push({ label: 'Expires:', value: plan.expiry_date });
+        }
+        if (plan.sessions_completed !== null || plan.total_num_sessions !== null) {
+          const completed = plan.sessions_completed ?? '-';
+          const total = plan.total_num_sessions ?? '-';
+          details.push({ label: 'Sessions:', value: `${completed}/${total}` });
+        }
+
+        return {
+          title: `${plan.service_group_name} (${plan.name})`,
+          pillLabel: 'Active',
+          details,
+          linkText: 'View Details',
+          onLinkPress: () => {
+            if (plan.service_type === 'membership') {
+              router.push('/explore-memberships');
+              return;
+            }
+            if (plan.service_type === 'class') {
+              router.push('/explore-classes');
+              return;
+            }
+            router.push('/explore');
+          },
+          image: planImage,
+        };
+      });
+
+      setPlanItems(nextPlanItems);
+    } catch (error) {
+      console.error('Failed to load active plans:', error);
+      setPlansError('Unable to load active plans right now.');
+      setPlanItems([]);
+    }
+  }, [router]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadActivePlans();
+    setRefreshing(false);
+  }, [loadActivePlans]);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      const callExplore = async () => {
-        try {
-          const response = await getExplore();
-          console.log('Explore API response', response);
-        } catch (error) {
-          console.warn('Explore API request failed', error);
-        }
-      };
-      callExplore();
+    if (!isAuthenticated || isLoading) {
+      return;
     }
-  }, [isAuthenticated, isLoading]);
+    loadActivePlans();
+  }, [isAuthenticated, isLoading, loadActivePlans]);
 
   if (!isLoading && !isAuthenticated) {
     return (
@@ -58,53 +109,6 @@ export default function ExploreScreen() {
       </SafeAreaView>
     );
   }
-
-  // Sample data for "Your plans" carousel
-  const planItems: InfoCardProps[] = [
-    {
-      title: 'Climbfit',
-      pillLabel: 'Paused',
-      details: [
-        { label: 'Sessions:', value: '4/12' },
-        { label: 'Slot:', value: '6:00 PM' },
-        { label: 'Location:', value: 'EQ Hoodi' },
-      ],
-      linkText: 'View Details',
-      onLinkPress: () => {
-        router.push('/explore-class');
-      },
-      image: planImage,
-    },
-    {
-      title: 'Boulder Basics',
-      pillLabel: 'Active',
-      details: [
-        { label: 'Sessions:', value: '8/12' },
-        { label: 'Slot:', value: '7:00 PM' },
-        { label: 'Location:', value: 'EQ Koramangala' },
-      ],
-      linkText: 'View Details',
-      onLinkPress: () => {
-        router.push('/explore-class');
-      },
-      image: planImage,
-    },
-    {
-      title: 'Advanced Training',
-      pillLabel: 'Upcoming',
-      details: [
-        { label: 'Sessions:', value: '0/8' },
-        { label: 'Slot:', value: '8:00 PM' },
-        { label: 'Location:', value: 'EQ Indiranagar' },
-      ],
-      linkText: 'View Details',
-      onLinkPress: () => {
-        router.push('/explore-class');
-      },
-      image: planImage,
-    },
-  ];
-
   // Sample data for "Upcoming Events" carousel
   const eventItems: InfoCardProps[] = [
     {
@@ -169,12 +173,26 @@ export default function ExploreScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         {/* Your Plans Section */}
-        <InfoCardCarousel
-          title="Your plans"
-          items={planItems}
-        />
+        {planItems.length > 0 ? (
+          <InfoCardCarousel
+            title="Your plans"
+            items={planItems}
+          />
+        ) : (
+          <View style={styles.emptyPlansSection}>
+            <ThemedText variant="body2" style={styles.sectionTitle}>
+              Your plans
+            </ThemedText>
+            <ThemedText variant="body3" style={styles.emptyPlansText}>
+              {plansError ?? 'No active plans found.'}
+            </ThemedText>
+          </View>
+        )}
 
         {/* Upcoming Events Section */}
         <View style={styles.eventsSection}>
@@ -204,7 +222,7 @@ export default function ExploreScreen() {
             text="Memberships"
             Icon={CardIcon}
             backgroundColor={Theme.colors.warning[300]}
-            onPress={() => console.log('Memberships pressed')}
+            onPress={() => router.push('/explore-memberships')}
             size={NAV_SQUARE_SIZE}
           />
           <NavSquare
@@ -269,6 +287,13 @@ const styles = StyleSheet.create({
   },
   eventsSection: {
     gap: 8,
+  },
+  emptyPlansSection: {
+    paddingHorizontal: Theme.spacing.lg,
+    gap: Theme.spacing.sm,
+  },
+  emptyPlansText: {
+    color: Theme.semantic.text.secondary,
   },
   sectionHeader: {
     flexDirection: 'row',

@@ -9,7 +9,6 @@ from django.db import transaction
 
 from .models import Gym, Wall, Boulder, Ascent
 from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer
-from eQ_backend.yoactiv_service import YoActivClient, YoActivAPIError
 
 logger = logging.getLogger(__name__)
 
@@ -199,42 +198,6 @@ class LeaderboardView(APIView):
 			'your_ranking': your_ranking,
 			'your_user_id': your_user_id
 		})
-
-
-class ExploreView(APIView):
-	permission_classes = [permissions.IsAuthenticated]
-
-	def get(self, request):
-		user = request.user
-		phone_number = getattr(getattr(user, 'profile', None), 'phone_number', None)
-		if not phone_number:
-			return Response({'detail': 'Authenticated user must have a phone_number in profile.'}, status=status.HTTP_400_BAD_REQUEST)
-
-		gyms = Gym.objects.exclude(branch_id__isnull=True).exclude(branch_id__exact='')
-		combined_results = []
-
-		for gym in gyms:
-			client = YoActivClient.from_gym(gym)
-			try:
-				response = client.fetch_user(phone_number)
-			except YoActivAPIError as exc:
-				logger.error('YoActiv request failed for gym %s branch %s: %s', gym.id, gym.branch_id, exc)
-				return Response({'detail': 'YoActiv request failed.', 'error': str(exc), 'gym_id': gym.id, 'branch_id': gym.branch_id}, status=status.HTTP_502_BAD_GATEWAY)
-
-			logger.info('YoActiv Explore response for gym %s branch %s: %s', gym.id, gym.branch_id, response)
-
-			if isinstance(response, dict):
-				results = response.get('Results', [])
-				if isinstance(results, list):
-					combined_results.extend(results)
-
-		logger.info('Explore combined Results count=%s', len(combined_results))
-		
-		# Filter to only include Active status
-		active_results = [result for result in combined_results if isinstance(result, dict) and result.get('Status') == 'Active']
-		logger.info('Explore active Results count=%s', len(active_results))
-		
-		return Response({'Results': active_results})
 
 
 class UserProfileView(APIView):

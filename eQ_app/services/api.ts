@@ -2,7 +2,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 
 // Get API URL from environment variable
-const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_URL || 'https://unpolarized-tiana-irretraceable.ngrok-free.dev/api';
+const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -141,6 +141,58 @@ export interface UserProfile {
   };
 }
 
+export interface ExploreClassVariation {
+  id: number;
+  service_group: number;
+  service_group_name: string;
+  service_type: 'membership' | 'class' | 'event';
+  name: string;
+  access_type: 'sessions' | 'unlimited' | 'single_day';
+  num_sessions: number | null;
+  price: string;
+  duration_days: number | null;
+  yoactiv_service_variation_id: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExploreClassGroup {
+  id: number;
+  name: string;
+  description: string;
+  service_type: 'membership' | 'class' | 'event';
+  yoactiv_service_id: string;
+  is_active: boolean;
+  variations: ExploreClassVariation[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExploreResponse {
+  classes: ExploreClassGroup[];
+}
+
+export interface ExploreMembershipsResponse {
+  memberships: ExploreClassGroup[];
+}
+
+export interface ExploreActivePlan {
+  service_id: number;
+  service_group_id: number;
+  service_group_name: string;
+  service_type: 'membership' | 'class' | 'event';
+  name: string;
+  expiry_date: string | null;
+  purchase_date: string | null;
+  sessions_completed: number | string | null;
+  total_num_sessions: number | string | null;
+}
+
+export interface ExploreActiveResponse {
+  active_plans: ExploreActivePlan[];
+}
+
 // API Functions
 
 // Authentication
@@ -266,8 +318,18 @@ export const getUserProfile = async (): Promise<UserProfile> => {
   return response.data;
 };
 
-export const getExplore = async (): Promise<{ Results: any[] }> => {
-  const response = await apiClient.get('/explore/');
+export const getExploreClasses = async (): Promise<ExploreResponse> => {
+  const response = await apiClient.get('/explore-classes/');
+  return response.data;
+};
+
+export const getExploreMemberships = async (): Promise<ExploreMembershipsResponse> => {
+  const response = await apiClient.get('/explore-memberships/');
+  return response.data;
+};
+
+export const getExploreActive = async (): Promise<ExploreActiveResponse> => {
+  const response = await apiClient.get('/explore-active/');
   return response.data;
 };
 

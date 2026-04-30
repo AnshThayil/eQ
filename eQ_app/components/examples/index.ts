@@ -13,6 +13,7 @@ export { AddAscentModalExample } from './features/AddAscentModalExample';
 export { AscentLogExample } from './features/AscentLogExample';
 export { AscentsListItemExample } from './features/AscentsListItemExample';
 export { BlueLeaderboardListItemExample } from './features/BlueLeaderboardListItemExample';
+export { ExploreClassListItemExample } from './features/ExploreClassListItemExample';
 export { InfoCardExample } from './features/InfoCardExample';
 export { InfoCardCarouselExample } from './features/InfoCardCarouselExample';
 export { LeaderboardListItemExample } from './features/LeaderboardListItemExample';

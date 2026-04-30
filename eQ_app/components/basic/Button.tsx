@@ -98,6 +98,8 @@ export function Button({
         {icon && <View style={styles.iconContainer}>{icon}</View>}
         <ThemedText
           variant="button"
+          numberOfLines={1}
+          ellipsizeMode="clip"
           style={[
             styles.text,
             isPrimary ? styles.primaryText : styles.secondaryText,

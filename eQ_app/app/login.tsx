@@ -22,7 +22,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const { access, refresh } = await login(username, password);
-      await signIn(access, refresh);
+      await signIn(access, refresh, username);
       router.replace('/(routes)');
     } catch (error: any) {
       console.error('Login error:', error);

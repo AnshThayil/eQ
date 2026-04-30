@@ -1,3 +1,6 @@
+#VSCode
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -61,6 +64,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 .env
+eQ_backend/staticfiles/
 
 # Flask stuff:
 instance/

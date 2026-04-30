@@ -5,7 +5,7 @@ import { Theme } from '@/constants';
 import {
   ExploreClassGroup,
   ExploreClassVariation,
-  getExploreClasses,
+  getExploreMemberships,
 } from '@/services/api';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -53,11 +53,11 @@ function formatPrice(price: string) {
   })}`;
 }
 
-export default function ExploreClassesScreen() {
+export default function ExploreMembershipsScreen() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [classGroups, setClassGroups] = useState<ExploreClassGroup[]>([]);
+  const [membershipGroups, setMembershipGroups] = useState<ExploreClassGroup[]>([]);
   const [selectedVariationByGroup, setSelectedVariationByGroup] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -71,18 +71,18 @@ export default function ExploreClassesScreen() {
 
     let isMounted = true;
 
-    const loadClasses = async () => {
+    const loadMemberships = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await getExploreClasses();
+        const response = await getExploreMemberships();
         if (!isMounted) {
           return;
         }
 
-        const nextGroups = response.classes.filter((group) => group.variations.length > 0);
-        setClassGroups(nextGroups);
+        const nextGroups = response.memberships.filter((group) => group.variations.length > 0);
+        setMembershipGroups(nextGroups);
         setSelectedVariationByGroup(
           nextGroups.reduce<Record<number, number>>((accumulator, group) => {
             accumulator[group.id] = group.variations[0].id;
@@ -93,8 +93,8 @@ export default function ExploreClassesScreen() {
         if (!isMounted) {
           return;
         }
-        console.error('Failed to load class groups:', fetchError);
-        setError('Unable to load classes right now.');
+        console.error('Failed to load membership groups:', fetchError);
+        setError('Unable to load memberships right now.');
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -102,7 +102,7 @@ export default function ExploreClassesScreen() {
       }
     };
 
-    loadClasses();
+    loadMemberships();
 
     return () => {
       isMounted = false;
@@ -118,9 +118,9 @@ export default function ExploreClassesScreen() {
     setError(null);
 
     try {
-      const response = await getExploreClasses();
-      const nextGroups = response.classes.filter((group) => group.variations.length > 0);
-      setClassGroups(nextGroups);
+      const response = await getExploreMemberships();
+      const nextGroups = response.memberships.filter((group) => group.variations.length > 0);
+      setMembershipGroups(nextGroups);
       setSelectedVariationByGroup(
         nextGroups.reduce<Record<number, number>>((accumulator, group) => {
           accumulator[group.id] = group.variations[0].id;
@@ -128,16 +128,16 @@ export default function ExploreClassesScreen() {
         }, {})
       );
     } catch (fetchError) {
-      console.error('Failed to refresh class groups:', fetchError);
-      setError('Unable to load classes right now.');
+      console.error('Failed to refresh membership groups:', fetchError);
+      setError('Unable to load memberships right now.');
     } finally {
       setRefreshing(false);
     }
   };
 
   const activeGroup = useMemo(
-    () => classGroups.find((group) => group.id === activeGroupId) ?? null,
-    [activeGroupId, classGroups]
+    () => membershipGroups.find((group) => group.id === activeGroupId) ?? null,
+    [activeGroupId, membershipGroups]
   );
 
   const handleSelectVariation = (groupId: number, variationId: number) => {
@@ -154,7 +154,7 @@ export default function ExploreClassesScreen() {
         <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.neutral.white} />
         <SafeAreaView style={styles.authContainer}>
           <ThemedText variant="body1" style={styles.authText}>
-            Please log in to view classes
+            Please log in to view memberships
           </ThemedText>
           <Button
             text="Go to Login"
@@ -193,14 +193,14 @@ export default function ExploreClassesScreen() {
           </View>
 
           <ThemedText variant="heading2" style={styles.sectionTitle}>
-            Classes
+            Memberships
           </ThemedText>
 
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              (loading || error || classGroups.length === 0) && styles.scrollContentState,
+              (loading || error || membershipGroups.length === 0) && styles.scrollContentState,
             ]}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -215,7 +215,7 @@ export default function ExploreClassesScreen() {
               <View style={styles.stateContainer}>
                 <ActivityIndicator size="large" color={Theme.colors.primary[500]} />
                 <ThemedText variant="body1" style={styles.stateText}>
-                  Loading classes...
+                  Loading memberships...
                 </ThemedText>
               </View>
             ) : error ? (
@@ -224,15 +224,15 @@ export default function ExploreClassesScreen() {
                   {error}
                 </ThemedText>
               </View>
-            ) : classGroups.length === 0 ? (
+            ) : membershipGroups.length === 0 ? (
               <View style={styles.stateContainer}>
                 <ThemedText variant="body1" style={styles.stateText}>
-                  No classes are available right now.
+                  No memberships are available right now.
                 </ThemedText>
               </View>
             ) : (
               <View style={styles.listContainer}>
-                {classGroups.map((group) => {
+                {membershipGroups.map((group) => {
                   const selectedVariationId = selectedVariationByGroup[group.id] ?? group.variations[0]?.id;
                   const selectedVariation =
                     group.variations.find((variation) => variation.id === selectedVariationId) ?? group.variations[0];
@@ -246,9 +246,7 @@ export default function ExploreClassesScreen() {
                       sessionsText={formatAccessSummary(selectedVariation)}
                       priceText={formatPrice(selectedVariation.price)}
                       onActionPress={() => {}}
-                      onDropdownPillPress={
-                        hasMultipleOptions ? () => setActiveGroupId(group.id) : undefined
-                      }
+                      onDropdownPillPress={hasMultipleOptions ? () => setActiveGroupId(group.id) : undefined}
                     />
                   );
                 })}
@@ -256,9 +254,8 @@ export default function ExploreClassesScreen() {
             )}
           </ScrollView>
         </View>
-      </SafeAreaView>
 
-      <Modal
+        <Modal
         visible={activeGroup !== null}
         transparent
         animationType="fade"
@@ -296,6 +293,7 @@ export default function ExploreClassesScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      </SafeAreaView>
     </View>
   );
 }
@@ -324,6 +322,10 @@ const styles = StyleSheet.create({
   authButton: {
     marginTop: Theme.spacing.md,
   },
+  contentContainer: {
+    flex: 1,
+    backgroundColor: Theme.colors.neutral.white,
+  },
   header: {
     height: 72,
     paddingHorizontal: Theme.spacing.lg,
@@ -340,14 +342,10 @@ const styles = StyleSheet.create({
     color: Theme.semantic.text.primary,
     textAlign: 'center',
   },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: Theme.colors.neutral.white,
-  },
   topRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexDirection: 'row',
     paddingHorizontal: Theme.spacing.lg,
     paddingTop: Theme.spacing.md,
     paddingBottom: Theme.spacing.lg,
@@ -378,7 +376,8 @@ const styles = StyleSheet.create({
   scrollContentState: {
     flexGrow: 1,
   },
-  listContainer: {},
+  listContainer: {
+  },
   stateContainer: {
     flex: 1,
     justifyContent: 'center',

@@ -119,7 +119,7 @@ export function RouteListItemExample() {
           With Zone Display (Sorted View)
         </ThemedText>
         <ThemedText variant="body1" style={styles.description}>
-          When routes are sorted by 'Most Climbed' or 'Level', zone information is displayed.
+          When routes are sorted by &apos;Most Climbed&apos; or &apos;Level&apos;, zone information is displayed.
         </ThemedText>
         <View style={styles.routeList}>
           {routes.slice(0, 3).map((route) => (

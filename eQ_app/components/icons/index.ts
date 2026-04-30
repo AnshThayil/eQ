@@ -1,6 +1,7 @@
 export { AscentCompletedIcon } from './AscentCompletedIcon';
 export { AscentUncompletedIcon } from './AscentUncompletedIcon';
 export { CardIcon } from './CardIcon';
+export { CartIcon } from './CartIcon';
 export { CaretDownIcon } from './CaretDownIcon';
 export { CheckboxSelectedIcon } from './CheckboxSelectedIcon';
 export { CheckboxUnselectedIcon } from './CheckboxUnselectedIcon';

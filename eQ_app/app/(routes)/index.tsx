@@ -141,8 +141,6 @@ export default function RoutesScreen() {
       setLoading(true);
       setError(null);
       const gymsData = await getGyms();
-      console.log('Gyms data received:', gymsData);
-      console.log('Is array?', Array.isArray(gymsData));
       // Ensure we always set an array
       setGyms(Array.isArray(gymsData) ? gymsData : []);
     } catch (err) {

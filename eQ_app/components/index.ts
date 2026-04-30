@@ -17,6 +17,7 @@ export { AddAscentModal } from './features/AddAscentModal';
 export { AscentLog } from './features/AscentLog';
 export { AscentsListItem } from './features/AscentsListItem';
 export { BlueLeaderboardListItem } from './features/BlueLeaderboardListItem';
+export { ExploreClassListItem } from './features/ExploreClassListItem';
 export { FilterModal } from './features/FilterModal';
 export { InfoCard } from './features/InfoCard';
 export type { InfoCardProps, DetailItem } from './features/InfoCard';
