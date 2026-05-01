@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'logger',
     'explore',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -184,6 +185,9 @@ REST_FRAMEWORK = {
 
 YOACTIV_API_KEY = os.environ.get('YOACTIV_API_KEY')
 YOACTIV_BASE_URL = os.environ.get('YOACTIV_BASE_URL', 'https://api.yoactiv.com/')
+
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 
 # JWT settings
 from datetime import timedelta

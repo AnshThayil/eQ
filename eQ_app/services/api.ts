@@ -344,4 +344,51 @@ export const getExploreActive = async (): Promise<ExploreActiveResponse> => {
   return response.data;
 };
 
+// Payment types
+export interface PaymentOrderResponse {
+  razorpay_order_id: string;
+  amount_paise: number;
+  currency: string;
+  razorpay_key_id: string;
+  prefill_name: string;
+  prefill_email: string;
+  prefill_contact: string;
+}
+
+export interface VerifyPaymentPayload {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export interface UserOrder {
+  id: number;
+  razorpay_order_id: string;
+  service_name: string;
+  service_type: string;
+  amount_paise: number;
+  currency: string;
+  status: 'pending' | 'paid' | 'failed';
+  created_at: string;
+}
+
+// Payment API functions
+export const createPaymentOrder = async (serviceId: number): Promise<PaymentOrderResponse> => {
+  const response = await apiClient.post('/payments/create-order/', { service_id: serviceId });
+  return response.data;
+};
+
+export const verifyPayment = async (payload: VerifyPaymentPayload): Promise<void> => {
+  await apiClient.post('/payments/verify/', payload);
+};
+
+export const markPaymentFailed = async (razorpayOrderId: string): Promise<void> => {
+  await apiClient.post('/payments/mark-failed/', { razorpay_order_id: razorpayOrderId });
+};
+
+export const getUserOrders = async (): Promise<UserOrder[]> => {
+  const response = await apiClient.get('/payments/orders/');
+  return response.data;
+};
+
 export default apiClient;

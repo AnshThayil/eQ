@@ -1,7 +1,9 @@
 import { Button, ExploreClassListItem, ThemedText } from '@/components';
+import RazorpayWebViewModal from '@/components/features/RazorpayWebViewModal';
 import { CartIcon } from '@/components/icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { Theme } from '@/constants';
+import { useRazorpay } from '@/hooks/useRazorpay';
 import {
   ExploreClassGroup,
   ExploreClassVariation,
@@ -56,6 +58,7 @@ function formatPrice(price: string) {
 export default function ExploreEventsScreen() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { initiatePayment, isProcessing, modalVisible, orderData, currentItemName, handleSuccess, handleFailure, handleDismiss } = useRazorpay();
 
   const [eventGroups, setEventGroups] = useState<ExploreClassGroup[]>([]);
   const [selectedVariationByGroup, setSelectedVariationByGroup] = useState<Record<number, number>>({});
@@ -245,7 +248,8 @@ export default function ExploreEventsScreen() {
                       dropdownPillLabel={hasMultipleOptions ? selectedVariation.name : undefined}
                       sessionsText={formatAccessSummary(selectedVariation)}
                       priceText={formatPrice(selectedVariation.price)}
-                      onActionPress={() => {}}
+                      onActionPress={() => initiatePayment(selectedVariation.id, selectedVariation.name)}
+                      actionDisabled={isProcessing}
                       onDropdownPillPress={
                         hasMultipleOptions ? () => setActiveGroupId(group.id) : undefined
                       }
@@ -257,6 +261,15 @@ export default function ExploreEventsScreen() {
           </ScrollView>
         </View>
       </SafeAreaView>
+
+      <RazorpayWebViewModal
+        visible={modalVisible}
+        orderData={orderData}
+        itemName={currentItemName}
+        onSuccess={handleSuccess}
+        onFailure={handleFailure}
+        onDismiss={handleDismiss}
+      />
 
       <Modal
         visible={activeGroup !== null}

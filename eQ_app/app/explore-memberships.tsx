@@ -1,4 +1,5 @@
 import { Button, ExploreClassListItem, ThemedText } from '@/components';
+import RazorpayWebViewModal from '@/components/features/RazorpayWebViewModal';
 import { CartIcon } from '@/components/icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { Theme } from '@/constants';
@@ -7,6 +8,7 @@ import {
   ExploreClassVariation,
   getExploreMemberships,
 } from '@/services/api';
+import { useRazorpay } from '@/hooks/useRazorpay';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -56,6 +58,7 @@ function formatPrice(price: string) {
 export default function ExploreMembershipsScreen() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { initiatePayment, isProcessing, modalVisible, orderData, currentItemName, handleSuccess, handleFailure, handleDismiss } = useRazorpay();
 
   const [membershipGroups, setMembershipGroups] = useState<ExploreClassGroup[]>([]);
   const [selectedVariationByGroup, setSelectedVariationByGroup] = useState<Record<number, number>>({});
@@ -245,7 +248,8 @@ export default function ExploreMembershipsScreen() {
                       dropdownPillLabel={hasMultipleOptions ? selectedVariation.name : undefined}
                       sessionsText={formatAccessSummary(selectedVariation)}
                       priceText={formatPrice(selectedVariation.price)}
-                      onActionPress={() => {}}
+                      onActionPress={() => initiatePayment(selectedVariation.id, selectedVariation.name)}
+                      actionDisabled={isProcessing}
                       onDropdownPillPress={hasMultipleOptions ? () => setActiveGroupId(group.id) : undefined}
                     />
                   );
@@ -254,6 +258,15 @@ export default function ExploreMembershipsScreen() {
             )}
           </ScrollView>
         </View>
+
+        <RazorpayWebViewModal
+          visible={modalVisible}
+          orderData={orderData}
+          itemName={currentItemName}
+          onSuccess={handleSuccess}
+          onFailure={handleFailure}
+          onDismiss={handleDismiss}
+        />
 
         <Modal
         visible={activeGroup !== null}

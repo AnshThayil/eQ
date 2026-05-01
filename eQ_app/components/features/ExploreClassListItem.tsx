@@ -14,6 +14,7 @@ export interface ExploreClassListItemProps {
   dropdownPillLabel?: string;
   onActionPress: () => void;
   onDropdownPillPress?: () => void;
+  actionDisabled?: boolean;
   style?: ViewStyle;
 }
 
@@ -25,6 +26,7 @@ export function ExploreClassListItem({
   dropdownPillLabel,
   onActionPress,
   onDropdownPillPress,
+  actionDisabled = false,
   style,
 }: ExploreClassListItemProps) {
   return (
@@ -58,6 +60,7 @@ export function ExploreClassListItem({
           text={buttonText}
           onPress={onActionPress}
           fullWidth
+          disabled={actionDisabled}
           accessibilityHint={`Perform ${buttonText.toLowerCase()} for ${title}`}
         />
       </View>
