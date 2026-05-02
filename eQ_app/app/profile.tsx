@@ -5,7 +5,7 @@ import { HistoryIcon, HoldIcon, InfoIcon, SaveIcon } from '@/components/icons';
 import { SettingsIcon } from '@/components/icons/SettingsIcon';
 import { getUserProfile, type UserProfile } from '@/services/api';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 
 const getDisplayName = (profile: UserProfile | null, fallbackUsername: string | null) => {
   const firstName = profile?.first_name?.trim() ?? '';
@@ -71,48 +71,60 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadProfile = async (isMounted: { current: boolean }) => {
+    if (!isAuthenticated) {
+      if (isMounted.current) {
+        setProfile(null);
+        setErrorMessage(null);
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    try {
+      if (isMounted.current) {
+        setIsLoading(true);
+        setErrorMessage(null);
+      }
+
+      const profileResponse = await getUserProfile();
+
+      if (isMounted.current) {
+        setProfile(profileResponse);
+      }
+    } catch {
+      if (isMounted.current) {
+        setErrorMessage('Unable to load profile stats right now.');
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
+    const mounted = { current: true };
 
-    const loadProfile = async () => {
-      if (!isAuthenticated) {
-        if (isMounted) {
-          setProfile(null);
-          setErrorMessage(null);
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      try {
-        if (isMounted) {
-          setIsLoading(true);
-          setErrorMessage(null);
-        }
-
-        const profileResponse = await getUserProfile();
-
-        if (isMounted) {
-          setProfile(profileResponse);
-        }
-      } catch {
-        if (isMounted) {
-          setErrorMessage('Unable to load profile stats right now.');
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+    const runLoad = async () => {
+      await loadProfile(mounted);
     };
 
-    void loadProfile();
+    void runLoad();
 
     return () => {
-      isMounted = false;
+      mounted.current = false;
     };
   }, [isAuthenticated]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    const mounted = { current: true };
+    await loadProfile(mounted);
+    setIsRefreshing(false);
+  };
 
   const displayName = getDisplayName(profile, username);
   const initials = getInitials(displayName);
@@ -167,6 +179,13 @@ export default function ProfileScreen() {
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => { void handleRefresh(); }}
+              tintColor={Theme.colors.primary[500]}
+            />
+          }
         >
           <View style={styles.profileSection}>
             <View style={styles.avatar}>
