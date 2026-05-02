@@ -11,7 +11,7 @@ Options:
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from explore.models import ServiceGroup, Service
+from explore.models import ServiceGroup
 
 
 class Command(BaseCommand):
@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 deleted_count, deleted_details = inactive_service_groups.delete()
                 
                 self.stdout.write('\n' + self.style.SUCCESS('✓ Deletion completed successfully!'))
-                self.stdout.write(f'\nDeleted objects:')
+                self.stdout.write('\nDeleted objects:')
                 for model, count in deleted_details.items():
                     self.stdout.write(f'  - {model}: {count}')
         

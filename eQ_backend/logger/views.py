@@ -194,7 +194,6 @@ class LeaderboardView(APIView):
 		
 		# Add index and rank (rank handles ties)
 		leaderboard_list = list(leaderboard)
-		current_rank = 1
 		for idx, entry in enumerate(leaderboard_list, start=1):
 			entry['index'] = idx
 			

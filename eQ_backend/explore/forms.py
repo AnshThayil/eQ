@@ -5,7 +5,6 @@ Provides dynamic dropdowns for selecting services and variations from YoActiv.
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 
 from .models import Service, ServiceGroup
 from .yoactiv_admin_integration import (
@@ -108,7 +107,7 @@ class ServiceAdminForm(forms.ModelForm):
                 initial_choices = [
                     ('', '--- Select a variation ---'),
                 ] + get_variation_choices(service_group.yoactiv_service_id)
-            except Exception as e:
+            except Exception:
                 # If API fails, just show empty dropdown - JavaScript will handle it
                 initial_choices = [('', '--- Select a service group first ---')]
         

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.conf import settings
-from .models import Order, Payment
+from .models import Order
 
 
 class CreateOrderSerializer(serializers.Serializer):

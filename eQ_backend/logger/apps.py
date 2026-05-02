@@ -6,4 +6,4 @@ class LoggerConfig(AppConfig):
     name = 'logger'
 
     def ready(self):
-        from . import signals  
+        pass  

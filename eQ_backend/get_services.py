@@ -73,11 +73,11 @@ for branch_id in branch_ids:
                                                             else:
                                                                 print(f"      - {variation}")
                                                     else:
-                                                        print(f"    No variations")
+                                                        print("    No variations")
                                                 else:
-                                                    print(f"    No variations")
+                                                    print("    No variations")
                                             else:
-                                                print(f"    Error parsing response")
+                                                print("    Error parsing response")
                                         else:
                                             print(f"    Error fetching variations: {var_response.text}")
                                     
