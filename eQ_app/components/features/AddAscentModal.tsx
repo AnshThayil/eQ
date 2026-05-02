@@ -21,7 +21,7 @@ import {
     ViewStyle,
 } from 'react-native';
 import { Button } from '../basic/Button';
-import { CaretDownIcon, HoldIcon } from '../icons';
+  import { CaretDownIcon, HoldIcon, LikeFilledIcon, LikeOutlineIcon } from '../icons';
 import { InputField } from '../basic/InputField';
 import { RadioButton, RadioOption } from '../basic/RadioButton';
 import { ThemedText } from '../basic/ThemedText';
@@ -55,6 +55,7 @@ export interface AddAscentModalProps {
     difficulty: string;
     isFlash: boolean;
     comments: string;
+    liked: boolean;
   }) => void;
 
   /**
@@ -81,6 +82,7 @@ export function AddAscentModal({
   const [difficulty, setDifficulty] = useState(difficultyOptions[0]);
   const [isFlash, setIsFlash] = useState(true);
   const [comments, setComments] = useState('');
+  const [liked, setLiked] = useState(false);
 
   const flashOptions: RadioOption[] = [
     { value: 'flash', label: 'Flash' },
@@ -92,11 +94,13 @@ export function AddAscentModal({
       difficulty,
       isFlash,
       comments,
+      liked,
     });
     // Reset form
     setDifficulty(difficultyOptions[0]);
     setIsFlash(true);
     setComments('');
+    setLiked(false);
   };
 
   const handleCancel = () => {
@@ -104,6 +108,7 @@ export function AddAscentModal({
     setDifficulty(difficultyOptions[0]);
     setIsFlash(true);
     setComments('');
+    setLiked(false);
     onCancel();
   };
 
@@ -164,6 +169,26 @@ export function AddAscentModal({
                 returnKeyType="done"
               />
             </View>
+          </View>
+
+          <View style={styles.likeSection}>
+            <ThemedText variant="subtext2" style={styles.commentsLabel}>
+              Like
+            </ThemedText>
+            <Pressable
+              onPress={() => setLiked((current) => !current)}
+              style={({ pressed }) => [styles.likeButton, pressed && styles.likeButtonPressed]}
+              accessibilityRole="button"
+              accessibilityLabel={liked ? 'Route liked' : 'Route not liked'}
+              accessibilityHint="Tap to toggle whether you liked the route"
+              accessibilityState={{ checked: liked }}
+            >
+              {liked ? (
+                <LikeFilledIcon size={18} color={Theme.colors.primary[300]} />
+              ) : (
+                <LikeOutlineIcon size={24} color={Theme.colors.primary[500]} />
+              )}
+            </Pressable>
           </View>
 
           {/* Action Buttons */}
@@ -239,6 +264,18 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     includeFontPadding: false,
+  },
+  likeSection: {
+    gap: Theme.spacing.xs,
+  },
+  likeButton: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  likeButtonPressed: {
+    opacity: 0.6,
   },
   actions: {
     flexDirection: 'row',

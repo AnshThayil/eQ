@@ -1,11 +1,11 @@
 import { Theme } from '@/constants';
 import { StyleSheet, View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator, RefreshControl } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, ThemedText, LeaderboardListItem, BlueLeaderboardListItem, InputField, CaretDownIcon } from '@/components';
+import { Button, ThemedText, LeaderboardListItem, BlueLeaderboardListItem, InputField, CaretDownIcon, Tabs, ActivityItem } from '@/components';
 import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getLeaderboard, getGyms, Gym, LeaderboardEntry } from '@/services/api';
+import { getLatestAscents, getLeaderboard, getGyms, ActivityAscent, Gym, LeaderboardEntry } from '@/services/api';
 
 const STORAGE_KEY_GYM = '@leaderboard_selected_gym';
 const STORAGE_KEY_TIMEFRAME = '@leaderboard_selected_timeframe';
@@ -21,9 +21,11 @@ export default function LeaderboardScreen() {
   const [selectedGymId, setSelectedGymId] = useState<string>(ALL_GYMS_VALUE);
   const [selectedTimeframe, setSelectedTimeframe] = useState('Currently Set');
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [activityData, setActivityData] = useState<ActivityAscent[]>([]);
   const [yourRanking, setYourRanking] = useState<number | null>(null);
   const [yourUserId, setYourUserId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isActivityLoading, setIsActivityLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   
@@ -61,6 +63,12 @@ export default function LeaderboardScreen() {
       fetchLeaderboard();
     }
   }, [selectedGymId, selectedTimeframe, isAuthenticated, authLoading, preferencesLoaded]);
+
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      fetchLatestActivity();
+    }
+  }, [isAuthenticated, authLoading]);
   
   // Auto-scroll to current user if they're not in top 3
   useEffect(() => {
@@ -114,7 +122,7 @@ export default function LeaderboardScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([fetchGyms(), fetchLeaderboard(false)]);
+      await Promise.all([fetchGyms(), fetchLeaderboard(false), fetchLatestActivity(false)]);
     } finally {
       setRefreshing(false);
     }
@@ -137,6 +145,25 @@ export default function LeaderboardScreen() {
       console.error('Failed to save timeframe preference:', error);
     }
   };
+
+  const fetchLatestActivity = async (showLoading = true) => {
+    if (showLoading) setIsActivityLoading(true);
+    try {
+      const latestAscents = await getLatestAscents();
+      setActivityData(latestAscents);
+    } catch (error) {
+      console.error('Failed to fetch activity:', error);
+      setActivityData([]);
+    } finally {
+      if (showLoading) setIsActivityLoading(false);
+    }
+  };
+
+  const getClimberName = (ascent: ActivityAscent) => {
+    const firstName = ascent.climber_details?.first_name?.trim() ?? '';
+    const lastName = ascent.climber_details?.last_name?.trim() ?? '';
+    return `${firstName} ${lastName}`.trim() || ascent.climber_details?.username || 'Unknown climber';
+  };
   
   // Get gym options for dropdown
   const gymOptions = [
@@ -150,37 +177,8 @@ export default function LeaderboardScreen() {
   const top3 = leaderboardData.slice(0, 3);
   const rest = leaderboardData.slice(3);
 
-  if (!authLoading && !isAuthenticated) {
-    return (
-      <View style={styles.outerContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.neutral.white} />
-        <SafeAreaView style={styles.authContainer}>
-          <ThemedText variant="body1" style={styles.authText}>
-            Please log in to view leaderboard
-          </ThemedText>
-          <Button 
-            text="Go to Login" 
-            onPress={() => router.push('/login')}
-            variant="primary"
-            style={styles.button}
-          />
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.outerContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.neutral[100]} />
-      <SafeAreaView style={styles.container}>
-        {/* Fixed Header Section */}
-        <View style={styles.header}>
-          <ThemedText variant="heading1" style={styles.headerTitle}>
-            Leaderboard
-          </ThemedText>
-        </View>
-
-      {/* Fixed Sort Section */}
+  const leaderboardContent = (
+    <>
       <View style={styles.sortSection}>
         <ThemedText variant="subtext2" style={styles.sortLabel}>
           Sort by:
@@ -210,7 +208,6 @@ export default function LeaderboardScreen() {
         </View>
       </View>
 
-      {/* Loading State */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Theme.colors.primary[500]} />
@@ -226,7 +223,6 @@ export default function LeaderboardScreen() {
         </View>
       ) : (
         <>
-          {/* Fixed Top 3 Section */}
           {top3.length > 0 && (
             <View style={styles.topThree}>
               {top3.map((entry) => (
@@ -241,7 +237,6 @@ export default function LeaderboardScreen() {
             </View>
           )}
 
-          {/* Scrollable Rest of Leaderboard with Pull-to-Refresh */}
           <ScrollView
             ref={scrollViewRef}
             style={styles.scrollableSection}
@@ -272,6 +267,88 @@ export default function LeaderboardScreen() {
           </ScrollView>
         </>
       )}
+    </>
+  );
+
+  const activityContent = (
+    isActivityLoading ? (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Theme.colors.primary[500]} />
+        <ThemedText variant="body1" style={styles.loadingText}>
+          Loading activity...
+        </ThemedText>
+      </View>
+    ) : activityData.length === 0 ? (
+      <View style={styles.emptyContainer}>
+        <ThemedText variant="body1" style={styles.emptyText}>
+          No recent activity yet
+        </ThemedText>
+      </View>
+    ) : (
+      <ScrollView
+        style={styles.activitySection}
+        contentContainerStyle={styles.activityContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Theme.colors.primary[500]}
+            colors={[Theme.colors.primary[500]]}
+          />
+        }
+      >
+        {activityData.map((activity) => (
+          <ActivityItem
+            key={activity.id}
+            climberName={getClimberName(activity)}
+            ascentType={activity.ascent_type}
+            dateClimbed={activity.date_climbed}
+            boulderGrade={activity.boulder_grade}
+            difficulty={activity.boulder_difficulty}
+            climbingStyle={activity.boulder_climbing_style}
+            zone={activity.wall_name}
+            personalGrade={activity.perceived_difficulty_display}
+            routeColor={activity.boulder_color}
+          />
+        ))}
+      </ScrollView>
+    )
+  );
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <View style={styles.outerContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.neutral.white} />
+        <SafeAreaView style={styles.authContainer}>
+          <ThemedText variant="body1" style={styles.authText}>
+            Please log in to view leaderboard
+          </ThemedText>
+          <Button 
+            text="Go to Login" 
+            onPress={() => router.push('/login')}
+            variant="primary"
+            style={styles.button}
+          />
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.outerContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.neutral[100]} />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <ThemedText variant="heading1" style={styles.headerTitle}>
+            Leaderboard
+          </ThemedText>
+        </View>
+
+        <Tabs tabs={['Leaderboard', 'Activity']} style={styles.tabsContainer} tabBarStyle={styles.tabsBar}>
+          {leaderboardContent}
+          {activityContent}
+        </Tabs>
       </SafeAreaView>
     </View>
   );
@@ -314,11 +391,18 @@ const styles = StyleSheet.create({
     color: Theme.semantic.text.primary,
     textAlign: 'center',
   },
+  tabsContainer: {
+    flex: 1,
+    backgroundColor: Theme.colors.neutral.white,
+  },
+  tabsBar: {
+    paddingTop: 20,
+  },
   
-  // Fixed Sort Section
   sortSection: {
     paddingHorizontal: 20,
     paddingTop: 24,
+    paddingBottom: 24,
     gap: 8,
     backgroundColor: Theme.colors.neutral.white,
   },
@@ -332,17 +416,14 @@ const styles = StyleSheet.create({
   dropdown: {
     flex: 1,
   },
-  
-  // Fixed Top 3 Section
+
   topThree: {
     paddingHorizontal: 20,
-    paddingTop: 24,
     paddingBottom: 24,
     gap: 8,
     backgroundColor: Theme.colors.neutral.white,
   },
-  
-  // Scrollable Section
+
   scrollableSection: {
     flex: 1,
     backgroundColor: Theme.colors.neutral.white,
@@ -355,8 +436,17 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
   },
-  
-  // Loading and Empty States
+  activitySection: {
+    flex: 1,
+    backgroundColor: Theme.colors.neutral.white,
+  },
+  activityContent: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+    gap: 16,
+  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

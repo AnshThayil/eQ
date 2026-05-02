@@ -70,6 +70,38 @@ class AscentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ActivityAscentSerializer(serializers.ModelSerializer):
+    climber_details = UserSerializer(source='climber', read_only=True)
+    perceived_difficulty_display = serializers.CharField(source='get_perceived_difficulty_display', read_only=True)
+    boulder_grade = serializers.CharField(source='boulder.setter_grade', read_only=True)
+    boulder_color = serializers.CharField(source='boulder.color', read_only=True)
+    boulder_difficulty = serializers.CharField(source='boulder.get_difficulty_display', read_only=True)
+    boulder_climbing_style = serializers.CharField(source='boulder.get_climbing_style_display', read_only=True)
+    wall_name = serializers.CharField(source='boulder.wall.name', read_only=True)
+    gym_name = serializers.CharField(source='boulder.wall.gym.name', read_only=True)
+
+    class Meta:
+        model = Ascent
+        fields = [
+            'id',
+            'climber',
+            'climber_details',
+            'boulder',
+            'ascent_type',
+            'perceived_difficulty',
+            'perceived_difficulty_display',
+            'liked',
+            'date_climbed',
+            'points',
+            'boulder_grade',
+            'boulder_color',
+            'boulder_difficulty',
+            'boulder_climbing_style',
+            'wall_name',
+            'gym_name',
+        ]
+
+
 class AscentSerializerWithoutBoulder(serializers.ModelSerializer):
     climber_details = UserSerializer(source='climber', read_only=True)
     

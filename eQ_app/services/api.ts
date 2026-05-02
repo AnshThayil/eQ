@@ -102,8 +102,29 @@ export interface Ascent {
   climber_details?: User;
   boulder: number;
   ascent_type: 'flash' | 'send';
+  perceived_difficulty?: 'easy' | 'medium' | 'hard' | null;
+  liked: boolean;
   date_climbed: string;
   points: number;
+}
+
+export interface ActivityAscent {
+  id: number;
+  climber: number;
+  climber_details: User;
+  boulder: number;
+  ascent_type: 'flash' | 'send';
+  perceived_difficulty: 'easy' | 'medium' | 'hard';
+  perceived_difficulty_display: string;
+  liked: boolean;
+  date_climbed: string;
+  points: number;
+  boulder_grade: string;
+  boulder_color: string;
+  boulder_difficulty: string;
+  boulder_climbing_style: string;
+  wall_name: string;
+  gym_name: string;
 }
 
 export interface LeaderboardEntry {
@@ -288,9 +309,16 @@ export const deleteBoulder = async (id: number): Promise<void> => {
 };
 
 // Ascents
-export const logAscent = async (boulderId: number, ascentType: 'flash' | 'send'): Promise<{ ascent: any; boulder: Boulder }> => {
+export const logAscent = async (
+  boulderId: number,
+  ascentType: 'flash' | 'send',
+  difficulty: string,
+  liked: boolean,
+): Promise<{ ascent: Ascent; boulder: Boulder }> => {
   const response = await apiClient.post(`/boulders/${boulderId}/ascent/`, {
     ascent_type: ascentType,
+    difficulty,
+    liked,
   });
   return response.data;
 };
@@ -298,6 +326,11 @@ export const logAscent = async (boulderId: number, ascentType: 'flash' | 'send')
 export const deleteAscent = async (boulderId: number): Promise<{ boulder: Boulder }> => {
   const response = await apiClient.delete(`/boulders/${boulderId}/ascent/`);
   return response.data;
+};
+
+export const getLatestAscents = async (): Promise<ActivityAscent[]> => {
+  const response = await apiClient.get('/activity/');
+  return response.data.ascents;
 };
 
 // Leaderboard

@@ -16,6 +16,8 @@ export { FlashIcon } from './FlashIcon';
 export { HoldIcon } from './HoldIcon';
 export { LeaderboardSelectedIcon } from './LeaderboardSelectedIcon';
 export { LeaderboardUnselectedIcon } from './LeaderboardUnselectedIcon';
+export { LikeFilledIcon } from './LikeFilledIcon';
+export { LikeOutlineIcon } from './LikeOutlineIcon';
 export { LocationPinIcon } from './LocationPinIcon';
 export { MapIcon } from './MapIcon';
 export { PlusIcon } from './PlusIcon';

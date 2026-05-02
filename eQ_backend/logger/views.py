@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from .models import Gym, Wall, Boulder, Ascent
-from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer
+from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,17 @@ class BoulderAscentView(APIView):
 			return get_object_or_404(User, pk=climber_id)
 		return None
 
+	def _normalize_difficulty(self, difficulty):
+		if not difficulty:
+			return False
+
+		normalized = str(difficulty).strip().lower()
+		valid_difficulties = {choice[0] for choice in Boulder.DIFFICULTY_CHOICES}
+		if normalized not in valid_difficulties:
+			return False
+
+		return normalized
+
 	@transaction.atomic
 	def post(self, request, pk):
 		boulder = get_object_or_404(Boulder, pk=pk)
@@ -76,7 +87,21 @@ class BoulderAscentView(APIView):
 		if not ascent_type:
 			return Response({'detail': 'Missing ascent_type.'}, status=status.HTTP_400_BAD_REQUEST)
 
-		ascent = Ascent(climber=climber, boulder=boulder, ascent_type=ascent_type)
+		perceived_difficulty = self._normalize_difficulty(request.data.get('difficulty'))
+		if perceived_difficulty is False:
+			return Response({'detail': 'Missing or invalid difficulty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		liked = request.data.get('liked')
+		if not isinstance(liked, bool):
+			return Response({'detail': 'Missing or invalid liked.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		ascent = Ascent(
+			climber=climber,
+			boulder=boulder,
+			ascent_type=ascent_type,
+			perceived_difficulty=perceived_difficulty,
+			liked=liked,
+		)
 		ascent.points = ascent.calculate_points()
 		ascent.save()
 
@@ -198,6 +223,23 @@ class LeaderboardView(APIView):
 			'your_ranking': your_ranking,
 			'your_user_id': your_user_id
 		})
+
+
+class LatestAscentsView(APIView):
+	"""Returns the latest 50 ascents across all climbers."""
+
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get(self, request):
+		ascents = Ascent.objects.select_related(
+			'climber',
+			'boulder',
+			'boulder__wall',
+			'boulder__wall__gym',
+		).order_by('-date_climbed', '-id')[:50]
+
+		serializer = ActivityAscentSerializer(ascents, many=True)
+		return Response({'ascents': serializer.data})
 
 
 class UserProfileView(APIView):

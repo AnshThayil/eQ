@@ -294,13 +294,13 @@ export default function RoutesScreen() {
     }
   };
 
-  const handleModalSubmit = async (data: { difficulty: string; isFlash: boolean; comments: string }) => {
+  const handleModalSubmit = async (data: { difficulty: string; isFlash: boolean; comments: string; liked: boolean }) => {
     const { zoneId, routeId } = selectedRoute;
     const boulderId = parseInt(routeId);
     const ascentType = data.isFlash ? 'flash' : 'send';
 
     try {
-      const response = await logAscent(boulderId, ascentType);
+      const response = await logAscent(boulderId, ascentType, data.difficulty, data.liked);
       setModalVisible(false);
       
       // Update only the affected boulder in state

@@ -1,18 +1,26 @@
 import { Button, ThemedText } from '@/components';
 import { Theme } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
+import { ProfileNavButtonExample } from '@/components/examples';
 import React from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
 export default function ProfileScreen() {
   const { signOut, username } = useAuth();
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <ThemedText variant="heading2" style={styles.message}>
-          You are logged in as {username ?? 'Unknown user'}
-        </ThemedText>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <ThemedText variant="heading2" style={styles.message}>
+            You are logged in as {username ?? 'Unknown user'}
+          </ThemedText>
+          <ThemedText variant="body1" style={styles.description}>
+            Profile navigation button preview
+          </ThemedText>
+        </View>
+
+        <ProfileNavButtonExample />
 
         <Button
           text="Log Out"
@@ -20,7 +28,7 @@ export default function ProfileScreen() {
           fullWidth
           accessibilityHint="Signs you out of the app"
         />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -31,13 +39,17 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.neutral.white,
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Theme.spacing.lg,
     gap: Theme.spacing.lg,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.lg,
+  },
+  header: {
+    gap: Theme.spacing.xs,
   },
   message: {
     color: Theme.colors.neutral.black,
-    textAlign: 'center',
+  },
+  description: {
+    color: Theme.semantic.text.secondary,
   },
 });

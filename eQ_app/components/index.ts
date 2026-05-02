@@ -7,6 +7,8 @@ export { NavSquare } from './basic/NavSquare';
 export type { NavSquareProps } from './basic/NavSquare';
 export { RadioButton } from './basic/RadioButton';
 export { StaticPill } from './basic/StaticPill';
+export { Tabs } from './basic/Tabs';
+export type { TabsProps } from './basic/Tabs';
 export { ThemedText } from './basic/ThemedText';
 
 // Layout Components
@@ -14,6 +16,8 @@ export { BottomNavBar } from './layout/BottomNavBar';
 
 // Feature-Specific Components
 export { AddAscentModal } from './features/AddAscentModal';
+export { ActivityItem } from './features/ActivityItem';
+export type { ActivityItemProps } from './features/ActivityItem';
 export { AscentLog } from './features/AscentLog';
 export { AscentsListItem } from './features/AscentsListItem';
 export { BlueLeaderboardListItem } from './features/BlueLeaderboardListItem';
@@ -24,6 +28,8 @@ export type { InfoCardProps, DetailItem } from './features/InfoCard';
 export { InfoCardCarousel } from './features/InfoCardCarousel';
 export type { InfoCardCarouselProps } from './features/InfoCardCarousel';
 export { LeaderboardListItem } from './features/LeaderboardListItem';
+export { ProfileNavButton } from './features/ProfileNavButton';
+export type { ProfileNavButtonProps } from './features/ProfileNavButton';
 export { RouteListItem } from './features/RouteListItem';
 export { SaveClimb } from './features/SaveClimb';
 export { ZoneAccordion } from './features/ZoneAccordion';

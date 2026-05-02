@@ -114,6 +114,8 @@ class Ascent(models.Model):
     climber = models.ForeignKey(User, on_delete=models.CASCADE, related_name="ascents")
     boulder = models.ForeignKey(Boulder, on_delete=models.CASCADE, related_name="ascents")
     ascent_type = models.CharField(max_length=20, choices=ASCENT_TYPES)
+    perceived_difficulty = models.CharField(max_length=20, choices=Boulder.DIFFICULTY_CHOICES)
+    liked = models.BooleanField()
     date_climbed = models.DateField(auto_now_add=True)
     points = models.PositiveIntegerField(default=0)
 

@@ -14,12 +14,14 @@ export function AddAscentModalExample() {
     difficulty: string;
     isFlash: boolean;
     comments: string;
+    liked: boolean;
   } | null>(null);
 
   const handleSubmit = (data: {
     difficulty: string;
     isFlash: boolean;
     comments: string;
+    liked: boolean;
   }) => {
     setLastSubmission(data);
     setModalVisible(false);
@@ -51,6 +53,9 @@ export function AddAscentModalExample() {
           </ThemedText>
           <ThemedText variant="body1">
             Comments: {lastSubmission.comments || 'None'}
+          </ThemedText>
+          <ThemedText variant="body1">
+            Liked: {lastSubmission.liked ? 'Yes' : 'No'}
           </ThemedText>
         </View>
       )}

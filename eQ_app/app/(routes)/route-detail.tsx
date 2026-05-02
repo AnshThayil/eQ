@@ -126,7 +126,7 @@ export default function RouteDetailScreen() {
               day: '2-digit',
               year: 'numeric',
             }),
-            rating: getDifficultyFromBoulder(boulderData.difficulty),
+            rating: getDifficultyFromBoulder(ascent.perceived_difficulty || boulderData.difficulty),
             isFlash: ascent.ascent_type === 'flash',
             position: index + 1,
           };
@@ -189,13 +189,13 @@ export default function RouteDetailScreen() {
     }
   };
 
-  const handleModalSubmit = async (data: { difficulty: string; isFlash: boolean; comments: string }) => {
+  const handleModalSubmit = async (data: { difficulty: string; isFlash: boolean; comments: string; liked: boolean }) => {
     if (!boulder) return;
 
     const ascentType = data.isFlash ? 'flash' : 'send';
 
     try {
-      const response = await logAscent(boulder.id, ascentType);
+      const response = await logAscent(boulder.id, ascentType, data.difficulty, data.liked);
       setModalVisible(false);
       setBoulder(response.boulder);
       // Reload to get updated ascents list
