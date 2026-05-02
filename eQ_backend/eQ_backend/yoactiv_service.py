@@ -93,6 +93,34 @@ class YoActivClient:
         payload = {"Mobile_No": mobile_no}
         return self.post("Users/Fetch", json=payload, timeout=timeout)
 
+    def save_bill(self, *, service_variation_id, start_date, end_date, amount,
+                  paid, transaction_id, purchase_date, country_code="+91",
+                  mobile, sales_staff_id=0, pt_staff_id=0, timeout=None):
+        """Record a completed sale in YoActiv via Billing/SaveBill.
+
+        Dates must be strings in DD-MM-YYYY format.
+        Amount and paid are in the currency unit (e.g. rupees, not paise).
+        """
+        payload = {
+            "ServiceDetails": [
+                {
+                    "serviceVariationid": service_variation_id,
+                    "StartDate": start_date,
+                    "EndDate": end_date,
+                    "amount": amount,
+                    "discountAmount": 0,
+                }
+            ],
+            "Paid": paid,
+            "TransactionID": transaction_id,
+            "Purchagedate": purchase_date,
+            "SalesStfid": sales_staff_id,
+            "PtStfid": pt_staff_id,
+            "CountryCode": country_code,
+            "Mobile": mobile,
+        }
+        return self.post("Billing/SaveBill", json=payload, timeout=timeout)
+
     def patch(self, endpoint: str, *, json=None, params=None, headers=None, timeout=None):
         return self.request("PATCH", endpoint, params=params, json=json, headers=headers, timeout=timeout)
 

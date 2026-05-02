@@ -1,5 +1,7 @@
+import logging
 import razorpay
 from decimal import Decimal
+from datetime import timedelta
 
 from django.conf import settings
 from rest_framework import status
@@ -8,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from explore.models import Service
+from eQ_backend.yoactiv_service import YoActivClient, YoActivAPIError
 from .models import Order, Payment
 from .serializers import (
     CreateOrderSerializer,
@@ -16,11 +19,75 @@ from .serializers import (
     OrderListSerializer,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def _razorpay_client():
     return razorpay.Client(
         auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
     )
+
+
+def _sync_to_yoactiv(order: Order) -> None:
+    """Push a paid order to the YoActiv Billing/SaveBill endpoint.
+
+    Failures are logged but never raised — the payment is already confirmed.
+    """
+    try:
+        service = order.service
+        gym = service.service_group.gym
+
+        if not gym.branch_id:
+            logger.warning("YoActiv sync skipped: gym %s has no branch_id", gym.id)
+            return
+
+        variation_id_str = service.yoactiv_service_variation_id
+        if not variation_id_str:
+            logger.warning("YoActiv sync skipped: service %s has no yoactiv_service_variation_id", service.id)
+            return
+
+        try:
+            phone = order.user.profile.phone_number or ''
+        except Exception:
+            phone = ''
+
+        if not phone:
+            logger.warning("YoActiv sync skipped: user %s has no phone number", order.user.id)
+            return
+
+        purchase_date = order.created_at.date()
+        start_date = purchase_date
+
+        if service.access_type == 'single_day':
+            end_date = start_date
+        elif service.duration_days:
+            end_date = start_date + timedelta(days=service.duration_days)
+        else:
+            end_date = start_date
+
+        fmt = "%d-%m-%Y"
+        amount_rupees = int(order.amount_paise / 100)
+
+        client = YoActivClient(
+            api_key=settings.YOACTIV_API_KEY,
+            branch_id=gym.branch_id,
+        )
+        client.save_bill(
+            service_variation_id=int(variation_id_str),
+            start_date=start_date.strftime(fmt),
+            end_date=end_date.strftime(fmt),
+            amount=amount_rupees,
+            paid=amount_rupees,
+            transaction_id=order.razorpay_order_id,
+            purchase_date=purchase_date.strftime(fmt),
+            mobile=phone,
+        )
+        logger.info("YoActiv SaveBill synced for order %s", order.razorpay_order_id)
+
+    except YoActivAPIError as exc:
+        logger.error("YoActiv SaveBill failed for order %s: %s", order.razorpay_order_id, exc)
+    except Exception as exc:
+        logger.exception("Unexpected error during YoActiv sync for order %s: %s", order.razorpay_order_id, exc)
 
 
 class CreateOrderView(APIView):
@@ -112,6 +179,10 @@ class VerifyPaymentView(APIView):
             razorpay_payment_id=razorpay_payment_id,
             razorpay_signature=razorpay_signature,
         )
+
+        # Sync to YoActiv CRM (best-effort — never fail the payment response)
+        _sync_to_yoactiv(order)
+
         return Response({'detail': 'Payment verified successfully.'}, status=status.HTTP_200_OK)
 
 
