@@ -1,5 +1,5 @@
 import { BottomNavBar } from "@/components";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import {
   Montserrat_600SemiBold,
 } from '@expo-google-fonts/montserrat';
@@ -9,14 +9,69 @@ import {
   Rubik_500Medium,
   Rubik_600SemiBold,
 } from '@expo-google-fonts/rubik';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useFonts } from "expo-font";
-import { Stack, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
+function ConditionalNavBar(props: BottomTabBarProps) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return null;
+  return <BottomNavBar {...props} />;
+}
+
+function AppContent() {
+  return (
+    <Tabs
+      tabBar={(props) => <ConditionalNavBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null, // Hide from tabs
+        }}
+      />
+      <Tabs.Screen
+        name="login"
+        options={{
+          href: null, // Hide from tabs
+        }}
+      />
+      <Tabs.Screen
+        name="(routes)"
+        options={{
+          title: "Routes",
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: "Leaderboard",
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: "Explore",
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+        }}
+      />
+    </Tabs>
+  );
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -44,49 +99,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <SafeAreaProvider>
-        <Tabs
-          tabBar={(props) => <BottomNavBar {...props} />}
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Tabs.Screen
-            name="index"
-            options={{
-              href: null, // Hide from tabs
-            }}
-          />
-          <Tabs.Screen
-            name="login"
-            options={{
-              href: null, // Hide from tabs
-            }}
-          />
-          <Tabs.Screen
-            name="(routes)"
-            options={{
-              title: "Routes",
-            }}
-          />
-          <Tabs.Screen
-            name="leaderboard"
-            options={{
-              title: "Leaderboard",
-            }}
-          />
-          <Tabs.Screen
-            name="explore"
-            options={{
-              title: "Explore",
-            }}
-          />
-          <Tabs.Screen
-            name="profile"
-            options={{
-              title: "Profile",
-            }}
-          />
-        </Tabs>
+        <AppContent />
       </SafeAreaProvider>
     </AuthProvider>
   );

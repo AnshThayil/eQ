@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { HistoryIcon, HoldIcon, InfoIcon, SaveIcon } from '@/components/icons';
 import { SettingsIcon } from '@/components/icons/SettingsIcon';
 import { getUserProfile, type UserProfile } from '@/services/api';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 
@@ -66,7 +67,8 @@ function GradeCircleIcon({ grade }: { grade: string | null }) {
 }
 
 export default function ProfileScreen() {
-  const { isAuthenticated, username, signOut } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, username, signOut } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -156,10 +158,30 @@ export default function ProfileScreen() {
     try {
       setIsSigningOut(true);
       await signOut();
+      router.replace('/login');
     } finally {
       setIsSigningOut(false);
     }
   };
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <View style={styles.outerContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.neutral.white} />
+        <SafeAreaView style={styles.authContainer}>
+          <ThemedText variant="body1" style={styles.authText}>
+            Please log in to view your profile
+          </ThemedText>
+          <Button
+            text="Go to Login"
+            onPress={() => router.push('/login')}
+            variant="primary"
+            style={styles.button}
+          />
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.outerContainer}>
@@ -406,5 +428,19 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: Theme.spacing.sm,
+  },
+  authContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: Theme.spacing.lg,
+    gap: Theme.spacing.md,
+  },
+  authText: {
+    color: Theme.semantic.text.secondary,
+    textAlign: 'center',
+  },
+  button: {
+    width: '100%',
   },
 });

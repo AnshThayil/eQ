@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: Theme.spacing.sm,
   },
   title: {

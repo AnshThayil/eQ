@@ -48,14 +48,20 @@ const tabConfigs: Record<string, TabConfig> = {
   },
 };
 
+const EXPLORE_RELATED_ROUTES = new Set(['explore-classes', 'explore-events', 'explore-memberships']);
+
 export function BottomNavBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const currentRouteName = state.routes[state.index]?.name ?? '';
   
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
+        const isCurrentTab = state.index === index;
+        const isFocused =
+          isCurrentTab ||
+          (route.name === 'explore' && EXPLORE_RELATED_ROUTES.has(currentRouteName));
         
         // Skip routes without tab config (like index)
         const tabConfig = tabConfigs[route.name];

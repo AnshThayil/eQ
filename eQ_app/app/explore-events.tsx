@@ -429,11 +429,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.md,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Theme.colors.neutral[200],
+    borderColor: Theme.colors.neutral[300],
   },
   modalOptionSelected: {
     borderColor: Theme.colors.primary[500],
-    backgroundColor: Theme.colors.primary[50],
+    backgroundColor: Theme.colors.primary[100],
   },
   modalOptionCopy: {
     flex: 1,

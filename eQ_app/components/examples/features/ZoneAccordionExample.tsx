@@ -155,6 +155,7 @@ export function ZoneAccordionExample() {
                 climbingStyle={route.climbingStyle}
                 numberOfSends={route.numberOfSends}
                 isSent={sentRoutes.has(route.id)}
+                isSaved={false}
                 onAscentPress={() => handleAscentPress(route.id)}
               />
             ))}
