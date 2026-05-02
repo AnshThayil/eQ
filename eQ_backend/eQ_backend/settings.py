@@ -53,7 +53,7 @@ DEBUG = True
 
 # Add your ngrok URL here when using ngrok tunnel
 # Example: ALLOWED_HOSTS = ['xxxx-xxxx-xxxx.ngrok-free.app', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'unpolarized-tiana-irretraceable.ngrok-free.dev']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'unpolarized-tiana-irretraceable.ngrok-free.dev', '64.227.142.137']
 
 
 # Application definition
@@ -110,8 +110,12 @@ WSGI_APPLICATION = 'eQ_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
