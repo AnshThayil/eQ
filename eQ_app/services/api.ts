@@ -227,8 +227,8 @@ export const refreshToken = async (refresh: string) => {
   return access;
 };
 
-export const logout = async () => {
-  const response = await apiClient.post('/auth/logout/');
+export const logout = async (refresh: string) => {
+  const response = await apiClient.post('/auth/logout/', { refresh });
   setAuthToken(null);
   return response.data;
 };

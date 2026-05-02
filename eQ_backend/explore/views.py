@@ -3,7 +3,6 @@ import logging
 from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework import permissions
@@ -159,7 +158,6 @@ class ExploreEventsView(BaseExploreServicesView):
 	response_key = 'events'
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def get_gym_services_json(request):
 	"""
@@ -177,6 +175,8 @@ def get_gym_services_json(request):
 		]
 	}
 	"""
+	if not request.user.is_staff:
+		return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
 	try:
 		gym_id = request.GET.get('gym_id')
 		if not gym_id:
@@ -205,7 +205,6 @@ def get_gym_services_json(request):
 		return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def get_service_variations_json(request):
 	"""
@@ -231,6 +230,8 @@ def get_service_variations_json(request):
 		]
 	}
 	"""
+	if not request.user.is_staff:
+		return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
 	try:
 		service_group_id = request.GET.get('service_group_id')
 		

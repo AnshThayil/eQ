@@ -50,17 +50,10 @@ class BoulderAscentView(APIView):
 	POST body should include 'ascent_type' (one of Ascent.ASCENT_TYPES keys).
 	The view will create an Ascent and increment Boulder.num_ascents.
 	"""
+	permission_classes = [permissions.IsAuthenticated]
 
 	def _get_climber(self, request):
-		# Prefer authenticated user; fall back to explicit climber id in body
-		user = getattr(request, 'user', None)
-		if user and user.is_authenticated:
-			return user
-		climber_id = request.data.get('climber') if hasattr(request, 'data') else None
-		from django.contrib.auth.models import User
-		if climber_id:
-			return get_object_or_404(User, pk=climber_id)
-		return None
+		return request.user
 
 	def _normalize_difficulty(self, difficulty):
 		if not difficulty:
@@ -121,17 +114,8 @@ class BoulderAscentView(APIView):
 	@transaction.atomic
 	def delete(self, request, pk):
 		boulder = get_object_or_404(Boulder, pk=pk)
-		climber = getattr(request, 'user', None)
-		if climber and climber.is_authenticated:
-			ascent_qs = Ascent.objects.filter(climber=climber, boulder=boulder)
-		else:
-			# Allow passing climber id in body for deletion if unauthenticated
-			climber_id = request.data.get('climber') if hasattr(request, 'data') else None
-			if not climber_id:
-				return Response({'detail': 'Authentication required or provide climber id.'}, status=status.HTTP_401_UNAUTHORIZED)
-			from django.contrib.auth.models import User
-			climber = get_object_or_404(User, pk=climber_id)
-			ascent_qs = Ascent.objects.filter(climber=climber, boulder=boulder)
+		climber = request.user
+		ascent_qs = Ascent.objects.filter(climber=climber, boulder=boulder)
 
 		ascent = ascent_qs.first()
 		if not ascent:
@@ -329,10 +313,19 @@ class UserProfileView(APIView):
 
 
 class LogoutView(APIView):
-	"""Logout endpoint for token blacklisting (if using token blacklist) or just client-side token removal."""
-	
+	"""Blacklists the submitted refresh token, invalidating it server-side."""
+	permission_classes = [permissions.IsAuthenticated]
+
 	def post(self, request):
-		# For JWT tokens, logout is typically handled client-side by removing tokens
-		# If using djangorestframework-simplejwt with token blacklist, you could blacklist the refresh token here
-		# For now, we'll just return a success response
+		from rest_framework_simplejwt.tokens import RefreshToken
+		from rest_framework_simplejwt.exceptions import TokenError
+
+		refresh_token = request.data.get('refresh')
+		if not refresh_token:
+			return Response({'detail': 'Refresh token required.'}, status=status.HTTP_400_BAD_REQUEST)
+		try:
+			token = RefreshToken(refresh_token)
+			token.blacklist()
+		except TokenError:
+			return Response({'detail': 'Token is invalid or already blacklisted.'}, status=status.HTTP_400_BAD_REQUEST)
 		return Response({'detail': 'Logout successful.'}, status=status.HTTP_200_OK)
