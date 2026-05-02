@@ -109,3 +109,20 @@ class AscentSerializerWithoutBoulder(serializers.ModelSerializer):
         model = Ascent
         # include all fields except `boulder`
         exclude = ('boulder',)
+
+
+class UserProfileStatsSerializer(serializers.Serializer):
+    total_ascents = serializers.IntegerField()
+    highest_grade = serializers.CharField(allow_null=True)
+    strongest_climbing_style = serializers.CharField(allow_null=True)
+    climbs_by_level = serializers.DictField(child=serializers.IntegerField())
+    flashes_by_level = serializers.DictField(child=serializers.IntegerField())
+    climbing_style_distribution = serializers.DictField(child=serializers.IntegerField())
+
+
+class UserProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    first_name = serializers.CharField(allow_blank=True)
+    last_name = serializers.CharField(allow_blank=True)
+    stats = UserProfileStatsSerializer()

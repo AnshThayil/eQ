@@ -15,13 +15,16 @@ export { ActivityItemExample } from './features/ActivityItemExample';
 export { AscentLogExample } from './features/AscentLogExample';
 export { AscentsListItemExample } from './features/AscentsListItemExample';
 export { BlueLeaderboardListItemExample } from './features/BlueLeaderboardListItemExample';
+export { BarGraphExample } from './features/BarGraphExample';
 export { ExploreClassListItemExample } from './features/ExploreClassListItemExample';
 export { InfoCardExample } from './features/InfoCardExample';
 export { InfoCardCarouselExample } from './features/InfoCardCarouselExample';
 export { LeaderboardListItemExample } from './features/LeaderboardListItemExample';
+export { PieChartExample } from './features/PieChartExample';
 export { ProfileNavButtonExample } from './features/ProfileNavButtonExample';
 export { RouteListItemExample } from './features/RouteListItemExample';
 export { SaveClimbExample } from './features/SaveClimbExample';
+export { StatsCardExample } from './features/StatsCardExample';
 export { ZoneAccordionExample } from './features/ZoneAccordionExample';
 
 

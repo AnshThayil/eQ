@@ -140,25 +140,15 @@ export interface LeaderboardEntry {
 export interface UserProfile {
   id: number;
   username: string;
-  email: string;
   first_name: string;
   last_name: string;
-  ascents: {
-    id: number;
-    boulder_id: number;
-    boulder_grade: string;
-    boulder_color: string;
-    wall_name: string;
-    gym_name: string;
-    ascent_type: 'flash' | 'send';
-    date_climbed: string;
-    points: number;
-  }[];
   stats: {
     total_ascents: number;
-    total_points: number;
-    flash_count: number;
-    send_count: number;
+    highest_grade: string | null;
+    strongest_climbing_style: string | null;
+    climbs_by_level: Record<string, number>;
+    flashes_by_level: Record<string, number>;
+    climbing_style_distribution: Record<string, number>;
   };
 }
 

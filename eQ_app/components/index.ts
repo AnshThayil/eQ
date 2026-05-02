@@ -21,6 +21,8 @@ export type { ActivityItemProps } from './features/ActivityItem';
 export { AscentLog } from './features/AscentLog';
 export { AscentsListItem } from './features/AscentsListItem';
 export { BlueLeaderboardListItem } from './features/BlueLeaderboardListItem';
+export { BarGraph } from './features/BarGraph';
+export type { BarGraphProps } from './features/BarGraph';
 export { ExploreClassListItem } from './features/ExploreClassListItem';
 export { FilterModal } from './features/FilterModal';
 export { InfoCard } from './features/InfoCard';
@@ -28,10 +30,14 @@ export type { InfoCardProps, DetailItem } from './features/InfoCard';
 export { InfoCardCarousel } from './features/InfoCardCarousel';
 export type { InfoCardCarouselProps } from './features/InfoCardCarousel';
 export { LeaderboardListItem } from './features/LeaderboardListItem';
+export { PieChart } from './features/PieChart';
+export type { PieChartProps, PieChartSegment } from './features/PieChart';
 export { ProfileNavButton } from './features/ProfileNavButton';
 export type { ProfileNavButtonProps } from './features/ProfileNavButton';
 export { RouteListItem } from './features/RouteListItem';
 export { SaveClimb } from './features/SaveClimb';
+export { StatsCard } from './features/StatsCard';
+export type { StatsCardProps } from './features/StatsCard';
 export { ZoneAccordion } from './features/ZoneAccordion';
 
 // Icons

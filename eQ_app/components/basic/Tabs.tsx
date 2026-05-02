@@ -4,12 +4,27 @@
  *
  * A tab container that adds tabbing capabilities to its children.
  * Each child corresponds to a tab in the tabs array by index.
+ * Supports swipe gestures and an animated sliding tab indicator.
  */
 
 import { Theme } from '@/constants/Theme';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  Animated,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { ThemedText } from './ThemedText';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+type TabLayout = { x: number; width: number };
 
 export interface TabsProps {
   /**
@@ -41,7 +56,53 @@ export interface TabsProps {
 
 export function Tabs({ tabs, children, defaultTab = 0, style, tabBarStyle }: TabsProps) {
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [tabLayouts, setTabLayouts] = useState<(TabLayout | undefined)[]>([]);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollX = useRef(new Animated.Value(defaultTab * SCREEN_WIDTH)).current;
   const childArray = React.Children.toArray(children);
+
+  const indicatorReady =
+    tabLayouts.length === tabs.length && tabLayouts.every(Boolean);
+
+  const handleTabPress = useCallback((index: number) => {
+    setActiveTab(index);
+    scrollRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
+  }, []);
+
+  const handleMomentumScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+      setActiveTab(index);
+    },
+    [],
+  );
+
+  const handleTabLayout = useCallback(
+    (index: number, x: number, width: number) => {
+      setTabLayouts(prev => {
+        const next = [...prev];
+        next[index] = { x, width };
+        return next;
+      });
+    },
+    [],
+  );
+
+  const inputRange = tabs.map((_, i) => i * SCREEN_WIDTH);
+  const indicatorTranslateX = indicatorReady
+    ? scrollX.interpolate({
+        inputRange,
+        outputRange: (tabLayouts as TabLayout[]).map(l => l.x),
+        extrapolate: 'clamp',
+      })
+    : undefined;
+  const indicatorWidth = indicatorReady
+    ? scrollX.interpolate({
+        inputRange,
+        outputRange: (tabLayouts as TabLayout[]).map(l => l.width),
+        extrapolate: 'clamp',
+      })
+    : undefined;
 
   return (
     <View style={[styles.container, style]}>
@@ -53,7 +114,14 @@ export function Tabs({ tabs, children, defaultTab = 0, style, tabBarStyle }: Tab
             <Pressable
               key={index}
               style={[styles.tab, isActive ? styles.activeTab : styles.inactiveTab]}
-              onPress={() => setActiveTab(index)}
+              onPress={() => handleTabPress(index)}
+              onLayout={e =>
+                handleTabLayout(
+                  index,
+                  e.nativeEvent.layout.x,
+                  e.nativeEvent.layout.width,
+                )
+              }
               accessibilityRole="tab"
               accessibilityLabel={label}
               accessibilityState={{ selected: isActive }}
@@ -67,12 +135,41 @@ export function Tabs({ tabs, children, defaultTab = 0, style, tabBarStyle }: Tab
             </Pressable>
           );
         })}
+
+        {/* Animated sliding indicator line */}
+        {indicatorReady &&
+          indicatorTranslateX !== undefined &&
+          indicatorWidth !== undefined && (
+            <Animated.View
+              style={[
+                styles.indicator,
+                {
+                  width: indicatorWidth,
+                  transform: [{ translateX: indicatorTranslateX }],
+                },
+              ]}
+            />
+          )}
       </View>
 
-      {/* Active Tab Content */}
-      <View style={styles.content}>
-        {childArray[activeTab] ?? null}
-      </View>
+      {/* Swipeable paged content */}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={e => scrollX.setValue(e.nativeEvent.contentOffset.x)}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        contentOffset={defaultTab > 0 ? { x: defaultTab * SCREEN_WIDTH, y: 0 } : undefined}
+        style={styles.scrollView}
+      >
+        {childArray.map((child, index) => (
+          <View key={index} style={styles.page}>
+            {child}
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -93,14 +190,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.lg + Theme.spacing.xs,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    position: 'relative',
   },
   activeTab: {
     backgroundColor: Theme.colors.neutral[100],
     borderTopLeftRadius: Theme.borderRadius.sm,
     borderTopRightRadius: Theme.borderRadius.sm,
-    borderBottomWidth: 2,
-    borderBottomColor: Theme.colors.primary[500],
     marginBottom: -1,
     paddingBottom: Theme.spacing.md,
   },
@@ -113,7 +207,16 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: Theme.colors.neutral.black,
   },
-  content: {
+  indicator: {
+    position: 'absolute',
+    bottom: 0,
+    height: 2,
+    backgroundColor: Theme.colors.primary[500],
+  },
+  scrollView: {
     flex: 1,
+  },
+  page: {
+    width: SCREEN_WIDTH,
   },
 });

@@ -1,5 +1,6 @@
 
 import logging
+from collections import Counter
 
 from rest_framework import viewsets, mixins, status, permissions
 from rest_framework.views import APIView
@@ -8,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from .models import Gym, Wall, Boulder, Ascent
-from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer
+from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer, UserProfileSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -243,57 +244,89 @@ class LatestAscentsView(APIView):
 
 
 class UserProfileView(APIView):
-	"""Returns the authenticated user's profile with ascent history and stats."""
+	"""Returns the authenticated user's basic profile and ascent summary stats."""
+
+	permission_classes = [permissions.IsAuthenticated]
 	
 	def get(self, request):
 		user = request.user
-		if not user.is_authenticated:
-			return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
-		
-		# User basic info
-		profile = {
+		profile_grade_levels = [grade for grade, _label in Boulder.GRADE_CHOICES if grade in {"L1", "L2", "L3", "L4", "L5", "L6", "L7"}]
+		ascents = list(
+			Ascent.objects.filter(climber=user).select_related('boulder')
+		)
+
+		grade_rank = {
+			grade: points for grade, points in Ascent.GRADE_POINTS.items()
+		}
+		grade_values = [
+			ascent.boulder.setter_grade
+			for ascent in ascents
+			if ascent.boulder and ascent.boulder.setter_grade
+		]
+		highest_grade = (
+			max(grade_values, key=lambda grade: grade_rank.get(grade, -1))
+			if grade_values
+			else None
+		)
+
+		style_counts = Counter(
+			ascent.boulder.climbing_style
+			for ascent in ascents
+			if ascent.boulder and ascent.boulder.climbing_style
+		)
+		strongest_style_key = None
+		if style_counts:
+			strongest_style_key = sorted(
+				style_counts.items(),
+				key=lambda item: (-item[1], item[0]),
+			)[0][0]
+
+		style_labels = dict(Boulder.STYLE_CHOICES)
+		climbing_style_distribution = {
+			label: style_counts.get(style_key, 0)
+			for style_key, label in Boulder.STYLE_CHOICES
+		}
+		climbs_by_level = {
+			grade: 0 for grade in profile_grade_levels
+		}
+		climbs_by_level.update(
+			Counter(
+				ascent.boulder.setter_grade
+				for ascent in ascents
+				if ascent.boulder and ascent.boulder.setter_grade in climbs_by_level
+			)
+		)
+		flashes_by_level = {
+			grade: 0 for grade in profile_grade_levels
+		}
+		flashes_by_level.update(
+			Counter(
+				ascent.boulder.setter_grade
+				for ascent in ascents
+				if (
+					ascent.boulder
+					and ascent.ascent_type == 'flash'
+					and ascent.boulder.setter_grade in flashes_by_level
+				)
+			)
+		)
+		profile_data = {
 			'id': user.id,
 			'username': user.username,
-			'email': user.email,
 			'first_name': user.first_name,
 			'last_name': user.last_name,
-			'phone_number': getattr(getattr(user, 'profile', None), 'phone_number', None),
+			'stats': {
+				'total_ascents': len(ascents),
+				'highest_grade': highest_grade,
+				'strongest_climbing_style': style_labels.get(strongest_style_key, None),
+				'climbs_by_level': climbs_by_level,
+				'flashes_by_level': flashes_by_level,
+				'climbing_style_distribution': climbing_style_distribution,
+			},
 		}
-		
-		# Get user's ascents
-		ascents = Ascent.objects.filter(climber=user).select_related('boulder', 'boulder__wall', 'boulder__wall__gym')
-		ascent_data = []
-		total_points = 0
-		flash_count = 0
-		send_count = 0
-		
-		for ascent in ascents:
-			ascent_data.append({
-				'id': ascent.id,
-				'boulder_id': ascent.boulder.id,
-				'boulder_grade': ascent.boulder.setter_grade,
-				'boulder_color': ascent.boulder.color,
-				'wall_name': ascent.boulder.wall.name,
-				'gym_name': ascent.boulder.wall.gym.name,
-				'ascent_type': ascent.ascent_type,
-				'date_climbed': ascent.date_climbed,
-				'points': ascent.points,
-			})
-			total_points += ascent.points
-			if ascent.ascent_type == 'flash':
-				flash_count += 1
-			elif ascent.ascent_type == 'send':
-				send_count += 1
-		
-		profile['ascents'] = ascent_data
-		profile['stats'] = {
-			'total_ascents': len(ascent_data),
-			'total_points': total_points,
-			'flash_count': flash_count,
-			'send_count': send_count,
-		}
-		
-		return Response(profile)
+
+		serializer = UserProfileSerializer(profile_data)
+		return Response(serializer.data)
 
 
 class LogoutView(APIView):

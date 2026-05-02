@@ -19,7 +19,7 @@ import {
 } from '@/components';
 import { Theme } from '@/constants';
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl, LayoutAnimation } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { getGyms, getGym, logAscent, deleteAscent, Gym, Boulder, Wall } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -317,6 +317,21 @@ export default function RoutesScreen() {
   };
 
   const toggleZone = async (zoneId: string) => {
+    LayoutAnimation.configureNext({
+      duration: 220,
+      update: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+      },
+      create: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      delete: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+    });
+
     const updatedZones = zones.map((zone) =>
       zone.id === zoneId 
         ? { ...zone, isOpen: !zone.isOpen } 
