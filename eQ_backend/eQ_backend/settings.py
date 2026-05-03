@@ -49,12 +49,27 @@ _load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = 'django-insecure-sv0(0hti_+ix^yssren9@0zb=#b5yqx7@pr6my$)vme1njxwe6'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # Add your ngrok URL here when using ngrok tunnel
 # Example: ALLOWED_HOSTS = ['xxxx-xxxx-xxxx.ngrok-free.app', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '64.227.142.137', 'eq-backend.jointadventure.in']
+ALLOWED_HOSTS = ['eq-backend.jointadventure.in']
+CSRF_TRUSTED_ORIGINS = ['https://eq-backend.jointadventure.in']
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = False
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+REFERRER_POLICY = "same-origin"
+
+USE_X_FORWARDED_HOST = False
 
 # Application definition
 
