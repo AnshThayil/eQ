@@ -53,7 +53,7 @@ DEBUG = True
 
 # Add your ngrok URL here when using ngrok tunnel
 # Example: ALLOWED_HOSTS = ['xxxx-xxxx-xxxx.ngrok-free.app', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '64.227.142.137', 'eq-backend.anshthayil.in']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '64.227.142.137', 'eq-backend.jointadventure.in']
 
 
 # Application definition
