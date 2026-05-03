@@ -187,6 +187,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+    'EXCEPTION_HANDLER': 'eQ_backend.exception_handler.custom_exception_handler',
 }
 
 YOACTIV_API_KEY = os.environ.get('YOACTIV_API_KEY')
