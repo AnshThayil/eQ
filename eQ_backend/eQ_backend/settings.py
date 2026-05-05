@@ -46,23 +46,26 @@ _load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-sv0(0hti_+ix^yssren9@0zb=#b5yqx7@pr6my$)vme1njxwe6'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-sv0(0hti_+ix^yssren9@0zb=#b5yqx7@pr6my$)vme1njxwe6')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# Set DJANGO_DEBUG=True in your .env to enable debug mode locally.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-# Add your ngrok URL here when using ngrok tunnel
-# Example: ALLOWED_HOSTS = ['xxxx-xxxx-xxxx.ngrok-free.app', 'localhost', '127.0.0.1']
 ALLOWED_HOSTS = ['eq-backend.jointadventure.in']
 CSRF_TRUSTED_ORIGINS = ['https://eq-backend.jointadventure.in']
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+if DEBUG:
+    ALLOWED_HOSTS += ['localhost', '127.0.0.1', '0.0.0.0']
+    CSRF_TRUSTED_ORIGINS += ['http://localhost:8000', 'http://127.0.0.1:8000']
 
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
 SECURE_HSTS_PRELOAD = False
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -181,7 +184,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Allow all origins in development (including Expo tunnels)
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = list('*')  # Allow all headers
+CORS_ALLOW_HEADERS = ['*']
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -252,12 +255,4 @@ LOGGING = {
     },
 }
 
-STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-import os
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
