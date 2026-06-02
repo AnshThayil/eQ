@@ -562,9 +562,15 @@ select option{background:#18181f;}
 <div class="screen" id="screen-member">
   <div class="pg-title">&#128100; Member Action</div>
   <div style="display:flex;flex-direction:column;gap:0;" id="member-empty-state">
-    <div style="text-align:center;padding:60px 20px;color:var(--muted);">
-      <div style="font-size:36px;margin-bottom:10px;">&#128100;</div>
-      <div style="font-size:14px;">Search for a member in the bar above</div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch">
+        <div class="ct">Members at This Gym</div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshMemberList()">Refresh</button>
+      </div>
+      <div class="cb" style="padding:10px;">
+        <div id="member-list-state" style="font-size:12px;color:var(--muted);padding:8px 4px;">Open this tab to load members.</div>
+        <div id="member-list-items"></div>
+      </div>
     </div>
   </div>
   <div id="member-loaded" style="display:none;">
@@ -1712,16 +1718,153 @@ var CLS_DATA = {
 };
 
 // ── HELPERS ──
-function getMember(id){ return MEMBERS.find(function(m){return m.id===id;})||null; }
+var _apiMembers=[];
+var _isLoadingMembers=false;
+var _memberListLoadedForGym=null;
+
+function initialsFromName(name){
+  var parts=(name||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return 'MB';
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+
+function normalizeYoActivMember(raw){
+  if(!raw||typeof raw!=='object') return null;
+  var mobile=String(raw.Mobile_No||raw.Mobile||raw.Phone||raw.phone||'').trim();
+  var yoId=String(raw.User_Id||raw.UserID||raw.UserId||raw.id||mobile||Math.random().toString(36).slice(2));
+  var name=String(raw.Name||raw.FullName||raw.User_Name||raw.Username||raw.MemberName||('Member '+yoId)).trim();
+  var email=String(raw.Email||raw.EmailId||raw.email||'').trim();
+  var statusRaw=String(raw.Status||'Active').toLowerCase();
+  var status=statusRaw.indexOf('active')>-1?'active':'inactive';
+  return {
+    id:'ya-'+yoId,
+    init:initialsFromName(name),
+    name:name,
+    phone:mobile,
+    email:email,
+    plan:String(raw.PlanName||raw.ServiceName||raw.PackageName||'Member'),
+    planType:'single',
+    status:status,
+    homeLocation:currentLocation?currentLocation.id:'1',
+    accessLocations:[currentLocation?currentLocation.id:'1'],
+    balance:Number(raw.Balance||0)||0,
+    visits:Number(raw.VisitCount||0)||0,
+    lastVisit:String(raw.LastVisitDate||raw.LastVisit||'—'),
+    spend:'₹0',
+    pts:0,
+    agreement:'valid',
+    rfid:String(raw.RFID||raw.Rfid||''),
+    dob:'',
+    addr:'',
+    city:'',
+    pin:'',
+    state:'Karnataka',
+    ec_name:'',
+    ec_rel:'',
+    ec_phone:'',
+    ref:'',
+    expiry:'',
+    notes:'',
+    recentVisits:[]
+  };
+}
+
+function extractMembersFromYoActivPayload(payload){
+  if(Array.isArray(payload)) return payload;
+  if(!payload||typeof payload!=='object') return [];
+  if(Array.isArray(payload.Results)) return payload.Results;
+  if(Array.isArray(payload.results)) return payload.results;
+  if(Array.isArray(payload.Data)) return payload.Data;
+  if(Array.isArray(payload.data)) return payload.data;
+  if(Array.isArray(payload.Users)) return payload.Users;
+  if(Array.isArray(payload.users)) return payload.users;
+  return [];
+}
+
+function renderMemberList(){
+  var stateEl=$('member-list-state');
+  var listEl=$('member-list-items');
+  if(!stateEl||!listEl) return;
+
+  if(_isLoadingMembers){
+    stateEl.style.display='block';
+    stateEl.textContent='Loading members…';
+    listEl.innerHTML='';
+    return;
+  }
+
+  if(!_apiMembers.length){
+    stateEl.style.display='block';
+    stateEl.textContent='No members found for this gym.';
+    listEl.innerHTML='';
+    return;
+  }
+
+  stateEl.style.display='none';
+  var html='';
+  _apiMembers.forEach(function(m){
+    var tagCls=m.status==='active'?'tg':'to';
+    var tagTxt=m.status==='active'?'Active':'Inactive';
+    html+='<div class="mbr-row" onclick="loadMember(\''+m.id+'\')">'+
+      '<div class="m-av">'+m.init+'</div>'+
+      '<div><div class="m-name">'+m.name+'</div><div class="m-sub">'+(m.phone||'No phone')+'</div></div>'+
+      '<div class="m-right"><span class="tag '+tagCls+'">'+tagTxt+'</span></div>'+
+      '</div>';
+  });
+  listEl.innerHTML=html;
+}
+
+function fetchMembersForCurrentGym(force){
+  if(!currentLocation) return;
+  var gymId=currentLocation.gymId||currentLocation.id;
+  if(!gymId) return;
+  if(!force&&_memberListLoadedForGym===String(gymId)&&_apiMembers.length){
+    renderMemberList();
+    return;
+  }
+
+  _isLoadingMembers=true;
+  renderMemberList();
+  apiFetch('/api/members/?gym_id='+encodeURIComponent(gymId))
+    .then(function(r){return r.json().then(function(d){return{ok:r.ok,data:d};});})
+    .then(function(res){
+      if(!res.ok) throw new Error((res.data&&res.data.detail)||'Could not load members.');
+      var rawMembers=extractMembersFromYoActivPayload(res.data);
+      _apiMembers=rawMembers.map(normalizeYoActivMember).filter(Boolean);
+      _memberListLoadedForGym=String(gymId);
+      _isLoadingMembers=false;
+      renderMemberList();
+    })
+    .catch(function(err){
+      _isLoadingMembers=false;
+      _apiMembers=[];
+      _memberListLoadedForGym=null;
+      renderMemberList();
+      var stateEl=$('member-list-state');
+      if(stateEl) stateEl.textContent=err&&err.message?err.message:'Could not load members for this gym.';
+    });
+}
+
+function refreshMemberList(){
+  _memberListLoadedForGym=null;
+  fetchMembersForCurrentGym(true);
+}
+
+function getMember(id){
+  var source=_apiMembers.length?_apiMembers:MEMBERS;
+  return source.find(function(m){return m.id===id;})||null;
+}
 
 function searchMembers(q){
   if(!q||q.length<2) return [];
   q=q.toLowerCase().replace(/\s/g,'');
-  return MEMBERS.filter(function(m){
+  var source=_apiMembers.length?_apiMembers:MEMBERS;
+  return source.filter(function(m){
     return m.name.toLowerCase().replace(/\s/g,'').indexOf(q)>-1 ||
            m.phone.replace(/\s/g,'').indexOf(q)>-1 ||
-           m.email.toLowerCase().indexOf(q)>-1 ||
-           m.rfid.toLowerCase().replace(/-/g,'').indexOf(q.replace(/-/g,''))>-1;
+           (m.email||'').toLowerCase().indexOf(q)>-1 ||
+           (m.rfid||'').toLowerCase().replace(/-/g,'').indexOf(q.replace(/-/g,''))>-1;
   });
 }
 
@@ -1804,24 +1947,42 @@ function doLogin(){
 }
 
 function loadGymLocations(){
-  apiFetch('/api/gyms/').then(function(r){return r.json();})
+  $('loc-err').textContent='';
+  apiFetch('/api/gyms/').then(function(r){
+    return r.json().then(function(d){ return { ok:r.ok, data:d }; });
+  })
   .then(function(data){
-    var gyms=data.results||data;
-    if(!gyms||!gyms.length) gyms=[{id:1,name:'eQ Gym',branch_id:null}];
+    if(!data.ok){
+      throw new Error((data.data&&data.data.detail)||'Could not load gyms from backend.');
+    }
+    var gyms=data.data.results||data.data;
+    if(!Array.isArray(gyms)||!gyms.length){
+      _apiGyms=[];
+      currentStaff.locations=[];
+      renderLocPickerFromGyms(_apiGyms);
+      $('loc-err').textContent='No gyms found in backend.';
+      return;
+    }
     _apiGyms=gyms.map(function(g){
       var short=g.name.replace(/^eq\s*/i,'').trim()||g.name;
       return{id:String(g.id),gymId:g.id,name:g.name,short:short,addr:''};
     });
     currentStaff.locations=_apiGyms.map(function(l){return l.id;});
     renderLocPickerFromGyms(_apiGyms);
-  }).catch(function(){
-    _apiGyms=[{id:'1',gymId:1,name:'eQ Hoodi',short:'Hoodi',addr:'ITPL Road, Hoodi'}];
-    currentStaff.locations=['1'];
+  }).catch(function(err){
+    _apiGyms=[];
+    currentStaff.locations=[];
     renderLocPickerFromGyms(_apiGyms);
+    $('loc-err').textContent=(err&&err.message)?err.message:'Cannot load gyms from backend.';
   });
 }
 
 function renderLocPickerFromGyms(gyms){
+  if(!gyms||!gyms.length){
+    $('loc-grid-picker').innerHTML='<div style="grid-column:1/-1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;">No gym locations available.</div>';
+    $('loc-confirm-btn').disabled=true;
+    return;
+  }
   var html='';
   gyms.forEach(function(loc,idx){
     html+='<button class="loc-btn" onclick="selectLocGym(this,'+idx+')" type="button">';
@@ -1866,6 +2027,10 @@ function doLocationLogin(){
   document.querySelectorAll('.loc-btn').forEach(function(b){b.classList.remove('selected');});
   // Load real service catalog from API
   loadServiceCatalog();
+  _apiMembers=[];
+  _memberListLoadedForGym=null;
+  _isLoadingMembers=false;
+  renderMemberList();
 }
 
 function confirmLogout(){
@@ -1902,6 +2067,7 @@ function goTo(screen){
   if(s) s.classList.add('on');
   if(n) n.classList.add('on');
   $('content').scrollTop=0;
+  if(screen==='member') fetchMembersForCurrentGym(false);
 }
 
 // ── GLOBAL SEARCH ──

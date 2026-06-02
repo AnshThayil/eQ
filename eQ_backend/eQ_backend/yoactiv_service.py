@@ -93,6 +93,10 @@ class YoActivClient:
         payload = {"Mobile_No": mobile_no}
         return self.post("Users/Fetch", json=payload, timeout=timeout)
 
+    def get_user_list(self, *, timeout=None):
+        """Fetch all users in the branch from YoActiv."""
+        return self.post("Users/GetUserList", json={}, timeout=timeout)
+
     def save_bill(self, *, service_variation_id, start_date, end_date, amount,
                   paid, transaction_id, purchase_date, country_code="+91",
                   mobile, sales_staff_id=0, pt_staff_id=0, timeout=None):

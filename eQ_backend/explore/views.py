@@ -335,3 +335,51 @@ class ServiceViewSet(ReadOnlyModelViewSet):
 	filterset_fields = ['service_group', 'service_group__gym', 'access_type']
 	ordering_fields = ['price', 'created_at']
 	ordering = ['price']
+
+
+class MemberSearchView(APIView):
+	"""
+	Frontdesk staff endpoint to look up members via YoActiv.
+
+	GET /api/members/?gym_id=<id>&mobile=<mobile>
+	  Proxies Users/Fetch — returns the matching YoActiv user record.
+
+	GET /api/members/?gym_id=<id>
+	  Proxies Users/GetUserList — returns all members for the branch.
+
+	Requires: authenticated staff user (is_staff=True).
+	"""
+
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get(self, request):
+		gym_id = request.query_params.get('gym_id')
+		if not gym_id:
+			return Response({'detail': 'gym_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		try:
+			gym = Gym.objects.get(id=gym_id)
+		except Gym.DoesNotExist:
+			return Response({'detail': f'Gym with id {gym_id} not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+		if not gym.branch_id:
+			return Response(
+				{'detail': f'Gym "{gym.name}" does not have a branch_id configured.'},
+				status=status.HTTP_400_BAD_REQUEST,
+			)
+
+		try:
+			client = YoActivClient.from_gym(gym)
+			mobile = request.query_params.get('mobile')
+			if mobile:
+				data = client.fetch_user(mobile)
+			else:
+				data = client.get_user_list()
+		except YoActivAPIError as exc:
+			logger.error('YoActiv member search failed for gym %s: %s', gym_id, exc)
+			return Response(
+				{'detail': 'YoActiv request failed.', 'error': str(exc)},
+				status=status.HTTP_502_BAD_GATEWAY,
+			)
+
+		return Response(data)
