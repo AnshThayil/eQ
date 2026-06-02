@@ -21,7 +21,7 @@ import { Theme } from '@/constants';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl, LayoutAnimation } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import { getGyms, getGym, logAscent, deleteAscent, Gym, Boulder, Wall } from '@/services/api';
+import { getGyms, getGym, logAscent, deleteAscent, saveClimb, unsaveClimb, Gym, Boulder, Wall } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -221,7 +221,7 @@ export default function RoutesScreen() {
         climbingStyle: boulder.climbing_style ? capitalizeFirst(boulder.climbing_style) : 'Technical',
         numberOfSends: boulder.num_ascents,
         isSent: boulder.user_has_sent,
-        isSaved: false, // TODO: Connect to saved routes API
+        isSaved: boulder.user_has_saved,
       });
     });
 
@@ -242,6 +242,7 @@ export default function RoutesScreen() {
                 ...route,
                 numberOfSends: updatedBoulder.num_ascents,
                 isSent: updatedBoulder.user_has_sent,
+                isSaved: updatedBoulder.user_has_saved,
               }
             : route
         ),
@@ -290,6 +291,30 @@ export default function RoutesScreen() {
         setError('Please log in to delete ascents');
       } else {
         setError('Failed to delete ascent');
+      }
+    }
+  };
+
+  const handleSaveToggle = async (zoneId: string, routeId: string) => {
+    const boulderId = parseInt(routeId);
+    const zone = zones.find((z) => z.id === zoneId);
+    const route = zone?.routes.find((r) => r.id === routeId);
+
+    if (!route) {
+      return;
+    }
+
+    try {
+      const response = route.isSaved
+        ? await unsaveClimb(boulderId)
+        : await saveClimb(boulderId);
+      updateBoulderInState(response.boulder);
+    } catch (err: any) {
+      console.error('Failed to toggle saved route:', err);
+      if (err.response?.status === 401) {
+        setError('Please log in to save climbs');
+      } else {
+        setError('Failed to save route');
       }
     }
   };
@@ -616,7 +641,7 @@ export default function RoutesScreen() {
                       isSent={route.isSent}
                       isSaved={route.isSaved}
                       onAscentPress={() => handleAscentToggle(zone.id, route.id)}
-                      onSavePress={() => {/* TODO: Implement save functionality */}}
+                      onSavePress={() => handleSaveToggle(zone.id, route.id)}
                       onPress={() => router.push(`/(routes)/route-detail?routeId=${route.id}&gymId=${selectedGymId}`)}
                     />
                   ))}
@@ -646,7 +671,7 @@ export default function RoutesScreen() {
                   isSent={route.isSent}
                   isSaved={route.isSaved}
                   onAscentPress={() => handleAscentToggle(route.zoneId, route.id)}
-                  onSavePress={() => {/* TODO: Implement save functionality */}}
+                  onSavePress={() => handleSaveToggle(route.zoneId, route.id)}
                   onPress={() => router.push(`/(routes)/route-detail?routeId=${route.id}&gymId=${selectedGymId}`)}
                 />
               ))

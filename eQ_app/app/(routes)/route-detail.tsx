@@ -14,7 +14,7 @@ import {
 } from '@/components';
 import { Theme } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
-import { Boulder, deleteAscent, getBoulder, getGyms, logAscent, Gym } from '@/services/api';
+import { Boulder, deleteAscent, getBoulder, getGyms, logAscent, Gym, saveClimb, unsaveClimb } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -171,6 +171,30 @@ export default function RouteDetailScreen() {
     }
   };
 
+  const handleSaveToggle = async () => {
+    if (!boulder) return;
+
+    try {
+      setError(null);
+      if (boulder.user_has_saved) {
+        // If already saved, unsave it
+        const response = await unsaveClimb(boulder.id);
+        setBoulder(response.boulder);
+      } else {
+        // If not saved, save it
+        const response = await saveClimb(boulder.id);
+        setBoulder(response.boulder);
+      }
+    } catch (err: any) {
+      console.error('Failed to toggle save:', err);
+      if (err.response?.status === 401) {
+        setError('Please log in to save climbs');
+      } else {
+        setError('Failed to save climb');
+      }
+    }
+  };
+
   const handleDeleteAscent = async () => {
     if (!boulder) return;
 
@@ -303,11 +327,9 @@ export default function RouteDetailScreen() {
                 showZone={true}
                 numberOfSends={boulder.num_ascents}
                 isSent={boulder.user_has_sent}
-                isSaved={false}
+                isSaved={boulder.user_has_saved}
                 onAscentPress={handleAscentToggle}
-                onSavePress={() => {
-                  /* TODO: Implement save functionality */
-                }}
+                onSavePress={handleSaveToggle}
                 style={styles.routeListItemOverride}
               />
             </View>

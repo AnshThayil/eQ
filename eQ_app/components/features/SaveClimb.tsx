@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { GestureResponderEvent, Pressable, StyleSheet } from 'react-native';
 import { SaveIcon, SaveIconSelected } from '../icons';
 
 export interface SaveClimbProps {
@@ -43,9 +43,14 @@ export function SaveClimb({
   accessibilityLabel,
   accessibilityHint,
 }: SaveClimbProps) {
+  const handlePress = (event: GestureResponderEvent) => {
+    event.stopPropagation();
+    onPress();
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => [
         styles.container,
         pressed && styles.pressed,

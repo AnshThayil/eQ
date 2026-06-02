@@ -156,7 +156,10 @@ export function RouteListItem({
       {/* Route Actions Section */}
       <View style={styles.routeActions}>
         {/* Action Buttons */}
-        <View style={styles.actionButtons}>
+        <View
+          style={styles.actionButtons}
+          onStartShouldSetResponder={() => true}
+        >
           <SaveClimb
             saved={isSaved}
             onPress={() => onSavePress?.()}

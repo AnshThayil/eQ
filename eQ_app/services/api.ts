@@ -81,6 +81,7 @@ export interface Boulder {
   is_active: boolean;
   num_ascents: number;
   user_has_sent: boolean;
+  user_has_saved: boolean;
   ascents?: Ascent[];
   wall_details?: {
     id: number;
@@ -150,6 +151,18 @@ export interface UserProfile {
     flashes_by_level: Record<string, number>;
     climbing_style_distribution: Record<string, number>;
   };
+  saved_climbs: SavedClimb[];
+}
+
+export interface SavedClimb {
+  id: number;
+  setter_grade: string;
+  color: string;
+  difficulty: string;
+  climbing_style: string;
+  wall_name: string;
+  gym_name: string;
+  num_ascents: number;
 }
 
 export interface ExploreClassVariation {
@@ -321,6 +334,17 @@ export const deleteAscent = async (boulderId: number): Promise<{ boulder: Boulde
 export const getLatestAscents = async (): Promise<ActivityAscent[]> => {
   const response = await apiClient.get('/activity/');
   return response.data.ascents;
+};
+
+// Saved Climbs
+export const saveClimb = async (boulderId: number): Promise<{ detail: string; boulder: Boulder }> => {
+  const response = await apiClient.post(`/boulders/${boulderId}/save/`, {});
+  return response.data;
+};
+
+export const unsaveClimb = async (boulderId: number): Promise<{ boulder: Boulder }> => {
+  const response = await apiClient.delete(`/boulders/${boulderId}/save/`);
+  return response.data;
 };
 
 // Leaderboard
