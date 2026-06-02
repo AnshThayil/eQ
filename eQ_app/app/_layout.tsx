@@ -19,7 +19,9 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore when splash is already handled by native/runtime.
+});
 
 function ConditionalNavBar(props: BottomTabBarProps) {
   const { isAuthenticated } = useAuth();
@@ -67,7 +69,7 @@ function AppContent() {
           }}
         />
         <Tabs.Screen
-          name="profile"
+          name="(profile)"
           options={{
             title: "Profile",
           }}
@@ -91,9 +93,17 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
+    if (!loaded) return;
+
+    const hideSplash = async () => {
+      try {
+        await SplashScreen.hideAsync();
+      } catch {
+        // Ignore when no native splash is registered.
+      }
+    };
+
+    void hideSplash();
   }, [loaded]);
 
   if (!loaded) {

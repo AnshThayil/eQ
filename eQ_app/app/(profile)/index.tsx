@@ -247,7 +247,7 @@ export default function ProfileScreen() {
             <ProfileNavButton
               text="Saved climbs"
               icon={<SaveIcon />}
-              onPress={() => {}}
+              onPress={() => router.push('/(profile)/saved-climbs')}
               style={styles.navButton}
             />
             <ProfileNavButton

@@ -40,8 +40,8 @@ const tabConfigs: Record<string, TabConfig> = {
     SelectedIcon: CompassFilledIcon,
     UnselectedIcon: CompassIcon,
   },
-  profile: {
-    name: 'profile',
+  '(profile)': {
+    name: '(profile)',
     label: 'Profile',
     SelectedIcon: ProfileSelectedIcon,
     UnselectedIcon: ProfileUnselectedIcon,

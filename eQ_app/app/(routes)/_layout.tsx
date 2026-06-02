@@ -22,6 +22,7 @@ export default function RoutesLayout() {
           title: 'Route Detail',
           gestureEnabled: true,
           gestureDirection: 'horizontal',
+          headerBackButtonMenuEnabled: false,
         }}
       />
       <Stack.Screen
