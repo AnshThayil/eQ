@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Gym, Wall, Boulder, Ascent
+from .models import Gym, Wall, Boulder, Ascent, SavedBoulder
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -36,6 +36,7 @@ class WallSerializer(serializers.ModelSerializer):
 
 class BoulderSerializer(serializers.ModelSerializer):
     user_has_sent = serializers.SerializerMethodField()
+    user_has_saved = serializers.SerializerMethodField()
     wall_details = serializers.SerializerMethodField()
 
     class Meta:
@@ -47,6 +48,13 @@ class BoulderSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and hasattr(request, 'user') and request.user.is_authenticated:
             return Ascent.objects.filter(climber=request.user, boulder=obj).exists()
+        return False
+    
+    def get_user_has_saved(self, obj):
+        """Check if the authenticated user has saved this boulder."""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return SavedBoulder.objects.filter(user=request.user, boulder=obj).exists()
         return False
     
     def get_wall_details(self, obj):
@@ -126,3 +134,23 @@ class UserProfileSerializer(serializers.Serializer):
     first_name = serializers.CharField(allow_blank=True)
     last_name = serializers.CharField(allow_blank=True)
     stats = UserProfileStatsSerializer()
+    saved_climbs = serializers.ListField(child=serializers.DictField(), required=False)
+
+
+class SavedBoulderListSerializer(serializers.ModelSerializer):
+    """Serializer for displaying saved boulders in a list."""
+    wall_name = serializers.CharField(source='wall.name', read_only=True)
+    gym_name = serializers.CharField(source='wall.gym.name', read_only=True)
+    
+    class Meta:
+        model = Boulder
+        fields = [
+            'id',
+            'setter_grade',
+            'color',
+            'difficulty',
+            'climbing_style',
+            'wall_name',
+            'gym_name',
+            'num_ascents',
+        ]

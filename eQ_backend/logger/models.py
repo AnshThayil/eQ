@@ -130,3 +130,16 @@ class Ascent(models.Model):
     
     def __str__(self):
         return f"{self.climber.username} - {self.boulder} ({self.ascent_type})"
+
+
+class SavedBoulder(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_boulders")
+    boulder = models.ForeignKey(Boulder, on_delete=models.CASCADE, related_name="saved_by")
+    saved_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ("user", "boulder")
+        ordering = ["-saved_at"]
+    
+    def __str__(self):
+        return f"{self.user.username} saved {self.boulder}"

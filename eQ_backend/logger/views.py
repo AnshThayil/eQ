@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from .models import Gym, Wall, Boulder, Ascent
-from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer, UserProfileSerializer
+from .models import Gym, Wall, Boulder, Ascent, SavedBoulder
+from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer, UserProfileSerializer, SavedBoulderListSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +126,48 @@ class BoulderAscentView(APIView):
 		# `post_delete` signal in `logger.signals` will decrement `num_ascents`.
 		# Refresh boulder from DB to get updated num_ascents
 		boulder.refresh_from_db()
+		boulder_serializer = BoulderSerializer(boulder, context={'request': request})
+		
+		return Response({'boulder': boulder_serializer.data}, status=status.HTTP_200_OK)
+
+
+class BoulderSaveView(APIView):
+	"""Handle POST to save a boulder for the authenticated user and
+	DELETE to unsave a boulder.
+	
+	POST creates a SavedBoulder entry, DELETE removes it.
+	"""
+	permission_classes = [permissions.IsAuthenticated]
+
+	@transaction.atomic
+	def post(self, request, pk):
+		boulder = get_object_or_404(Boulder, pk=pk)
+		user = request.user
+
+		# Check if already saved
+		if SavedBoulder.objects.filter(user=user, boulder=boulder).exists():
+			return Response({'detail': 'Boulder already saved.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		saved = SavedBoulder.objects.create(user=user, boulder=boulder)
+		boulder_serializer = BoulderSerializer(boulder, context={'request': request})
+		
+		return Response({
+			'detail': 'Boulder saved successfully.',
+			'boulder': boulder_serializer.data
+		}, status=status.HTTP_201_CREATED)
+
+	@transaction.atomic
+	def delete(self, request, pk):
+		boulder = get_object_or_404(Boulder, pk=pk)
+		user = request.user
+		
+		saved_qs = SavedBoulder.objects.filter(user=user, boulder=boulder)
+		saved = saved_qs.first()
+		
+		if not saved:
+			return Response({'detail': 'Boulder not saved.'}, status=status.HTTP_404_NOT_FOUND)
+
+		saved.delete()
 		boulder_serializer = BoulderSerializer(boulder, context={'request': request})
 		
 		return Response({'boulder': boulder_serializer.data}, status=status.HTTP_200_OK)
@@ -293,6 +335,11 @@ class UserProfileView(APIView):
 				)
 			)
 		)
+		
+		# Get saved climbs
+		saved_boulders = SavedBoulder.objects.filter(user=user).select_related('boulder', 'boulder__wall', 'boulder__wall__gym').order_by('-saved_at')
+		saved_climbs_data = SavedBoulderListSerializer([sb.boulder for sb in saved_boulders], many=True).data
+		
 		profile_data = {
 			'id': user.id,
 			'username': user.username,
@@ -306,6 +353,7 @@ class UserProfileView(APIView):
 				'flashes_by_level': flashes_by_level,
 				'climbing_style_distribution': climbing_style_distribution,
 			},
+			'saved_climbs': saved_climbs_data,
 		}
 
 		serializer = UserProfileSerializer(profile_data)

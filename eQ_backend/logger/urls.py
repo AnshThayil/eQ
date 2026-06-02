@@ -1,6 +1,6 @@
 
 from django.urls import path, include
-from .views import GymViewSet, WallViewSet, BoulderViewSet, BoulderAscentView, LeaderboardView, LatestAscentsView, UserProfileView, LogoutView
+from .views import GymViewSet, WallViewSet, BoulderViewSet, BoulderAscentView, BoulderSaveView, LeaderboardView, LatestAscentsView, UserProfileView, LogoutView
 from rest_framework_nested import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -18,6 +18,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(gyms_router.urls)),
     path('boulders/<int:pk>/ascent/', BoulderAscentView.as_view(), name='boulder-ascent'),
+    path('boulders/<int:pk>/save/', BoulderSaveView.as_view(), name='boulder-save'),
     path('leaderboard/', LeaderboardView.as_view(), name='leaderboard'),
     path('activity/', LatestAscentsView.as_view(), name='latest-ascents'),
     path('profile/', UserProfileView.as_view(), name='profile'),
