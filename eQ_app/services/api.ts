@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
+import logger from './logger';
 
 // Get API URL from environment variable
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -50,7 +51,8 @@ apiClient.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
+    logger.error('[API]', error.config?.method?.toUpperCase(), error.config?.url, error.response?.status ?? 'network error');
     return Promise.reject(error);
   }
 );
@@ -228,9 +230,9 @@ export interface ExploreActiveResponse {
 // Authentication
 export const login = async (username: string, password: string) => {
   const response = await apiClient.post('/auth/token/', { username, password });
-  const { access, refresh } = response.data;
+  const { access, refresh, is_staff } = response.data;
   setAuthToken(access);
-  return { access, refresh };
+  return { access, refresh, isStaff: is_staff as boolean };
 };
 
 export const refreshToken = async (refresh: string) => {
@@ -336,6 +338,11 @@ export const getLatestAscents = async (): Promise<ActivityAscent[]> => {
   return response.data.ascents;
 };
 
+export const getMyAscents = async (): Promise<ActivityAscent[]> => {
+  const response = await apiClient.get('/my-ascents/');
+  return response.data.ascents;
+};
+
 // Saved Climbs
 export const saveClimb = async (boulderId: number): Promise<{ detail: string; boulder: Boulder }> => {
   const response = await apiClient.post(`/boulders/${boulderId}/save/`, {});
@@ -365,9 +372,24 @@ export const getLeaderboard = async (params?: {
   return response.data;
 };
 
+export interface PersonalInfo {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  image: string | null;
+  dob: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_number: string | null;
+}
+
 // Profile
 export const getUserProfile = async (): Promise<UserProfile> => {
   const response = await apiClient.get('/profile/');
+  return response.data;
+};
+
+export const getPersonalInfo = async (): Promise<PersonalInfo> => {
+  const response = await apiClient.get('/personal-info/');
   return response.data;
 };
 
@@ -435,6 +457,22 @@ export const markPaymentFailed = async (razorpayOrderId: string): Promise<void> 
 
 export const getUserOrders = async (): Promise<UserOrder[]> => {
   const response = await apiClient.get('/payments/orders/');
+  return response.data;
+};
+
+// User Settings
+export interface UserSettings {
+  leaderboard_opt_in: boolean;
+  sends_visibility: 'everyone' | 'only_me';
+}
+
+export const getUserSettings = async (): Promise<UserSettings> => {
+  const response = await apiClient.get('/settings/');
+  return response.data;
+};
+
+export const updateUserSettings = async (settings: Partial<UserSettings>): Promise<UserSettings> => {
+  const response = await apiClient.patch('/settings/', settings);
   return response.data;
 };
 

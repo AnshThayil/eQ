@@ -5,13 +5,33 @@ from collections import Counter
 from rest_framework import viewsets, mixins, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from .models import Gym, Wall, Boulder, Ascent, SavedBoulder
+from .models import Gym, Wall, Boulder, Ascent, SavedBoulder, UserSettings
 from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer, UserProfileSerializer, SavedBoulderListSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+	@classmethod
+	def get_token(cls, user):
+		token = super().get_token(user)
+		token['is_staff'] = user.is_staff
+		return token
+
+	def validate(self, attrs):
+		data = super().validate(attrs)
+		data['is_staff'] = self.user.is_staff
+		return data
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+	serializer_class = CustomTokenObtainPairSerializer
+
 
 class GymViewSet(viewsets.ModelViewSet):
 	queryset = Gym.objects.all()
@@ -200,7 +220,9 @@ class LeaderboardView(APIView):
 		
 		# Build the annotation with most recent ascent for tie-breaking
 		if filters:
-			leaderboard = User.objects.annotate(
+			leaderboard = User.objects.filter(
+				Q(settings__leaderboard_opt_in=True) | Q(settings__isnull=True)
+			).annotate(
 				total_points=Sum('ascents__points', filter=filters),
 				most_recent_ascent=Max('ascents__date_climbed', filter=filters)
 			).filter(
@@ -209,7 +231,9 @@ class LeaderboardView(APIView):
 				'id', 'username', 'first_name', 'last_name', 'total_points', 'most_recent_ascent'
 			)
 		else:
-			leaderboard = User.objects.annotate(
+			leaderboard = User.objects.filter(
+				Q(settings__leaderboard_opt_in=True) | Q(settings__isnull=True)
+			).annotate(
 				total_points=Sum('ascents__points'),
 				most_recent_ascent=Max('ascents__date_climbed')
 			).filter(
@@ -263,6 +287,23 @@ class LatestAscentsView(APIView):
 			'boulder__wall',
 			'boulder__wall__gym',
 		).order_by('-date_climbed', '-id')[:50]
+
+		serializer = ActivityAscentSerializer(ascents, many=True)
+		return Response({'ascents': serializer.data})
+
+
+class MyAscentsView(APIView):
+	"""Returns all ascents for the authenticated user, ordered by date descending."""
+
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get(self, request):
+		ascents = Ascent.objects.filter(climber=request.user).select_related(
+			'climber',
+			'boulder',
+			'boulder__wall',
+			'boulder__wall__gym',
+		).order_by('-date_climbed', '-id')
 
 		serializer = ActivityAscentSerializer(ascents, many=True)
 		return Response({'ascents': serializer.data})
@@ -360,6 +401,61 @@ class UserProfileView(APIView):
 		return Response(serializer.data)
 
 
+class PersonalInfoView(APIView):
+	"""Returns the authenticated user's personal information sourced from YoActiv."""
+
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get(self, request):
+		from eQ_backend.yoactiv_service import get_yoactiv_user
+
+		user = request.user
+		phone = getattr(getattr(user, 'profile', None), 'phone_number', None) or ''
+
+		yoactiv_data = {}
+		if phone:
+			try:
+				gym = Gym.objects.filter(branch_id__isnull=False).exclude(branch_id='').first()
+				if gym:
+					raw = get_yoactiv_user(phone, gym, timeout=10)
+					if isinstance(raw, dict):
+						yoactiv_data = raw
+			except Exception as exc:
+				logger.warning("YoActiv fetch_user failed for user %s: %s", user.username, exc)
+
+		# Extract emergency contact from Family_Member list (first entry)
+		family_members = yoactiv_data.get('Family_Member') or []
+		emergency_contact_name = None
+		emergency_contact_number = None
+		if family_members:
+			first = family_members[0]
+			emergency_contact_name = first.get('Name') or None
+			raw_mobile = first.get('Mobile') or ''
+			# YoActiv appends ~N suffixes for family members — strip it
+			emergency_contact_number = raw_mobile.split('~')[0] or None
+
+		# Extract DOB from Additional_Details if present
+		dob = None
+		additional_details = yoactiv_data.get('Additional_Details') or []
+		for detail in additional_details:
+			if isinstance(detail, dict):
+				key = str(detail.get('Field') or detail.get('field') or '').lower()
+				if 'dob' in key or 'birth' in key or 'date of birth' in key:
+					dob = detail.get('Value') or detail.get('value') or None
+					break
+
+		data = {
+			'name': yoactiv_data.get('Name') or f"{user.first_name} {user.last_name}".strip() or user.username,
+			'email': yoactiv_data.get('Mail') or user.email or None,
+			'phone': phone or yoactiv_data.get('Mobile') or None,
+			'image': yoactiv_data.get('Image') or None,
+			'dob': dob,
+			'emergency_contact_name': emergency_contact_name,
+			'emergency_contact_number': emergency_contact_number,
+		}
+		return Response(data)
+
+
 class LogoutView(APIView):
 	"""Blacklists the submitted refresh token, invalidating it server-side."""
 	permission_classes = [permissions.IsAuthenticated]
@@ -377,3 +473,41 @@ class LogoutView(APIView):
 		except TokenError:
 			return Response({'detail': 'Token is invalid or already blacklisted.'}, status=status.HTTP_400_BAD_REQUEST)
 		return Response({'detail': 'Logout successful.'}, status=status.HTTP_200_OK)
+
+
+class UserSettingsView(APIView):
+	"""GET or PATCH the authenticated user's settings."""
+	permission_classes = [permissions.IsAuthenticated]
+
+	def _get_or_create_settings(self, user):
+		settings, _ = UserSettings.objects.get_or_create(user=user)
+		return settings
+
+	def get(self, request):
+		user_settings = self._get_or_create_settings(request.user)
+		return Response({
+			'leaderboard_opt_in': user_settings.leaderboard_opt_in,
+			'sends_visibility': user_settings.sends_visibility,
+		})
+
+	def patch(self, request):
+		user_settings = self._get_or_create_settings(request.user)
+
+		leaderboard_opt_in = request.data.get('leaderboard_opt_in')
+		if leaderboard_opt_in is not None:
+			if not isinstance(leaderboard_opt_in, bool):
+				return Response({'detail': 'leaderboard_opt_in must be a boolean.'}, status=status.HTTP_400_BAD_REQUEST)
+			user_settings.leaderboard_opt_in = leaderboard_opt_in
+
+		sends_visibility = request.data.get('sends_visibility')
+		if sends_visibility is not None:
+			valid_choices = {choice[0] for choice in UserSettings.SENDS_VISIBILITY_CHOICES}
+			if sends_visibility not in valid_choices:
+				return Response({'detail': f'sends_visibility must be one of: {", ".join(valid_choices)}.'}, status=status.HTTP_400_BAD_REQUEST)
+			user_settings.sends_visibility = sends_visibility
+
+		user_settings.save()
+		return Response({
+			'leaderboard_opt_in': user_settings.leaderboard_opt_in,
+			'sends_visibility': user_settings.sends_visibility,
+		})

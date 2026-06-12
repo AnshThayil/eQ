@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { ThemedText, InputField, Button } from '@/components';
 import { Colors } from '@/constants';
 import { login } from '@/services/api';
+import { getErrorMessage } from '@/services/errors';
+import logger from '@/services/logger';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
@@ -21,15 +23,12 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const { access, refresh } = await login(username, password);
-      await signIn(access, refresh, username);
+      const { access, refresh, isStaff } = await login(username, password);
+      await signIn(access, refresh, username, isStaff);
       router.replace('/(routes)');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.detail || 'Invalid username or password'
-      );
+    } catch (error: unknown) {
+      logger.error('Login error:', error);
+      Alert.alert('Login Failed', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
