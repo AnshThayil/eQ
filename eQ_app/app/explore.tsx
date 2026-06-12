@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { InfoCardProps } from '@/components/features/InfoCard';
 import { EventsIcon, CardIcon, FacilitiesLadderIcon, ShopIcon } from '@/components/icons';
 import { getExploreActive, getExploreEvents } from '@/services/api';
+import logger from '@/services/logger';
 
 // Example images - replace with actual images when available
 const planImage: ImageSourcePropType = require('@/assets/images/info-card-example.png');
@@ -77,7 +78,7 @@ export default function ExploreScreen() {
 
       setPlanItems(nextPlanItems);
     } catch (error) {
-      console.error('Failed to load active plans:', error);
+      logger.error('Failed to load active plans:', error);
       setPlansError('Unable to load active plans right now.');
       setPlanItems([]);
     }
@@ -109,7 +110,7 @@ export default function ExploreScreen() {
         });
       setEventItems(nextEventItems);
     } catch (error) {
-      console.error('Failed to load events:', error);
+      logger.error('Failed to load events:', error);
     }
   }, [router]);
 

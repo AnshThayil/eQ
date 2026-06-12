@@ -9,6 +9,7 @@ import {
   ExploreClassVariation,
   getExploreClasses,
 } from '@/services/api';
+import logger from '@/services/logger';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -96,7 +97,7 @@ export default function ExploreClassesScreen() {
         if (!isMounted) {
           return;
         }
-        console.error('Failed to load class groups:', fetchError);
+        logger.error('Failed to load class groups:', fetchError);
         setError('Unable to load classes right now.');
       } finally {
         if (isMounted) {

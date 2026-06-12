@@ -143,3 +143,25 @@ class SavedBoulder(models.Model):
     
     def __str__(self):
         return f"{self.user.username} saved {self.boulder}"
+
+
+class UserSettings(models.Model):
+    SENDS_VISIBILITY_CHOICES = [
+        ("everyone", "Everyone"),
+        ("only_me", "Only Me"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="settings")
+    leaderboard_opt_in = models.BooleanField(
+        default=True,
+        help_text="Whether the user participates in the gym leaderboard",
+    )
+    sends_visibility = models.CharField(
+        max_length=20,
+        choices=SENDS_VISIBILITY_CHOICES,
+        default="everyone",
+        help_text="Who can see this user's sends in the activity feed",
+    )
+
+    def __str__(self):
+        return f"Settings for {self.user.username}"

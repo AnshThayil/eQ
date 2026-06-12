@@ -8,6 +8,7 @@ import {
   ExploreClassVariation,
   getExploreMemberships,
 } from '@/services/api';
+import logger from '@/services/logger';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -96,7 +97,7 @@ export default function ExploreMembershipsScreen() {
         if (!isMounted) {
           return;
         }
-        console.error('Failed to load membership groups:', fetchError);
+        logger.error('Failed to load membership groups:', fetchError);
         setError('Unable to load memberships right now.');
       } finally {
         if (isMounted) {

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLatestAscents, getLeaderboard, getGyms, ActivityAscent, Gym, LeaderboardEntry } from '@/services/api';
+import logger from '@/services/logger';
 
 const STORAGE_KEY_GYM = '@leaderboard_selected_gym';
 const STORAGE_KEY_TIMEFRAME = '@leaderboard_selected_timeframe';
@@ -41,7 +42,7 @@ export default function LeaderboardScreen() {
         if (savedGym) setSelectedGymId(savedGym);
         if (savedTimeframe) setSelectedTimeframe(savedTimeframe);
       } catch (error) {
-        console.error('Failed to load preferences:', error);
+        logger.error('Failed to load preferences:', error);
       } finally {
         setPreferencesLoaded(true);
       }
@@ -94,7 +95,7 @@ export default function LeaderboardScreen() {
       const fetchedGyms = await getGyms();
       setGyms(fetchedGyms);
     } catch (error) {
-      console.error('Failed to fetch gyms:', error);
+      logger.error('Failed to fetch gyms:', error);
     }
   };
   
@@ -113,7 +114,7 @@ export default function LeaderboardScreen() {
       setYourRanking(data.your_ranking);
       setYourUserId(data.your_user_id);
     } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
+      logger.error('Failed to fetch leaderboard:', error);
     } finally {
       if (showLoading) setIsLoading(false);
     }
@@ -133,7 +134,7 @@ export default function LeaderboardScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_GYM, value);
     } catch (error) {
-      console.error('Failed to save gym preference:', error);
+      logger.error('Failed to save gym preference:', error);
     }
   };
   
@@ -142,7 +143,7 @@ export default function LeaderboardScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY_TIMEFRAME, value);
     } catch (error) {
-      console.error('Failed to save timeframe preference:', error);
+      logger.error('Failed to save timeframe preference:', error);
     }
   };
 
@@ -152,7 +153,7 @@ export default function LeaderboardScreen() {
       const latestAscents = await getLatestAscents();
       setActivityData(latestAscents);
     } catch (error) {
-      console.error('Failed to fetch activity:', error);
+      logger.error('Failed to fetch activity:', error);
       setActivityData([]);
     } finally {
       if (showLoading) setIsActivityLoading(false);

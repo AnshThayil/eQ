@@ -9,6 +9,7 @@ import {
   ExploreClassVariation,
   getExploreEvents,
 } from '@/services/api';
+import logger from '@/services/logger';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -96,7 +97,7 @@ export default function ExploreEventsScreen() {
         if (!isMounted) {
           return;
         }
-        console.error('Failed to load event groups:', fetchError);
+        logger.error('Failed to load event groups:', fetchError);
         setError('Unable to load events right now.');
       } finally {
         if (isMounted) {

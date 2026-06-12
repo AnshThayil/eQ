@@ -1,4 +1,5 @@
 import { BottomNavBar } from "@/components";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Theme } from "@/constants";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import {
@@ -15,8 +16,17 @@ import { useFonts } from "expo-font";
 import { Tabs } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { StyleSheet } from 'react-native';
+import { LogBox, StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+
+// Suppress the LogBox overlay for handled API/network errors.
+// These are caught and shown to users as friendly messages — the raw
+// error detail is only useful in the terminal, not the on-screen overlay.
+LogBox.ignoreLogs([
+  'AxiosError',
+  'Network request failed',
+  'Request failed with status code',
+]);
 
 // Keep the splash screen visible while we fetch resources
 void SplashScreen.preventAutoHideAsync().catch(() => {
@@ -73,6 +83,12 @@ function AppContent() {
           options={{
             title: "Profile",
           }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              navigation.navigate('(profile)', { screen: 'index' });
+            },
+          })}
         />
       </Tabs>
     </SafeAreaView>
@@ -111,11 +127,13 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <AppContent />
-      </SafeAreaProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SafeAreaProvider>
+          <AppContent />
+        </SafeAreaProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

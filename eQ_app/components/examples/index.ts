@@ -26,5 +26,6 @@ export { RouteListItemExample } from './features/RouteListItemExample';
 export { SaveClimbExample } from './features/SaveClimbExample';
 export { StatsCardExample } from './features/StatsCardExample';
 export { ZoneAccordionExample } from './features/ZoneAccordionExample';
+export { SessionHistoryItemExample } from './features/SessionHistoryItemExample';
 
 

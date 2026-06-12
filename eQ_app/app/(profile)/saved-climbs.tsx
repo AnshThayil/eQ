@@ -22,6 +22,8 @@ import { ThemedText, Button, RouteListItem } from '@/components';
 import { CaretDownIcon } from '@/components/icons';
 import { Theme } from '@/constants';
 import { getUserProfile, unsaveClimb, type SavedClimb } from '@/services/api';
+import { getErrorMessage } from '@/services/errors';
+import logger from '@/services/logger';
 
 export default function SavedClimbsScreen() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -55,9 +57,9 @@ export default function SavedClimbsScreen() {
         setSavedClimbs(profileResponse.saved_climbs || []);
       }
     } catch (error) {
-      console.error('Failed to load saved climbs:', error);
+      logger.error('Failed to load saved climbs:', error);
       if (isMounted.current) {
-        setErrorMessage('Unable to load saved climbs right now.');
+        setErrorMessage(getErrorMessage(error));
       }
     } finally {
       if (isMounted.current) {
@@ -96,12 +98,8 @@ export default function SavedClimbsScreen() {
       await unsaveClimb(climbId);
       setSavedClimbs((prev) => prev.filter((c) => c.id !== climbId));
     } catch (err: any) {
-      console.error('Failed to unsave climb:', err);
-      if (err.response?.status === 401) {
-        setErrorMessage('Please log in to manage saved climbs');
-      } else {
-        setErrorMessage('Failed to remove saved climb');
-      }
+      logger.error('Failed to unsave climb:', err);
+      setErrorMessage(getErrorMessage(err));
     }
   };
 

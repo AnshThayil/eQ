@@ -6,7 +6,7 @@ import { SettingsIcon } from '@/components/icons/SettingsIcon';
 import { getUserProfile, type UserProfile } from '@/services/api';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const getDisplayName = (profile: UserProfile | null, fallbackUsername: string | null) => {
   const firstName = profile?.first_name?.trim() ?? '';
@@ -193,7 +193,13 @@ export default function ProfileScreen() {
             Profile
           </ThemedText>
           <View style={styles.headerSide}>
-            <SettingsIcon size={24} color={Theme.colors.primary[500]} />
+            <TouchableOpacity
+              onPress={() => router.push('/(profile)/settings')}
+              accessibilityLabel="Open Settings"
+              accessibilityRole="button"
+            >
+              <SettingsIcon size={24} color={Theme.colors.primary[500]} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -241,7 +247,7 @@ export default function ProfileScreen() {
             <ProfileNavButton
               text="Session history"
               icon={<HistoryIcon color={Theme.colors.primary[500]} />}
-              onPress={() => {}}
+              onPress={() => router.push('/(profile)/session-history')}
               style={styles.navButton}
             />
             <ProfileNavButton
@@ -253,7 +259,7 @@ export default function ProfileScreen() {
             <ProfileNavButton
               text="Personal info"
               icon={<InfoIcon color={Theme.colors.primary[500]} />}
-              onPress={() => {}}
+              onPress={() => router.push('/(profile)/personal-info')}
               style={styles.navButton}
             />
           </View>

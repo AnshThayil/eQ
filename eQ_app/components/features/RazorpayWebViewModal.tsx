@@ -127,8 +127,7 @@ export default function RazorpayWebViewModal({
       if (message.type === 'success') {
         onSuccess(message.data as RazorpaySuccessData);
       } else if (message.type === 'failure') {
-        const errorData = message.data as { description?: string };
-        onFailure(errorData?.description ?? 'Payment failed. Please try again.');
+        onFailure('Payment could not be completed. Please try again.');
       } else if (message.type === 'dismiss') {
         onDismiss();
       }
