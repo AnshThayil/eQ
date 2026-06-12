@@ -1,20 +1,26 @@
 /**
  * Route Detail Screen - Shows detailed information about a specific route and all ascents
- * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=290-2355
+ * Staff view: tabs with Ascents, Comments, Likes + editable route info
+ * Based on Figma design: https://www.figma.com/design/7PMr5fujBVexahIxwYsSyS/EQ?node-id=464-3750
  */
 
 import {
   AddAscentModal,
   AscentsListItem,
   CaretDownIcon,
+  EditIcon,
   LocationPinIcon,
   MapIcon,
   InputField,
-  RouteListItem
+  RouteListItem,
+  Tabs,
+  LikeFilledIcon,
 } from '@/components';
 import { Theme } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { Boulder, deleteAscent, getBoulder, getGyms, logAscent, Gym, saveClimb, unsaveClimb } from '@/services/api';
+import { getErrorMessage } from '@/services/errors';
+import logger from '@/services/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -42,8 +48,28 @@ interface AscentDisplay {
   position: number;
 }
 
+interface CommentDisplay {
+  id: number;
+  name: string;
+  comment: string;
+}
+
+interface LikeDisplay {
+  id: number;
+  name: string;
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+      <ThemedText variant="body2">{label}</ThemedText>
+      <ThemedText variant="body1">{value}</ThemedText>
+    </View>
+  );
+}
+
 export default function RouteDetailScreen() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, isStaff } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams<{ routeId: string; gymId?: string }>();
   const routeId = params.routeId;
@@ -57,6 +83,8 @@ export default function RouteDetailScreen() {
   const [selectedGymId, setSelectedGymId] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [ascents, setAscents] = useState<AscentDisplay[]>([]);
+  const [comments, setComments] = useState<CommentDisplay[]>([]);
+  const [likes, setLikes] = useState<LikeDisplay[]>([]);
 
   // Load saved gym ID and fetch gyms on mount
   useEffect(() => {
@@ -82,7 +110,7 @@ export default function RouteDetailScreen() {
         setSelectedGymId(3);
       }
     } catch (error) {
-      console.error('Failed to load saved gym ID:', error);
+      logger.error('Failed to load saved gym ID:', error);
       setSelectedGymId(paramGymId || 3);
     }
   };
@@ -92,7 +120,7 @@ export default function RouteDetailScreen() {
       const gymsData = await getGyms();
       setGyms(Array.isArray(gymsData) ? gymsData : []);
     } catch (err) {
-      console.error('Failed to load gyms:', err);
+      logger.error('Failed to load gyms:', err);
       setGyms([]);
     }
   };
@@ -132,12 +160,26 @@ export default function RouteDetailScreen() {
           };
         });
         setAscents(transformedAscents);
+
+        // Derive likes from ascents where liked === true
+        const likesList: LikeDisplay[] = boulderData.ascents
+          .filter((a) => a.liked)
+          .map((a) => {
+            let name = 'Unknown';
+            if (a.climber_details) {
+              const { first_name, last_name, username } = a.climber_details;
+              name = first_name && last_name ? `${first_name} ${last_name}` : username;
+            }
+            return { id: a.id, name };
+          });
+        setLikes(likesList);
       } else {
         setAscents([]);
+        setLikes([]);
       }
     } catch (err) {
-      console.error('Failed to load boulder details:', err);
-      setError('Failed to load route details');
+      logger.error('Failed to load boulder details:', err);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -186,12 +228,8 @@ export default function RouteDetailScreen() {
         setBoulder(response.boulder);
       }
     } catch (err: any) {
-      console.error('Failed to toggle save:', err);
-      if (err.response?.status === 401) {
-        setError('Please log in to save climbs');
-      } else {
-        setError('Failed to save climb');
-      }
+      logger.error('Failed to toggle save:', err);
+      setError(getErrorMessage(err));
     }
   };
 
@@ -204,12 +242,8 @@ export default function RouteDetailScreen() {
       // Reload to get updated ascents list
       await loadBoulderDetails(boulder.id);
     } catch (err: any) {
-      console.error('Failed to delete ascent:', err);
-      if (err.response?.status === 401) {
-        setError('Please log in to delete ascents');
-      } else {
-        setError('Failed to delete ascent');
-      }
+      logger.error('Failed to delete ascent:', err);
+      setError(getErrorMessage(err));
     }
   };
 
@@ -225,13 +259,9 @@ export default function RouteDetailScreen() {
       // Reload to get updated ascents list
       await loadBoulderDetails(boulder.id);
     } catch (err: any) {
-      console.error('Failed to log ascent:', err);
-      if (err.response?.status === 401) {
-        setError('Please log in to log ascents');
-        setModalVisible(false);
-      } else {
-        setError('Failed to log ascent');
-      }
+      logger.error('Failed to log ascent:', err);
+      setError(getErrorMessage(err));
+      setModalVisible(false);
     }
   };
 
@@ -243,7 +273,7 @@ export default function RouteDetailScreen() {
       try {
         await AsyncStorage.setItem('selectedGymId', selectedGym.id.toString());
       } catch (error) {
-        console.error('Failed to save gym ID:', error);
+        logger.error('Failed to save gym ID:', error);
       }
     }
   };
@@ -311,83 +341,195 @@ export default function RouteDetailScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Route Summary */}
-          {boulder && (
-            <View style={styles.routeSummary}>
-              <RouteListItem
-                colour={boulder.color}
-                level={boulder.setter_grade}
-                difficulty={getDifficultyFromBoulder(boulder.difficulty)}
-                climbingStyle={
-                  boulder.climbing_style
-                    ? boulder.climbing_style.charAt(0).toUpperCase() + boulder.climbing_style.slice(1)
-                    : 'Technical'
-                }
-                zone={getWallName()}
-                showZone={true}
-                numberOfSends={boulder.num_ascents}
-                isSent={boulder.user_has_sent}
-                isSaved={boulder.user_has_saved}
-                onAscentPress={handleAscentToggle}
-                onSavePress={handleSaveToggle}
-                style={styles.routeListItemOverride}
-              />
-            </View>
+          {isStaff ? (
+            /* ── Staff header ── */
+            <>
+              {/* Back button */}
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <CaretDownIcon size={12} color={Theme.colors.primary[500]} style={{ transform: [{ rotate: '90deg' }] }} />
+                <ThemedText variant="button" style={styles.backText}>Back</ThemedText>
+              </TouchableOpacity>
+
+              {/* Route grade badge */}
+              {boulder && (
+                <View style={styles.staffRouteBadge}>
+                  <ThemedText variant="heading2" style={styles.staffGradeText}>
+                    {boulder.setter_grade}
+                  </ThemedText>
+                </View>
+              )}
+
+              {/* Route info with edit button */}
+              {boulder && (
+                <View style={styles.staffInfoSection}>
+                  <View style={styles.staffInfoRows}>
+                    <InfoRow label="Zone:" value={getWallName()} />
+                    <InfoRow label="Setter:" value={boulder.setter_details?.name ?? 'Unknown'} />
+                    <InfoRow label="Style:" value={boulder.climbing_style ? boulder.climbing_style.charAt(0).toUpperCase() + boulder.climbing_style.slice(1) : '—'} />
+                    <InfoRow label="Difficulty:" value={getDifficultyFromBoulder(boulder.difficulty)} />
+                    <InfoRow label="Climber grade:" value={getDifficultyFromBoulder(boulder.concensus_grade)} />
+                  </View>
+                  <TouchableOpacity style={styles.editButton} accessibilityLabel="Edit route">
+                    <EditIcon size={24} color={Theme.colors.primary[500]} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
+          ) : (
+            /* ── Regular header ── */
+            boulder && (
+              <View style={styles.routeSummary}>
+                <RouteListItem
+                  colour={boulder.color}
+                  level={boulder.setter_grade}
+                  difficulty={getDifficultyFromBoulder(boulder.difficulty)}
+                  climbingStyle={
+                    boulder.climbing_style
+                      ? boulder.climbing_style.charAt(0).toUpperCase() + boulder.climbing_style.slice(1)
+                      : 'Technical'
+                  }
+                  zone={getWallName()}
+                  showZone={true}
+                  numberOfSends={boulder.num_ascents}
+                  isSent={boulder.user_has_sent}
+                  isSaved={boulder.user_has_saved}
+                  onAscentPress={handleAscentToggle}
+                  onSavePress={handleSaveToggle}
+                  style={styles.routeListItemOverride}
+                />
+              </View>
+            )
           )}
         </View>
 
         {/* Content */}
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={Theme.colors.primary[500]}
-              colors={[Theme.colors.primary[500]]}
-            />
-          }
-        >
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Theme.colors.primary[500]} />
-              <Text style={styles.loadingText}>Loading route details...</Text>
-            </View>
-          ) : (
-            <>
-              {/* Sends Header */}
-              <View style={styles.sendsHeader}>
-                <ThemedText variant="heading2" style={styles.sendsTitle}>
-                  Sends ({ascents.length})
-                </ThemedText>
-              </View>
+        {isStaff ? (
+          /* ── Staff tabbed content ── */
+          <Tabs
+            tabs={[
+              `Ascents (${ascents.length})`,
+              `Comments (${comments.length})`,
+              `Likes (${likes.length})`,
+            ]}
+            style={{ flex: 1 }}
+          >
+            {/* Ascents tab */}
+            <ScrollView
+              contentContainerStyle={styles.tabScrollContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Theme.colors.primary[500]} colors={[Theme.colors.primary[500]]} />
+              }
+            >
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={Theme.colors.primary[500]} />
+                </View>
+              ) : ascents.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No ascents yet</Text>
+                </View>
+              ) : (
+                ascents.map((ascent, index) => (
+                  <AscentsListItem
+                    key={ascent.id}
+                    name={ascent.climberName}
+                    date={ascent.date}
+                    rating={ascent.rating}
+                    flash={ascent.isFlash}
+                    position={ascent.position}
+                    style={index < ascents.length - 1 ? styles.ascentListItemWithMargin : undefined}
+                  />
+                ))
+              )}
+            </ScrollView>
 
-              {/* Ascents List */}
-              <View style={styles.ascentsList}>
-                {ascents.length === 0 ? (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No sends yet</Text>
-                    <Text style={styles.emptySubtext}>Be the first to send this route!</Text>
+            {/* Comments tab */}
+            <ScrollView contentContainerStyle={styles.tabScrollContent} showsVerticalScrollIndicator={false}>
+              {comments.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No comments yet</Text>
+                </View>
+              ) : (
+                comments.map((comment) => (
+                  <View key={comment.id} style={styles.commentItem}>
+                    <ThemedText variant="body2">{comment.name}</ThemedText>
+                    <ThemedText variant="body1" style={styles.commentText}>{comment.comment}</ThemedText>
                   </View>
-                ) : (
-                  ascents.map((ascent, index) => (
-                    <AscentsListItem
-                      key={ascent.id}
-                      name={ascent.climberName}
-                      date={ascent.date}
-                      rating={ascent.rating}
-                      flash={ascent.isFlash}
-                      position={ascent.position}
-                      style={index < ascents.length - 1 ? styles.ascentListItemWithMargin : undefined}
-                    />
-                  ))
-                )}
+                ))
+              )}
+            </ScrollView>
+
+            {/* Likes tab */}
+            <ScrollView contentContainerStyle={styles.tabScrollContent} showsVerticalScrollIndicator={false}>
+              {likes.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No likes yet</Text>
+                </View>
+              ) : (
+                likes.map((like) => (
+                  <View key={like.id} style={styles.likeItem}>
+                    <ThemedText variant="body2">{like.name}</ThemedText>
+                    <LikeFilledIcon size={24} color={Theme.colors.primary[500]} />
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </Tabs>
+        ) : (
+          /* ── Regular scrollable content ── */
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Theme.colors.primary[500]}
+                colors={[Theme.colors.primary[500]]}
+              />
+            }
+          >
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Theme.colors.primary[500]} />
+                <Text style={styles.loadingText}>Loading route details...</Text>
               </View>
-            </>
-          )}
-        </ScrollView>
+            ) : (
+              <>
+                {/* Sends Header */}
+                <View style={styles.sendsHeader}>
+                  <ThemedText variant="heading2" style={styles.sendsTitle}>
+                    Sends ({ascents.length})
+                  </ThemedText>
+                </View>
+
+                {/* Ascents List */}
+                <View style={styles.ascentsList}>
+                  {ascents.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>No sends yet</Text>
+                      <Text style={styles.emptySubtext}>Be the first to send this route!</Text>
+                    </View>
+                  ) : (
+                    ascents.map((ascent, index) => (
+                      <AscentsListItem
+                        key={ascent.id}
+                        name={ascent.climberName}
+                        date={ascent.date}
+                        rating={ascent.rating}
+                        flash={ascent.isFlash}
+                        position={ascent.position}
+                        style={index < ascents.length - 1 ? styles.ascentListItemWithMargin : undefined}
+                      />
+                    ))
+                  )}
+                </View>
+              </>
+            )}
+          </ScrollView>
+        )}
 
         {/* Add Ascent Modal */}
         {boulder && (
@@ -414,6 +556,19 @@ const styles = StyleSheet.create<{
   header: ViewStyle;
   locationInput: ViewStyle;
   mapButton: ViewStyle;
+  // Staff-specific
+  backButton: ViewStyle;
+  backText: TextStyle;
+  staffRouteBadge: ViewStyle;
+  staffGradeText: TextStyle;
+  staffInfoSection: ViewStyle;
+  staffInfoRows: ViewStyle;
+  editButton: ViewStyle;
+  tabScrollContent: ViewStyle;
+  commentItem: ViewStyle;
+  commentText: TextStyle;
+  likeItem: ViewStyle;
+  // Regular
   routeSummary: ViewStyle;
   routeListItemOverride: ViewStyle;
   scrollView: ViewStyle;
@@ -472,6 +627,65 @@ const styles = StyleSheet.create<{
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  backText: {
+    color: Theme.colors.primary[500],
+  },
+  staffRouteBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.neutral[300],
+  },
+  staffGradeText: {
+    color: Theme.colors.neutral[900],
+  },
+  staffInfoSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: Theme.colors.neutral.white,
+  },
+  staffInfoRows: {
+    gap: 8,
+    flex: 1,
+  },
+  editButton: {
+    padding: 4,
+  },
+  tabScrollContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 0,
+  },
+  commentItem: {
+    paddingVertical: 16,
+    gap: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.neutral[100],
+  },
+  commentText: {
+    color: Theme.colors.neutral[700],
+  },
+  likeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.neutral[100],
   },
   routeSummary: {
     backgroundColor: Theme.colors.neutral.white,
