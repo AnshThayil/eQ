@@ -6,6 +6,7 @@
 import {
   ActionPill,
   AddAscentModal,
+  DrillScheduleCard,
   FilterModal,
   InputField,
   RouteListItem,
@@ -22,6 +23,8 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl, LayoutAnimation } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { getGyms, getGym, logAscent, deleteAscent, saveClimb, unsaveClimb, Gym, Boulder, Wall } from '@/services/api';
+import { getErrorMessage } from '@/services/errors';
+import logger from '@/services/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -84,7 +87,7 @@ export default function RoutesScreen() {
         setSelectedGymId(3);
       }
     } catch (error) {
-      console.error('Failed to load saved gym ID:', error);
+      logger.error('Failed to load saved gym ID:', error);
       setSelectedGymId(3);
     }
   };
@@ -98,7 +101,7 @@ export default function RoutesScreen() {
         return new Map(Object.entries(statesObj));
       }
     } catch (error) {
-      console.error('Failed to load accordion states:', error);
+      logger.error('Failed to load accordion states:', error);
     }
     return new Map();
   };
@@ -109,7 +112,7 @@ export default function RoutesScreen() {
       const statesObj = Object.fromEntries(states);
       await AsyncStorage.setItem(key, JSON.stringify(statesObj));
     } catch (error) {
-      console.error('Failed to save accordion states:', error);
+      logger.error('Failed to save accordion states:', error);
     }
   };
 
@@ -144,8 +147,8 @@ export default function RoutesScreen() {
       // Ensure we always set an array
       setGyms(Array.isArray(gymsData) ? gymsData : []);
     } catch (err) {
-      console.error('Failed to load gyms:', err);
-      setError('Failed to load gyms');
+      logger.error('Failed to load gyms:', err);
+      setError(getErrorMessage(err));
       setGyms([]);
     } finally {
       setLoading(false);
@@ -182,8 +185,8 @@ export default function RoutesScreen() {
       
       setZones(zonesWithStates);
     } catch (err) {
-      console.error('Failed to load gym details:', err);
-      setError('Failed to load routes');
+      logger.error('Failed to load gym details:', err);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -286,12 +289,8 @@ export default function RoutesScreen() {
       // Update only the affected boulder in state
       updateBoulderInState(response.boulder);
     } catch (err: any) {
-      console.error('Failed to delete ascent:', err);
-      if (err.response?.status === 401) {
-        setError('Please log in to delete ascents');
-      } else {
-        setError('Failed to delete ascent');
-      }
+      logger.error('Failed to delete ascent:', err);
+      setError(getErrorMessage(err));
     }
   };
 
@@ -310,12 +309,8 @@ export default function RoutesScreen() {
         : await saveClimb(boulderId);
       updateBoulderInState(response.boulder);
     } catch (err: any) {
-      console.error('Failed to toggle saved route:', err);
-      if (err.response?.status === 401) {
-        setError('Please log in to save climbs');
-      } else {
-        setError('Failed to save route');
-      }
+      logger.error('Failed to toggle saved route:', err);
+      setError(getErrorMessage(err));
     }
   };
 
@@ -331,13 +326,9 @@ export default function RoutesScreen() {
       // Update only the affected boulder in state
       updateBoulderInState(response.boulder);
     } catch (err: any) {
-      console.error('Failed to log ascent:', err);
-      if (err.response?.status === 401) {
-        setError('Please log in to log ascents');
-        setModalVisible(false);
-      } else {
-        setError('Failed to log ascent');
-      }
+      logger.error('Failed to log ascent:', err);
+      setError(getErrorMessage(err));
+      setModalVisible(false);
     }
   };
 
@@ -563,6 +554,16 @@ export default function RoutesScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Drill Schedule Card */}
+      <View style={styles.drillCardContainer}>
+        <DrillScheduleCard
+          lastSetDate="19/10/25"
+          lastSetZones="Z1, Z7"
+          upNextDate="12/11/25"
+          upNextZones="Z2, Z4"
+        />
+      </View>
+
       {/* Filters */}
       <View style={styles.filtersContainer}>
         <View style={styles.filterOptions}>
@@ -712,6 +713,7 @@ const styles = StyleSheet.create<{
   header: ViewStyle;
   locationInput: ViewStyle;
   mapButton: ViewStyle;
+  drillCardContainer: ViewStyle;
   filtersContainer: ViewStyle;
   filterOptions: ViewStyle;
   scrollView: ViewStyle;
@@ -766,6 +768,11 @@ const styles = StyleSheet.create<{
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  drillCardContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    backgroundColor: Theme.colors.neutral.white,
   },
   filtersContainer: {
     flexDirection: 'row',

@@ -8,6 +8,7 @@ export { CheckboxUnselectedIcon } from './CheckboxUnselectedIcon';
 export { CloseIcon } from './CloseIcon';
 export { CompassIcon } from './CompassIcon';
 export { CompassFilledIcon } from './CompassFilledIcon';
+export { EditIcon } from './EditIcon';
 export { EmailIcon } from './EmailIcon';
 export { EventsIcon } from './EventsIcon';
 export { FacilitiesLadderIcon } from './FacilitiesLadderIcon';

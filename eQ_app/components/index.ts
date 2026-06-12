@@ -35,10 +35,16 @@ export type { PieChartProps, PieChartSegment } from './features/PieChart';
 export { ProfileNavButton } from './features/ProfileNavButton';
 export type { ProfileNavButtonProps } from './features/ProfileNavButton';
 export { RouteListItem } from './features/RouteListItem';
+export { DrillScheduleCard } from './features/DrillScheduleCard';
+export type { DrillScheduleCardProps } from './features/DrillScheduleCard';
 export { SaveClimb } from './features/SaveClimb';
 export { StatsCard } from './features/StatsCard';
 export type { StatsCardProps } from './features/StatsCard';
 export { ZoneAccordion } from './features/ZoneAccordion';
+export { SessionHistoryItem } from './features/SessionHistoryItem';
+export type { SessionHistoryItemProps, SessionRouteItem } from './features/SessionHistoryItem';
+export { SessionCalendar } from './features/SessionCalendar';
+export type { SessionCalendarProps, CalendarSession } from './features/SessionCalendar';
 
 // Icons
 export * from './icons';
