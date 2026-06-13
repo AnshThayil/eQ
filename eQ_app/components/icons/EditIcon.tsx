@@ -6,16 +6,8 @@ export function EditIcon({ size = 24, color = '#c01752' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+        d="M19.1171 9.3461C19.1171 9.3461 22.4645 5.9987 20.2329 3.76711C18.0013 1.53552 14.6539 4.88291 14.6539 4.88291L4.61344 14.9233C3.87851 15.6583 3.29826 16.5504 3.12162 17.5746C2.94326 18.6087 2.8839 19.8921 3.49591 20.5041C4.10791 21.1161 5.39128 21.0568 6.42542 20.8783C7.44963 20.7017 8.34171 20.1215 9.07664 19.3865L19.1171 9.3461ZM14.6539 4.88291L19.1171 9.3461"
         stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-        stroke={color}
-        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

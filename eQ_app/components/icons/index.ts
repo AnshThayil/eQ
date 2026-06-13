@@ -1,8 +1,10 @@
 export { AscentCompletedIcon } from './AscentCompletedIcon';
 export { AscentUncompletedIcon } from './AscentUncompletedIcon';
+export { CalendarIcon } from './CalendarIcon';
 export { CardIcon } from './CardIcon';
 export { CartIcon } from './CartIcon';
 export { CaretDownIcon } from './CaretDownIcon';
+export { ChevronLeftIcon } from './ChevronLeftIcon';
 export { CheckboxSelectedIcon } from './CheckboxSelectedIcon';
 export { CheckboxUnselectedIcon } from './CheckboxUnselectedIcon';
 export { CloseIcon } from './CloseIcon';
@@ -35,4 +37,5 @@ export { SettingsIcon } from './SettingsIcon';
 export { ShopIcon } from './ShopIcon';
 export { SortIcon } from './SortIcon';
 export type { IconProps } from './SortIcon';
+export { TrashIcon } from './TrashIcon';
 
