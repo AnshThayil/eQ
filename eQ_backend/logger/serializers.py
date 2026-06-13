@@ -13,6 +13,19 @@ class UserSerializer(serializers.ModelSerializer):
         profile = getattr(obj, 'profile', None)
         return profile.phone_number if profile else None
 
+
+class StaffUserSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for populating setter/tester dropdowns."""
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'name']
+
+    def get_name(self, obj):
+        full_name = f"{obj.first_name} {obj.last_name}".strip()
+        return full_name or obj.username
+
 class GymSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gym
@@ -38,6 +51,8 @@ class BoulderSerializer(serializers.ModelSerializer):
     user_has_sent = serializers.SerializerMethodField()
     user_has_saved = serializers.SerializerMethodField()
     wall_details = serializers.SerializerMethodField()
+    setter_details = serializers.SerializerMethodField()
+    tester_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Boulder
@@ -61,6 +76,16 @@ class BoulderSerializer(serializers.ModelSerializer):
         """Include wall details with id and name."""
         if obj.wall:
             return {'id': obj.wall.id, 'name': obj.wall.name}
+        return None
+
+    def get_setter_details(self, obj):
+        if obj.setter:
+            return StaffUserSerializer(obj.setter).data
+        return None
+
+    def get_tester_details(self, obj):
+        if obj.tester:
+            return StaffUserSerializer(obj.tester).data
         return None
 
     def to_representation(self, instance):
@@ -154,3 +179,44 @@ class SavedBoulderListSerializer(serializers.ModelSerializer):
             'gym_name',
             'num_ascents',
         ]
+
+
+class ZoneScheduleSerializer(serializers.ModelSerializer):
+    """A wall ("zone") as it appears in the setting schedule/queue.
+
+    ``next_reset`` is the manual override if set, otherwise the date
+    auto-computed from the gym's setting day and the wall's queue
+    position (provided by the view via ``computed_reset`` on the instance).
+    """
+    gym_name = serializers.CharField(source='gym.name', read_only=True)
+    next_reset = serializers.SerializerMethodField()
+    next_reset_is_override = serializers.SerializerMethodField()
+    active_route_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Wall
+        fields = [
+            'id',
+            'name',
+            'gym',
+            'gym_name',
+            'order',
+            'last_set',
+            'next_reset',
+            'next_reset_is_override',
+            'active_route_count',
+        ]
+
+    def get_next_reset(self, obj):
+        if obj.next_reset:
+            return obj.next_reset
+        return getattr(obj, 'computed_reset', None)
+
+    def get_next_reset_is_override(self, obj):
+        return obj.next_reset is not None
+
+    def get_active_route_count(self, obj):
+        count = getattr(obj, 'active_route_count', None)
+        if count is not None:
+            return count
+        return obj.boulders.filter(is_active=True).count()

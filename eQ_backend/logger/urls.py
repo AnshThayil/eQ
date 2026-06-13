@@ -1,12 +1,13 @@
 
 from django.urls import path, include
-from .views import GymViewSet, WallViewSet, BoulderViewSet, BoulderAscentView, BoulderSaveView, LeaderboardView, LatestAscentsView, MyAscentsView, UserProfileView, PersonalInfoView, LogoutView, UserSettingsView, CustomTokenObtainPairView
+from .views import GymViewSet, WallViewSet, BoulderViewSet, BoulderAscentView, BoulderSaveView, LeaderboardView, LatestAscentsView, MyAscentsView, UserProfileView, PersonalInfoView, LogoutView, UserSettingsView, CustomTokenObtainPairView, ZoneViewSet, SettingHistoryView, StaffUsersView
 from rest_framework_nested import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 
 router = routers.DefaultRouter()
 router.register(r'gyms', GymViewSet, basename='gyms')
 router.register(r'boulders', BoulderViewSet, basename='boulders')
+router.register(r'zones', ZoneViewSet, basename='zones')
 gyms_router = routers.NestedDefaultRouter(router, r'gyms', lookup='gym')
 gyms_router.register(r'walls', WallViewSet, basename='gym-walls')
 
@@ -24,8 +25,12 @@ urlpatterns = [
     path('my-ascents/', MyAscentsView.as_view(), name='my-ascents'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('personal-info/', PersonalInfoView.as_view(), name='personal-info'),
+    path('staff-users/', StaffUsersView.as_view(), name='staff-users'),
+    path('setting-history/', SettingHistoryView.as_view(), name='setting-history'),
+    path('setting-history/<str:date>/', SettingHistoryView.as_view(), name='setting-history-detail'),
     path('auth/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('settings/', UserSettingsView.as_view(), name='user-settings'),
 ]
+

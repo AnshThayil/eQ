@@ -6,4 +6,4 @@ class LoggerConfig(AppConfig):
     name = 'logger'
 
     def ready(self):
-        pass  
+        import logger.signals  # noqa: F401

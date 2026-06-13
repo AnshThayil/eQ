@@ -4,14 +4,17 @@ from collections import Counter
 
 from rest_framework import viewsets, mixins, status, permissions
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.shortcuts import get_object_or_404
-from django.db import transaction
+from django.db import transaction, models
 
 from .models import Gym, Wall, Boulder, Ascent, SavedBoulder, UserSettings
-from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer, UserProfileSerializer, SavedBoulderListSerializer
+from .serializers import GymSerializer, WallSerializer, BoulderSerializer, AscentSerializer, ActivityAscentSerializer, UserProfileSerializer, SavedBoulderListSerializer, ZoneScheduleSerializer, StaffUserSerializer
+from .permissions import IsStaffOrReadOnly
+from .scheduling import computed_reset_date, next_occurrence
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +46,7 @@ class WallViewSet(mixins.CreateModelMixin,
 				  mixins.DestroyModelMixin,
 				  viewsets.GenericViewSet):
 	serializer_class = WallSerializer
+	permission_classes = [IsStaffOrReadOnly]
 
 	def get_queryset(self):
 		gym_id = self.kwargs.get('gym_pk')
@@ -61,6 +65,25 @@ class BoulderViewSet(mixins.ListModelMixin,
 					 viewsets.GenericViewSet):
 	queryset = Boulder.objects.all()
 	serializer_class = BoulderSerializer
+	permission_classes = [IsStaffOrReadOnly]
+
+	def get_queryset(self):
+		qs = Boulder.objects.all()
+		wall_id = self.request.query_params.get('wall')
+		if wall_id:
+			qs = qs.filter(wall_id=wall_id)
+		active = self.request.query_params.get('is_active')
+		if active is not None:
+			qs = qs.filter(is_active=active.lower() == 'true')
+		return qs
+
+	def perform_create(self, serializer):
+		# Default the setter to the staff user creating the route when not
+		# explicitly provided.
+		if serializer.validated_data.get('setter') is None:
+			serializer.save(setter=self.request.user)
+		else:
+			serializer.save()
 
 
 class BoulderAscentView(APIView):
@@ -511,3 +534,215 @@ class UserSettingsView(APIView):
 			'leaderboard_opt_in': user_settings.leaderboard_opt_in,
 			'sends_visibility': user_settings.sends_visibility,
 		})
+
+
+def _annotate_zone_schedule(walls, gym):
+	"""Attach computed reset dates and active route counts to ordered walls.
+
+	``walls`` must already be ordered by their queue ``order``.
+	"""
+	from datetime import date, timedelta
+
+	setting_day = gym.setting_day if gym else None
+	batch_size = max(1, getattr(gym, 'zones_per_reset', 2) or 1) if gym else 1
+	# Counts of active routes per wall in one query.
+	counts = {
+		row['wall_id']: row['c']
+		for row in Boulder.objects.filter(
+			wall__in=walls, is_active=True
+		).values('wall_id').annotate(c=models.Count('id'))
+	}
+	for position, wall in enumerate(walls):
+		wall.active_route_count = counts.get(wall.id, 0)
+		# If the wall was already reset today, schedule from tomorrow so it
+		# doesn't show today as its next reset.
+		from_date = date.today()
+		if wall.last_set == date.today():
+			from_date = date.today() + timedelta(days=1)
+		# Zones roll in batches of ``batch_size`` (default 2): positions
+		# 0..batch_size-1 reset on the next setting day, the next batch one
+		# week later, and so on.
+		queue_week = position // batch_size
+		wall.computed_reset = computed_reset_date(setting_day, queue_week, from_date=from_date)
+	return walls
+
+
+class ZoneViewSet(viewsets.GenericViewSet):
+	"""Setting-schedule management for walls ("zones").
+
+	- ``GET /zones/``            ordered queue with reset dates + route counts
+	- ``PATCH /zones/{id}/``     override next_reset and/or mark up next
+	- ``POST /zones/reorder/``   persist a new drag-and-drop order
+	- ``POST /zones/{id}/reset/``deactivate active routes and roll the schedule
+	- ``GET /zones/{id}/routes/``active routes in the zone
+	"""
+	queryset = Wall.objects.all()
+	serializer_class = ZoneScheduleSerializer
+	permission_classes = [IsStaffOrReadOnly]
+
+	def _ordered_walls(self, gym):
+		return list(Wall.objects.filter(gym=gym).order_by('order', 'id'))
+
+	def list(self, request):
+		gym_id = request.query_params.get('gym_id')
+		if gym_id:
+			gym = get_object_or_404(Gym, pk=gym_id)
+		else:
+			gym = Gym.objects.first()
+		if gym is None:
+			return Response({'zones': []})
+
+		walls = _annotate_zone_schedule(self._ordered_walls(gym), gym)
+		serializer = self.get_serializer(walls, many=True)
+		return Response({
+			'gym_id': gym.id,
+			'setting_day': gym.setting_day,
+			'zones_per_reset': gym.zones_per_reset,
+			'zones': serializer.data,
+		})
+
+	def partial_update(self, request, pk=None):
+		wall = get_object_or_404(Wall, pk=pk)
+
+		# Manual reset-date override (null clears it to fall back to computed).
+		if 'next_reset' in request.data:
+			wall.next_reset = request.data.get('next_reset') or None
+
+		# "Mark as up next" — move this wall to the front of the queue.
+		if request.data.get('mark_up_next') is True:
+			others = Wall.objects.filter(gym=wall.gym).exclude(pk=wall.pk).order_by('order', 'id')
+			wall.order = 0
+			wall.save()
+			for idx, other in enumerate(others, start=1):
+				if other.order != idx:
+					other.order = idx
+					other.save(update_fields=['order'])
+		else:
+			wall.save()
+
+		walls = _annotate_zone_schedule(self._ordered_walls(wall.gym), wall.gym)
+		serializer = self.get_serializer(walls, many=True)
+		return Response({
+			'gym_id': wall.gym_id,
+			'setting_day': wall.gym.setting_day,
+			'zones_per_reset': wall.gym.zones_per_reset,
+			'zones': serializer.data,
+		})
+
+	@action(detail=False, methods=['post'])
+	def reorder(self, request):
+		"""Persist a new queue order. Body: {"order": [wall_id, ...]}"""
+		order = request.data.get('order')
+		if not isinstance(order, list) or not order:
+			return Response({'detail': 'order must be a non-empty list of wall ids.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		walls = {w.id: w for w in Wall.objects.filter(id__in=order)}
+		missing = [wid for wid in order if wid not in walls]
+		if missing:
+			return Response({'detail': f'Unknown wall ids: {missing}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		gym_ids = {w.gym_id for w in walls.values()}
+		if len(gym_ids) > 1:
+			return Response({'detail': 'All walls must belong to the same gym.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		with transaction.atomic():
+			for position, wall_id in enumerate(order):
+				wall = walls[wall_id]
+				if wall.order != position:
+					wall.order = position
+					wall.save(update_fields=['order'])
+
+		gym = next(iter(walls.values())).gym
+		result = _annotate_zone_schedule(self._ordered_walls(gym), gym)
+		serializer = self.get_serializer(result, many=True)
+		return Response({
+			'gym_id': gym.id,
+			'setting_day': gym.setting_day,
+			'zones_per_reset': gym.zones_per_reset,
+			'zones': serializer.data,
+		})
+
+	@action(detail=True, methods=['post'])
+	def reset(self, request, pk=None):
+		"""Reset a wall: deactivate its active routes, mark it set today,
+		and roll its next reset date forward one cycle."""
+		from datetime import date, timedelta
+
+		wall = get_object_or_404(Wall, pk=pk)
+		with transaction.atomic():
+			deactivated = Boulder.objects.filter(wall=wall, is_active=True).update(is_active=False)
+			wall.last_set = date.today()
+			# Roll the manual override (if any) forward so it points to a
+			# future date; otherwise leave it null to recompute from order.
+			position = list(
+				Wall.objects.filter(gym=wall.gym).order_by('order', 'id').values_list('id', flat=True)
+			).index(wall.id)
+			batch_size = max(1, wall.gym.zones_per_reset or 1)
+			queue_week = position // batch_size
+			wall.next_reset = computed_reset_date(
+				wall.gym.setting_day, queue_week, from_date=date.today() + timedelta(days=1)
+			)
+			wall.save(update_fields=['last_set', 'next_reset'])
+
+		return Response({'detail': f'Reset complete. {deactivated} routes deactivated.', 'wall_id': wall.id})
+
+	@action(detail=True, methods=['get'])
+	def routes(self, request, pk=None):
+		"""List the active routes in this zone."""
+		wall = get_object_or_404(Wall, pk=pk)
+		boulders = Boulder.objects.filter(wall=wall, is_active=True).order_by('-date_set', '-id')
+		serializer = BoulderSerializer(boulders, many=True, context={'request': request})
+		return Response({'wall_id': wall.id, 'wall_name': wall.name, 'routes': serializer.data})
+
+
+class SettingHistoryView(APIView):
+	"""Setting history grouped by the date routes were set.
+
+	``GET /setting-history/``          → list of {date, zones, setter_names, route_count}
+	``GET /setting-history/{date}/``   → routes set on that date (YYYY-MM-DD)
+	"""
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get(self, request, date=None):
+		if date:
+			boulders = Boulder.objects.filter(date_set=date).select_related(
+				'wall', 'wall__gym', 'setter', 'tester'
+			).order_by('wall__order', 'id')
+			serializer = BoulderSerializer(boulders, many=True, context={'request': request})
+			return Response({'date': date, 'routes': serializer.data})
+
+		# Group by date_set.
+		rows = (
+			Boulder.objects.values('date_set')
+			.annotate(route_count=models.Count('id'))
+			.order_by('-date_set')
+		)
+		history = []
+		for row in rows:
+			d = row['date_set']
+			day_boulders = Boulder.objects.filter(date_set=d).select_related('wall', 'setter')
+			zones = sorted({b.wall.name for b in day_boulders if b.wall})
+			setters = sorted({
+				(f"{b.setter.first_name} {b.setter.last_name}".strip() or b.setter.username)
+				for b in day_boulders if b.setter
+			})
+			history.append({
+				'date': d,
+				'zones': zones,
+				'setters': setters,
+				'route_count': row['route_count'],
+			})
+		return Response({'history': history})
+
+
+class StaffUsersView(APIView):
+	"""List staff users for setter/tester dropdowns."""
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get(self, request):
+		from django.contrib.auth.models import User
+
+		staff = User.objects.filter(is_staff=True).order_by('first_name', 'last_name', 'username')
+		serializer = StaffUserSerializer(staff, many=True)
+		return Response({'staff_users': serializer.data})
+

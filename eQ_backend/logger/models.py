@@ -13,6 +13,15 @@ class Gym(models.Model):
         unique=True,
         help_text="YoActiv branch ID for this gym",
     )
+    setting_day = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Recurring weekly setting/reset day (0=Monday ... 6=Sunday)",
+    )
+    zones_per_reset = models.PositiveIntegerField(
+        default=2,
+        help_text="Default number of zones reset together each setting day. The queue auto-rolls in batches of this size, one week apart.",
+    )
 
     def __str__(self):
 
@@ -41,10 +50,25 @@ class Wall(models.Model):
 
     gym = models.ForeignKey(Gym, on_delete=models.CASCADE, related_name='walls')
     name = models.CharField(max_length=100)
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Position in the setting queue (lower = sooner). 0 is 'up next'.",
+    )
+    last_set = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date this wall's routes were last reset/set.",
+    )
+    next_reset = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Manual override for the next reset date. If blank, it is computed from the gym setting day and queue order.",
+    )
 
 
     class Meta:
         unique_together = ("gym", "name")
+        ordering = ["order", "id"]
     
     def __str__(self):
         return f"{self.name} at {self.gym}"
@@ -77,6 +101,8 @@ class Boulder(models.Model):
 
     wall = models.ForeignKey(Wall, on_delete=models.CASCADE, related_name="boulders")
     setter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='setter')
+    tester = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='tested_boulders')
+    comments = models.TextField(blank=True, default="")
     setter_grade = models.CharField(max_length=10, choices=GRADE_CHOICES, blank=True)
     color = models.CharField(max_length=30, blank=True)
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, blank=True)
