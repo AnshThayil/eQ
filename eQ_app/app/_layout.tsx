@@ -17,6 +17,7 @@ import { Tabs } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { LogBox, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // Suppress the LogBox overlay for handled API/network errors.
@@ -58,6 +59,12 @@ function AppContent() {
           name="login"
           options={{
             href: null, // Hide from tabs
+          }}
+        />
+        <Tabs.Screen
+          name="(setter)"
+          options={{
+            href: null, // Hide from tabs (reachable via router.push)
           }}
         />
         <Tabs.Screen
@@ -128,16 +135,21 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <SafeAreaProvider>
-          <AppContent />
-        </SafeAreaProvider>
-      </AuthProvider>
+      <GestureHandlerRootView style={styles.root}>
+        <AuthProvider>
+          <SafeAreaProvider>
+            <AppContent />
+          </SafeAreaProvider>
+        </AuthProvider>
+      </GestureHandlerRootView>
     </ErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: Theme.colors.neutral[100],

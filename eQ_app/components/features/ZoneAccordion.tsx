@@ -11,8 +11,8 @@
  */
 
 import { Theme } from '@/constants/Theme';
-import React from 'react';
-import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { CaretDownIcon } from '../icons';
 import { ThemedText } from '../basic/ThemedText';
 
@@ -56,6 +56,53 @@ export function ZoneAccordion({
   children,
   style: styleProp,
 }: ZoneAccordionProps) {
+  const rotateAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+  const heightAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+  const isFirstRender = useRef(true);
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  const hasMeasured = useRef(false);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    Animated.parallel([
+      Animated.timing(rotateAnim, {
+        toValue: isOpen ? 1 : 0,
+        duration: 180,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(heightAnim, {
+        toValue: isOpen ? 1 : 0,
+        duration: 180,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [isOpen]);
+
+  const rotateDeg = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const animatedHeight = heightAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, measuredHeight],
+  });
+
+  const handleLayout = (h: number) => {
+    if (h > 0 && !hasMeasured.current) {
+      hasMeasured.current = true;
+      setMeasuredHeight(h);
+      heightAnim.setValue(isOpenRef.current ? 1 : 0);
+    }
+  };
+
   return (
     <View style={[styles.container, styleProp]}>
       {/* Zone Header - Clickable */}
@@ -77,20 +124,22 @@ export function ZoneAccordion({
         </View>
         
         {/* Caret Icon */}
-        <View style={[styles.caretContainer, isOpen && styles.caretOpen]}>
+        <Animated.View style={[styles.caretContainer, { transform: [{ rotate: rotateDeg }] }]}>
           <CaretDownIcon
             size={24}
             color={Theme.semantic.text.primary}
           />
-        </View>
+        </Animated.View>
       </Pressable>
       
-      {/* Routes Container - Conditionally rendered */}
-      {isOpen && (
-        <View style={styles.routesContainer}>
+      {/* Routes Container - always mounted, height animated */}
+      <Animated.View style={[styles.routesContainer, { height: measuredHeight === 0 ? undefined : animatedHeight, overflow: 'hidden' }]}>
+        <View
+          onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
+        >
           {children}
         </View>
-      )}
+      </Animated.View>
     </View>
   );
 }
@@ -124,13 +173,10 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ scaleY: 1 }], // Normal orientation when closed (pointing down)
-  },
-  caretOpen: {
-    transform: [{ scaleY: -1 }], // Flipped when open (pointing up)
   },
   routesContainer: {
     flexDirection: 'column',
     backgroundColor: Theme.colors.neutral.white,
+    overflow: 'hidden',
   },
 });

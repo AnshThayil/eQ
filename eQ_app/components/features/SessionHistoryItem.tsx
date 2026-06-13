@@ -7,8 +7,8 @@
  */
 
 import { Theme } from '@/constants/Theme';
-import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { CaretDownIcon } from '../icons/CaretDownIcon';
 import { FlashIcon } from '../icons/FlashIcon';
 import { HoldIcon } from '../icons/HoldIcon';
@@ -112,6 +112,49 @@ export function SessionHistoryItem({
   style: styleProp,
 }: SessionHistoryItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const rotateAnim = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
+  const heightAnim = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+  const isExpandedRef = useRef(defaultExpanded);
+  const hasMeasured = useRef(false);
+
+  const handleToggle = () => {
+    const next = !isExpandedRef.current;
+    isExpandedRef.current = next;
+    setIsExpanded(next);
+    Animated.parallel([
+      Animated.timing(rotateAnim, {
+        toValue: next ? 1 : 0,
+        duration: 180,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(heightAnim, {
+        toValue: next ? 1 : 0,
+        duration: 180,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
+
+  const handleLayout = (h: number) => {
+    if (h > 0 && !hasMeasured.current) {
+      hasMeasured.current = true;
+      setMeasuredHeight(h);
+      heightAnim.setValue(isExpandedRef.current ? 1 : 0);
+    }
+  };
+
+  const rotateDeg = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const animatedHeight = heightAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, measuredHeight],
+  });
 
   return (
     <View style={[styles.card, styleProp]}>
@@ -148,32 +191,34 @@ export function SessionHistoryItem({
       {/* Accordion toggle */}
       <TouchableOpacity
         style={styles.toggleButton}
-        onPress={() => setIsExpanded(!isExpanded)}
+        onPress={handleToggle}
         activeOpacity={0.7}
       >
-        <View style={[styles.caretContainer, isExpanded && styles.caretUp]}>
+        <Animated.View style={[styles.caretContainer, { transform: [{ rotate: rotateDeg }] }]}>
           <CaretDownIcon size={12} color={Theme.colors.primary[500]} />
-        </View>
+        </Animated.View>
         <ThemedText variant="button" style={styles.toggleText}>
           {isExpanded ? 'Hide routes' : 'See routes'}
         </ThemedText>
       </TouchableOpacity>
 
-      {/* Expanded routes list */}
-      {isExpanded && routes.length > 0 && (
-        <View style={styles.routesList}>
-          {routes.map((route, index) => (
-            <View
-              key={route.id}
-              style={[
-                styles.routeRowWrapper,
-                index === 0 && styles.routeRowFirst,
-              ]}
-            >
-              <RouteRow route={route} />
-            </View>
-          ))}
-        </View>
+      {/* Expanded routes list - always mounted, height animated */}
+      {routes.length > 0 && (
+        <Animated.View style={[styles.routesList, { height: measuredHeight === 0 ? undefined : animatedHeight, overflow: 'hidden' }]}>
+          <View onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}>
+            {routes.map((route, index) => (
+              <View
+                key={route.id}
+                style={[
+                  styles.routeRowWrapper,
+                  index === 0 && styles.routeRowFirst,
+                ]}
+              >
+                <RouteRow route={route} />
+              </View>
+            ))}
+          </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -227,12 +272,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.xs,
     paddingVertical: Theme.spacing.xs,
   },
-  caretContainer: {
-    transform: [{ rotate: '0deg' }],
-  },
-  caretUp: {
-    transform: [{ rotate: '180deg' }],
-  },
+  caretContainer: {},
   toggleText: {
     color: Theme.colors.primary[500],
   },

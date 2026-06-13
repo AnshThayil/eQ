@@ -70,10 +70,36 @@ export interface Wall {
   name: string;
 }
 
+/**
+ * A wall as it appears in the setter setting-schedule / queue.
+ * The backend calls these "zones".
+ */
+export interface Zone {
+  id: number;
+  name: string;
+  gym: number;
+  gym_name: string;
+  order: number;
+  last_set: string | null;
+  next_reset: string | null;
+  next_reset_is_override: boolean;
+  active_route_count: number;
+}
+
+export interface ZoneScheduleResponse {
+  gym_id: number;
+  setting_day: number | null;
+  zones_per_reset: number;
+  zones: Zone[];
+}
+
+
 export interface Boulder {
   id: number;
   wall: number;
   setter: number | null;
+  tester: number | null;
+  comments: string;
   setter_grade: string;
   concensus_grade: string;
   color: string;
@@ -89,6 +115,17 @@ export interface Boulder {
     id: number;
     name: string;
   };
+  setter_details?: StaffUser | null;
+  tester_details?: StaffUser | null;
+}
+
+/** A staff user as returned for setter/tester dropdowns and route details. */
+export interface StaffUser {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  name: string;
 }
 
 export interface User {
@@ -281,9 +318,9 @@ export const deleteWall = async (gymId: number, wallId: number): Promise<void> =
 };
 
 // Boulders
-export const getBoulders = async (): Promise<Boulder[]> => {
-  const response = await apiClient.get('/boulders/');
-  return response.data;
+export const getBoulders = async (params?: { wall?: number; is_active?: boolean }): Promise<Boulder[]> => {
+  const response = await apiClient.get('/boulders/', { params });
+  return response.data.results ?? response.data;
 };
 
 export const getBoulder = async (id: number): Promise<Boulder> => {
@@ -313,6 +350,38 @@ export const deleteBoulder = async (id: number): Promise<void> => {
   await apiClient.delete(`/boulders/${id}/`);
 };
 
+export const getStaffUsers = async (): Promise<StaffUser[]> => {
+  const response = await apiClient.get('/staff-users/');
+  return response.data.staff_users;
+};
+
+// Zones (setting schedule)
+export const getZones = async (gymId?: number): Promise<ZoneScheduleResponse> => {
+  const response = await apiClient.get('/zones/', {
+    params: gymId ? { gym_id: gymId } : undefined,
+  });
+  return response.data;
+};
+
+export const updateZone = async (
+  zoneId: number,
+  data: { next_reset?: string | null; mark_up_next?: boolean },
+): Promise<ZoneScheduleResponse> => {
+  const response = await apiClient.patch(`/zones/${zoneId}/`, data);
+  return response.data;
+};
+
+export const reorderZones = async (order: number[]): Promise<ZoneScheduleResponse> => {
+  const response = await apiClient.post('/zones/reorder/', { order });
+  return response.data;
+};
+
+export const resetZone = async (zoneId: number): Promise<{ detail: string; wall_id: number }> => {
+  const response = await apiClient.post(`/zones/${zoneId}/reset/`);
+  return response.data;
+};
+
+
 // Ascents
 export const logAscent = async (
   boulderId: number,
@@ -330,6 +399,32 @@ export const logAscent = async (
 
 export const deleteAscent = async (boulderId: number): Promise<{ boulder: Boulder }> => {
   const response = await apiClient.delete(`/boulders/${boulderId}/ascent/`);
+  return response.data;
+};
+
+export interface SettingHistoryEntry {
+  date: string;
+  zones: string[];
+  setters: string[];
+  route_count: number;
+}
+
+export interface SettingHistoryResponse {
+  history: SettingHistoryEntry[];
+}
+
+export interface SettingHistoryDetailResponse {
+  date: string;
+  routes: Boulder[];
+}
+
+export const getSettingHistory = async (): Promise<SettingHistoryResponse> => {
+  const response = await apiClient.get('/setting-history/');
+  return response.data;
+};
+
+export const getSettingHistoryDetail = async (date: string): Promise<SettingHistoryDetailResponse> => {
+  const response = await apiClient.get(`/setting-history/${date}/`);
   return response.data;
 };
 

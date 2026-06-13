@@ -275,6 +275,7 @@ export default function RouteDetailScreen() {
       } catch (error) {
         logger.error('Failed to save gym ID:', error);
       }
+      router.back();
     }
   };
 
@@ -345,10 +346,14 @@ export default function RouteDetailScreen() {
             /* ── Staff header ── */
             <>
               {/* Back button */}
-              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <CaretDownIcon size={12} color={Theme.colors.primary[500]} style={{ transform: [{ rotate: '90deg' }] }} />
-                <ThemedText variant="button" style={styles.backText}>Back</ThemedText>
-              </TouchableOpacity>
+              <View style={styles.backButtonRow}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                  <View style={{ transform: [{ rotate: '90deg' }] }}>
+                    <CaretDownIcon size={12} color={Theme.colors.primary[500]} />
+                  </View>
+                  <ThemedText variant="button" style={styles.backText}>Back</ThemedText>
+                </TouchableOpacity>
+              </View>
 
               {/* Route grade badge */}
               {boulder && (
@@ -470,7 +475,7 @@ export default function RouteDetailScreen() {
                 likes.map((like) => (
                   <View key={like.id} style={styles.likeItem}>
                     <ThemedText variant="body2">{like.name}</ThemedText>
-                    <LikeFilledIcon size={24} color={Theme.colors.primary[500]} />
+                    <LikeFilledIcon size={24} color={Theme.colors.primary[300]} />
                   </View>
                 ))
               )}
@@ -557,6 +562,7 @@ const styles = StyleSheet.create<{
   locationInput: ViewStyle;
   mapButton: ViewStyle;
   // Staff-specific
+  backButtonRow: ViewStyle;
   backButton: ViewStyle;
   backText: TextStyle;
   staffRouteBadge: ViewStyle;
@@ -628,12 +634,16 @@ const styles = StyleSheet.create<{
     alignItems: 'center',
     justifyContent: 'center',
   },
+  backButtonRow: {
+    backgroundColor: Theme.colors.neutral.white,
+  },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 20,
     paddingVertical: 12,
+    alignSelf: 'flex-start',
   },
   backText: {
     color: Theme.colors.primary[500],
@@ -646,6 +656,7 @@ const styles = StyleSheet.create<{
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.neutral[300],
+    backgroundColor: Theme.colors.neutral.white,
   },
   staffGradeText: {
     color: Theme.colors.neutral[900],

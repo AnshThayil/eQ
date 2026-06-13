@@ -22,7 +22,7 @@ import { Theme } from '@/constants';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, ActivityIndicator, Text, ViewStyle, TextStyle, RefreshControl, LayoutAnimation } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import { getGyms, getGym, logAscent, deleteAscent, saveClimb, unsaveClimb, Gym, Boulder, Wall } from '@/services/api';
+import { getGyms, getGym, getZones, logAscent, deleteAscent, saveClimb, unsaveClimb, Gym, Boulder, Wall, Zone as ApiZone, ZoneScheduleResponse } from '@/services/api';
 import { getErrorMessage } from '@/services/errors';
 import logger from '@/services/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -66,6 +66,7 @@ export default function RoutesScreen() {
     routeId: '',
     route: null,
   });
+  const [schedule, setSchedule] = useState<ZoneScheduleResponse | null>(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
@@ -76,6 +77,13 @@ export default function RoutesScreen() {
     loadSavedGymId();
     loadGyms();
   }, []);
+
+  // Load zone schedule when gym changes
+  useEffect(() => {
+    if (selectedGymId) {
+      getZones(selectedGymId).then(setSchedule).catch(() => {});
+    }
+  }, [selectedGymId]);
 
   const loadSavedGymId = async () => {
     try {
@@ -123,18 +131,23 @@ export default function RoutesScreen() {
     }
   }, [selectedGymId]);
 
-  // Refresh gym details only when switching between tabs (not when navigating back from stack)
+  // Refresh gym details when returning from stack or switching tabs
   useFocusEffect(
     React.useCallback(() => {
-      // Store the current route to track tab changes
       const currentRoute = '(routes)';
-      
-      // Only refresh if we're coming from a different tab
-      if (selectedGymId && lastFocusedTabRoute !== null && lastFocusedTabRoute !== currentRoute) {
-        loadGymDetails(selectedGymId);
-      }
-      
-      // Update the last focused tab route
+
+      // Re-read saved gym ID; if it changed (e.g. changed in route-detail), reload
+      AsyncStorage.getItem('selectedGymId').then((savedGymId) => {
+        const savedId = savedGymId ? parseInt(savedGymId, 10) : null;
+        if (savedId && savedId !== selectedGymId) {
+          setSelectedGymId(savedId);
+          // loadGymDetails will fire from the selectedGymId useEffect
+        } else if (selectedGymId && lastFocusedTabRoute !== null && lastFocusedTabRoute !== currentRoute) {
+          // Refresh when switching tabs
+          loadGymDetails(selectedGymId);
+        }
+      });
+
       setLastFocusedTabRoute(currentRoute);
     }, [selectedGymId, lastFocusedTabRoute])
   );
@@ -557,10 +570,43 @@ export default function RoutesScreen() {
       {/* Drill Schedule Card */}
       <View style={styles.drillCardContainer}>
         <DrillScheduleCard
-          lastSetDate="19/10/25"
-          lastSetZones="Z1, Z7"
-          upNextDate="12/11/25"
-          upNextZones="Z2, Z4"
+          lastSetDate={(() => {
+            if (!schedule) return '—';
+            const dates = schedule.zones
+              .map((z) => z.last_set)
+              .filter(Boolean) as string[];
+            if (!dates.length) return '—';
+            const iso = dates.sort().at(-1)!;
+            const [y, m, d] = iso.split('-');
+            return `${d}/${m}/${y.slice(2)}`;
+          })()}
+          lastSetZones={(() => {
+            if (!schedule) return '—';
+            const latest = schedule.zones
+              .map((z) => z.last_set)
+              .filter(Boolean)
+              .sort()
+              .at(-1);
+            if (!latest) return '—';
+            return schedule.zones
+              .filter((z) => z.last_set === latest)
+              .map((z) => z.name)
+              .join(', ');
+          })()}
+          upNextDate={(() => {
+            if (!schedule) return '—';
+            const upNext = schedule.zones.slice(0, schedule.zones_per_reset);
+            const date = upNext.find((z) => z.next_reset)?.next_reset;
+            if (!date) return '—';
+            const [y, m, d] = date.split('-');
+            return `${d}/${m}/${y.slice(2)}`;
+          })()}
+          upNextZones={(() => {
+            if (!schedule) return '—';
+            const upNext = schedule.zones.slice(0, schedule.zones_per_reset);
+            return upNext.map((z) => z.name).join(', ') || '—';
+          })()}
+          onPress={() => router.push('/(setter)/setting-schedule')}
         />
       </View>
 
