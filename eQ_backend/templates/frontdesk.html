@@ -1,0 +1,3002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EQ — Front Desk</title>
+<style>
+/* ── ROOT ── */
+:root{
+  --bg:#09090e;--s1:#111118;--s2:#18181f;--s3:#20202a;
+  --border:#2a2a3c;--accent:#c8f03c;--green:#36e89a;
+  --blue:#4ea8f8;--orange:#f08040;--red:#f04444;--purple:#a78bfa;
+  --text:#eeeef3;--muted:#686880;--subtle:#222235;
+  --fh:'Trebuchet MS','Arial Black',sans-serif;
+  --fb:'Segoe UI',system-ui,sans-serif;
+  --nav-w:196px;--nav-c:54px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.4;overflow:hidden;}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;}
+.login-box{width:420px;background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:32px 30px;text-align:center;}
+.login-logo{font-family:var(--fh);font-size:36px;font-weight:900;color:var(--accent);letter-spacing:-1px;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.sso-btn{width:100%;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#09090e;font-family:var(--fh);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;}
+.sso-btn:hover{background:#d4f745;transform:translateY(-1px);}
+.login-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--muted);}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.demo-staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}
+.demo-staff-btn{padding:9px 8px;border-radius:9px;border:1.5px solid var(--border);background:var(--s2);color:var(--text);font-family:var(--fb);font-size:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.demo-staff-btn:hover{border-color:var(--accent);}
+.dsb-av{width:30px;height:30px;border-radius:7px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:11px;font-weight:700;color:var(--accent);}
+.loc-picker-title{font-size:12px;color:var(--muted);margin-bottom:10px;text-align:left;}
+.loc-grid{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.loc-btn{padding:11px 13px;border-radius:10px;border:1.5px solid var(--border);background:var(--s2);color:var(--text);font-family:var(--fb);font-size:13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:11px;text-align:left;width:100%;}
+.loc-btn:hover:not(.locked){border-color:var(--accent);}
+.loc-btn.selected{border-color:var(--accent);background:rgba(200,240,60,.08);}
+.loc-btn.locked{opacity:.38;cursor:not-allowed;}
+.loc-icon{font-size:20px;flex-shrink:0;}
+.loc-info{flex:1;}
+.loc-name{font-weight:600;font-size:13px;}
+.loc-addr{font-size:11px;color:var(--muted);margin-top:1px;}
+.loc-confirm-btn{width:100%;padding:11px;border-radius:9px;border:none;background:var(--accent);color:#09090e;font-family:var(--fh);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
+.loc-confirm-btn:hover{background:#d4f745;}
+.loc-confirm-btn:disabled{background:var(--subtle);color:var(--muted);cursor:not-allowed;}
+.login-err{font-size:12px;color:var(--red);min-height:16px;margin-bottom:6px;text-align:left;}
+.loc-badge{display:flex;align-items:center;gap:6px;background:rgba(200,240,60,.1);border:1px solid rgba(200,240,60,.2);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:500;color:var(--accent);flex-shrink:0;}
+.loc-badge-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;}
+
+/* ── TOPBAR ── */
+#topbar{position:fixed;top:0;left:0;right:0;height:52px;background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px 0 0;z-index:100;}
+#nav-toggle{width:52px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px;transition:color .15s;flex-shrink:0;}
+#nav-toggle:hover{color:var(--text);}
+.t-logo{font-family:var(--fh);font-weight:900;font-size:20px;color:var(--accent);letter-spacing:-.5px;flex-shrink:0;padding-right:16px;}
+.t-search{flex:1;max-width:400px;position:relative;}
+.t-search input{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px 8px 34px;color:var(--text);font-family:var(--fb);font-size:13px;outline:none;transition:border-color .2s;}
+.t-search input:focus{border-color:var(--accent);}
+.t-search input::placeholder{color:var(--muted);}
+.t-si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:15px;}
+#search-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.sd-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border);}
+.sd-item:last-child{border-bottom:none;}
+.sd-item:hover{background:var(--s2);}
+.sd-av{width:32px;height:32px;border-radius:7px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;}
+.sd-name{font-size:13px;font-weight:500;}
+.sd-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+.t-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+#clk{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.staff-chip{display:flex;align-items:center;gap:6px;background:var(--subtle);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;}
+.gdot{width:6px;height:6px;background:var(--green);border-radius:50%;}
+
+/* ── LAYOUT ── */
+#layout{display:flex;margin-top:52px;height:calc(100vh - 52px);}
+#nav{width:var(--nav-w);flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+#nav.collapsed{width:var(--nav-c);}
+.nav-sec{padding:7px;}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .13s,color .13s;color:var(--muted);white-space:nowrap;overflow:hidden;font-size:13px;font-weight:500;}
+.ni:hover{background:var(--s2);color:var(--text);}
+.ni.on{background:rgba(200,240,60,.1);color:var(--accent);}
+.ni-icon{font-size:17px;flex-shrink:0;width:22px;text-align:center;}
+.ni-lbl{transition:opacity .18s;}
+#nav.collapsed .ni-lbl{opacity:0;pointer-events:none;}
+.nav-div{height:1px;background:var(--border);margin:5px 7px;}
+.nav-bot{margin-top:auto;padding:7px;}
+#content{flex:1;overflow-y:auto;position:relative;background:var(--bg);}
+.screen{display:none;padding:18px;min-height:100%;}
+.screen.on{display:block;}
+.pg-title{font-family:var(--fh);font-size:19px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* ── CARD ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.card:last-child{margin-bottom:0;}
+.ch{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.ct{font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);}
+.cb{padding:14px;}
+
+/* ── TAGS ── */
+.tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.tg{background:rgba(54,232,154,.1);color:var(--green);border:1px solid rgba(54,232,154,.22);}
+.ta{background:rgba(200,240,60,.09);color:var(--accent);border:1px solid rgba(200,240,60,.18);}
+.to{background:rgba(240,128,64,.1);color:var(--orange);border:1px solid rgba(240,128,64,.22);}
+.tr{background:rgba(240,68,68,.1);color:var(--red);border:1px solid rgba(240,68,68,.22);}
+.tp{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.22);}
+.tb{background:rgba(78,168,248,.1);color:var(--blue);border:1px solid rgba(78,168,248,.22);}
+.tag-multi{background:rgba(200,240,60,.12);color:var(--accent);border:1px solid rgba(200,240,60,.25);}
+.tag-single{background:rgba(78,168,248,.1);color:var(--blue);border:1px solid rgba(78,168,248,.22);}
+.tag-pack{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.22);}
+
+/* ── FORM ── */
+.fl{margin-bottom:10px;}
+.fl:last-child{margin-bottom:0;}
+.fl>label,.flbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px;}
+.sw{position:relative;}
+.sw::after{content:'\25BE';position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;pointer-events:none;}
+select,input[type=text],input[type=email],input[type=tel],input[type=date],input[type=password],textarea{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:var(--fb);font-size:13px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
+select{padding-right:24px;}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);}
+select option{background:#18181f;}
+.c2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.c3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+/* ── TOGGLE ── */
+.tog{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0;}
+.tog input{opacity:0;position:absolute;}
+.tog-t{position:absolute;inset:0;background:var(--subtle);border:1px solid var(--border);border-radius:12px;transition:background .2s;}
+.tog input:checked+.tog-t{background:var(--green);border-color:var(--green);}
+.tog-k{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.tog input:checked~.tog-k{transform:translateX(20px);}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-family:var(--fh);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-accent{background:var(--accent);color:#09090e;}
+.btn-accent:hover{background:#d4f745;transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--text);color:var(--text);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#6ab9ff;}
+.btn-green{background:var(--green);color:#09090e;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-orange{background:var(--orange);color:#fff;}
+.btn-sm{padding:6px 11px;font-size:11px;}
+.btn:disabled{background:var(--subtle);color:var(--muted);cursor:not-allowed;transform:none;}
+
+/* ── PAYMENT ── */
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pm{padding:8px 5px;border-radius:8px;border:1.5px solid var(--border);background:var(--s2);color:var(--muted);font-family:var(--fb);font-size:11px;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.pm:hover{border-color:var(--accent);color:var(--text);}
+.pm.sel{background:rgba(200,240,60,.08);border-color:var(--accent);color:var(--accent);}
+.pm.pay-ok{background:rgba(54,232,154,.1);border-color:var(--green);color:var(--green);}
+.pmi{font-size:16px;}
+
+/* ── POS BOX ── */
+.pos-box{border-radius:9px;overflow:hidden;border:1px solid var(--border);margin-top:8px;}
+.pos-s1{padding:11px 13px;background:var(--s2);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.pos-s2{padding:11px 13px;background:rgba(78,168,248,.06);display:none;align-items:center;gap:10px;}
+.pos-s3{padding:11px 13px;background:rgba(54,232,154,.06);display:none;align-items:center;gap:10px;}
+.pos-spin{width:17px;height:17px;border:2px solid rgba(78,168,248,.3);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pos-check{width:26px;height:26px;background:rgba(54,232,154,.15);border:1.5px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;flex-shrink:0;}
+
+/* ── UPI BOX ── */
+.upi-box{border-radius:9px;border:1px solid rgba(54,232,154,.2);background:rgba(54,232,154,.04);margin-top:8px;overflow:hidden;}
+.qr-wrap{width:64px;height:64px;background:#fff;border-radius:5px;padding:5px;flex-shrink:0;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;}
+.qr-wrap div{background:#111;border-radius:1px;}
+
+/* ── MEMBER CARD ── */
+.mstats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-top:10px;}
+.mst{background:var(--s2);padding:8px 10px;text-align:center;}
+.mst-v{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--accent);}
+.mst-l{font-size:10px;color:var(--muted);margin-top:2px;}
+.loyalty-bar{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.18);border-radius:8px;}
+.lp-prog{width:60px;height:5px;background:var(--subtle);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.lp-fill{height:100%;background:var(--purple);border-radius:3px;}
+.expand-btn{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:7px;padding:5px 11px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .13s;margin-top:10px;}
+.expand-btn:hover{border-color:var(--accent);color:var(--accent);}
+.arr{display:inline-block;font-size:10px;transition:transform .2s;}
+.expand-btn.open .arr{transform:rotate(180deg);}
+.mdetail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.mdetail.open{display:block;}
+.mdi-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.mdi{background:var(--s2);border-radius:7px;padding:8px 10px;}
+.mdi-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.mdi-v{font-size:13px;font-weight:500;}
+
+/* ── F&B ── */
+.fnb-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:10px;}
+.fi{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:9px 6px;text-align:center;cursor:pointer;transition:all .13s;position:relative;user-select:none;}
+.fi:hover{border-color:rgba(200,240,60,.35);}
+.fi.sel{border-color:var(--accent);background:rgba(200,240,60,.06);}
+.f-ico{font-size:20px;margin-bottom:3px;}
+.f-nm{font-size:11px;font-weight:500;}
+.f-pr{font-size:11px;color:var(--muted);}
+.f-qty{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;background:var(--accent);color:#09090e;border-radius:9px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 3px;}
+.fi.sel .f-qty{display:flex;}
+
+/* ── CI BAR ── */
+.ci-bar{background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s,background .2s;margin-bottom:12px;}
+.ci-bar.on{border-color:rgba(54,232,154,.4);background:rgba(54,232,154,.04);}
+.ci-ico{width:32px;height:32px;border-radius:8px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .2s;}
+.ci-bar.on .ci-ico{background:rgba(54,232,154,.14);}
+
+/* ── AGREEMENT GATE ── */
+.agmt-gate{border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.agmt-red{background:rgba(240,68,68,.07);border:1px solid rgba(240,68,68,.28);}
+.agmt-amber{background:rgba(240,128,64,.07);border:1px solid rgba(240,128,64,.28);}
+.agmt-body{padding:12px 14px;}
+.agmt-title{font-family:var(--fh);font-size:13px;font-weight:700;margin-bottom:3px;}
+.agmt-sub{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+.agmt-btns{display:flex;gap:7px;flex-wrap:wrap;}
+.a-wa{background:#25D366;color:#fff;border:none;}
+.a-em{background:var(--blue);color:#fff;border:none;}
+.a-ov{background:var(--s3);color:var(--muted);border:1px solid var(--border);}
+.invoice-lock{opacity:.35;pointer-events:none;user-select:none;}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:0;background:var(--s2);border-radius:8px;padding:3px;margin-bottom:12px;}
+.tab{flex:1;padding:6px 8px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .13s;text-align:center;font-family:var(--fb);}
+.tab.on{background:var(--s1);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+
+/* ── CLASS ROW ── */
+.cls-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--s2);cursor:pointer;transition:all .13s;margin-bottom:7px;}
+.cls-row:last-child{margin-bottom:0;}
+.cls-row:hover{border-color:rgba(200,240,60,.3);}
+.cls-row.live{border-color:rgba(54,232,154,.3);background:rgba(54,232,154,.04);}
+.cls-row.picked{border-color:var(--accent);background:rgba(200,240,60,.05);}
+.c-time{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--accent);width:42px;flex-shrink:0;}
+.c-name{font-size:13px;font-weight:500;}
+.c-instr{font-size:11px;color:var(--muted);margin-top:1px;}
+.c-right{margin-left:auto;text-align:right;flex-shrink:0;}
+.c-slots{font-family:var(--fh);font-size:14px;font-weight:700;}
+.slots-ok{color:var(--green);}
+.slots-low{color:var(--orange);}
+.slots-full{color:var(--red);}
+.fill-bar{height:4px;background:var(--subtle);border-radius:2px;overflow:hidden;margin-top:4px;width:60px;}
+.fill-in{height:100%;border-radius:2px;}
+
+/* ── MEMBER ROW ── */
+.mbr-row{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;background:var(--s2);border:1px solid var(--border);cursor:pointer;transition:all .13s;margin-bottom:7px;}
+.mbr-row:last-child{margin-bottom:0;}
+.mbr-row:hover{border-color:rgba(200,240,60,.3);}
+.m-av{width:34px;height:34px;border-radius:8px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;}
+.m-name{font-size:13px;font-weight:500;}
+.m-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.m-right{margin-left:auto;text-align:right;flex-shrink:0;}
+
+/* ── ALERTS ── */
+.alrt{display:flex;gap:8px;padding:9px 11px;border-radius:8px;margin-bottom:7px;font-size:12px;align-items:flex-start;}
+.alrt:last-child{margin-bottom:0;}
+.alrt-r{background:rgba(240,68,68,.08);border:1px solid rgba(240,68,68,.2);}
+.alrt-o{background:rgba(240,128,64,.08);border:1px solid rgba(240,128,64,.2);}
+.alrt-b{background:rgba(78,168,248,.08);border:1px solid rgba(78,168,248,.2);}
+.a-t{font-weight:500;margin-bottom:1px;}
+.a-s{color:var(--muted);font-size:11px;}
+
+/* ── STAT CARD ── */
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:13px;}
+.sv{font-family:var(--fh);font-size:24px;font-weight:800;}
+.sl{font-size:11px;color:var(--muted);margin-top:3px;}
+.ss{font-size:12px;color:var(--muted);margin-top:5px;}
+
+/* ── ROSTER ── */
+.ros-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.ros-item:last-child{border-bottom:none;}
+.ros-av{width:28px;height:28px;border-radius:6px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;}
+.timer-b{padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500;}
+.t-ok{background:rgba(54,232,154,.1);color:var(--green);}
+.t-warn{background:rgba(240,128,64,.1);color:var(--orange);}
+.t-over{background:rgba(240,68,68,.1);color:var(--red);}
+
+/* ── GROUP BOOKING ── */
+.grp-slot-row{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;background:var(--s2);border:1px solid var(--border);margin-bottom:6px;}
+.grp-slot-row.filled{border-color:rgba(54,232,154,.25);}
+.grp-slot-row.blocked{border-color:rgba(240,68,68,.3);}
+.slot-num{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--muted);width:20px;flex-shrink:0;text-align:center;}
+.slot-info{flex:1;min-width:0;}
+.slot-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.slot-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;}
+
+/* ── ACCESS STRIP ── */
+.access-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding:8px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--border);}
+.acc-loc{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:11px;}
+.acc-loc.has{background:rgba(54,232,154,.1);color:var(--green);border:1px solid rgba(54,232,154,.22);}
+.acc-loc.none{background:var(--subtle);color:var(--muted);border:1px solid var(--border);}
+.acc-loc.here{outline:2px solid var(--accent);outline-offset:2px;}
+.access-edit-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--border);margin-bottom:6px;}
+.access-edit-row:last-child{margin-bottom:0;}
+
+/* ── VISIT BANNER ── */
+.visit-banner{border-radius:11px;padding:12px 14px;margin-bottom:12px;display:none;}
+.visit-banner.show{display:block;}
+
+/* ── CONFIRM BAR ── */
+.cfm-bar{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;}
+.cfm-dots{display:flex;gap:12px;flex-wrap:wrap;}
+.cd{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.cd.on{color:var(--text);}
+.cdd{width:6px;height:6px;border-radius:50%;background:var(--subtle);flex-shrink:0;}
+.cd.on .cdd{background:var(--green);}
+
+/* ── OCCUPANCY ── */
+.occ-circle{position:relative;width:88px;height:88px;flex-shrink:0;}
+.occ-circle svg{transform:rotate(-90deg);}
+.occ-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.occ-n{font-family:var(--fh);font-size:21px;font-weight:800;line-height:1;}
+.occ-m{font-size:10px;color:var(--muted);}
+.bar-wrap{width:100%;height:4px;background:var(--subtle);border-radius:2px;overflow:hidden;margin-top:3px;}
+.bar-fill{height:100%;border-radius:2px;}
+
+/* ── TXN ROW ── */
+.txn-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.txn-row:last-child{border-bottom:none;}
+.txn-d{color:var(--muted);font-size:11px;margin-top:1px;}
+.txn-a{font-family:var(--fh);font-weight:600;color:var(--green);font-size:12px;}
+.att-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;gap:8px;}
+.att-row:last-child{border-bottom:none;}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.sum-row:last-child{border-bottom:none;}
+.sum-lbl{color:var(--muted);}
+.sum-val{font-family:var(--fh);font-weight:600;}
+
+/* ── INSTR OVERRIDE ── */
+.instr-ov{margin-top:10px;padding:10px;border-radius:8px;background:var(--s2);border:1px solid var(--border);display:none;}
+.instr-ov.show{display:block;}
+.instr-g{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:end;}
+.spill{padding:8px 10px;border-radius:7px;background:var(--subtle);border:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.sdot{width:5px;height:5px;background:var(--green);border-radius:50%;flex-shrink:0;}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(9,9,14,.88);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(5px);}
+.modal-bg.show{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:26px 30px;max-width:440px;width:92%;animation:popIn .28s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;}
+.modal.wide{max-width:640px;width:96%;}
+.modal-body{flex:1;overflow-y:auto;padding-right:2px;}
+.modal-body::-webkit-scrollbar{width:3px;}
+.modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+@keyframes popIn{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
+.modal-title{font-family:var(--fh);font-size:16px;font-weight:700;margin-bottom:5px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.modal-btns{display:flex;gap:8px;margin-top:16px;}
+.s-icon{width:50px;height:50px;background:rgba(54,232,154,.12);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 13px;}
+.steps{display:flex;gap:0;margin-bottom:16px;flex-shrink:0;}
+.step{flex:1;padding:8px 10px;text-align:center;font-size:11px;font-weight:600;border-bottom:2px solid var(--border);color:var(--muted);cursor:default;transition:all .15s;}
+.step.done{border-bottom-color:var(--green);color:var(--green);cursor:pointer;}
+.step.active{border-bottom-color:var(--accent);color:var(--accent);}
+
+/* ── GT BAR ── */
+.gt-bar{background:var(--s2);border:1px solid var(--border);border-radius:11px;padding:11px 14px;display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.gt-items{display:flex;gap:14px;flex:1;flex-wrap:wrap;font-size:12px;color:var(--muted);}
+.gt-items span{color:var(--text);font-weight:500;}
+.gt-val{font-family:var(--fh);font-size:18px;font-weight:700;color:var(--accent);white-space:nowrap;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ── MISC ── */
+.sep{height:1px;background:var(--border);margin:10px 0;}
+
+</style>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<!-- ════════════════════════════════════ -->
+<!--  LOGIN SCREEN                       -->
+<!-- ════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">EQ</div>
+    <div class="login-sub">Front Desk &mdash; Staff Login</div>
+
+    <!-- STEP 1: Credentials -->
+    <div id="login-step-sso">
+      <div class="fl" style="margin-bottom:10px;text-align:left;">
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px;">Username</label>
+        <input type="text" id="login-username" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+      </div>
+      <div class="fl" style="margin-bottom:14px;text-align:left;">
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px;">Password</label>
+        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="login-err" id="login-err"></div>
+      <button class="sso-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- STEP 2: Location picker (after SSO) -->
+    <div id="login-step-loc" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:9px;padding:9px 12px;margin-bottom:16px;">
+        <div style="width:30px;height:30px;border-radius:7px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:11px;font-weight:700;color:var(--accent);" id="loc-step-av">—</div>
+        <div style="flex:1;text-align:left;"><div style="font-size:13px;font-weight:600;" id="loc-step-name">—</div><div style="font-size:11px;color:var(--green);">&#10003; Authenticated via Yoactiv</div></div>
+        <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;" onclick="backToSSO()">Change</button>
+      </div>
+      <div class="loc-picker-title">Select your location for this session:</div>
+      <div class="loc-grid" id="loc-grid-picker"></div>
+      <div class="login-err" id="loc-err"></div>
+      <button class="loc-confirm-btn" id="loc-confirm-btn" disabled onclick="doLocationLogin()">Start Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  TOPBAR                             -->
+<!-- ════════════════════════════════════ -->
+<div id="topbar" style="display:none;">
+  <div id="nav-toggle" onclick="toggleNav()">&#9776;</div>
+  <div class="t-logo">EQ</div>
+  <div class="t-search">
+    <span class="t-si">&#9906;</span>
+    <input id="gsearch" type="text" placeholder="Search member — name, phone or ID…" oninput="onSearch(this.value)" onkeydown="onSearchKey(event)" autocomplete="off">
+    <div id="search-dropdown"></div>
+  </div>
+  <div class="t-right">
+    <span id="clk"></span>
+    <div class="loc-badge" id="loc-badge-topbar"><div class="loc-badge-dot"></div><span id="loc-badge-name">EQ Location</span></div>
+    <div class="staff-chip" id="staff-chip"><div class="gdot"></div><span id="staff-chip-name">Staff</span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  MAIN LAYOUT                        -->
+<!-- ════════════════════════════════════ -->
+<div id="layout" style="display:none;">
+  <div id="nav">
+    <div class="nav-sec">
+      <div class="ni on" id="ni-home" onclick="goTo('home')"><span class="ni-icon">&#127968;</span><span class="ni-lbl">Home</span></div>
+      <div class="ni" id="ni-member" onclick="goTo('member')"><span class="ni-icon">&#128100;</span><span class="ni-lbl">Member</span></div>
+      <div class="ni" id="ni-classes" onclick="goTo('classes')"><span class="ni-icon">&#128197;</span><span class="ni-lbl">Classes</span></div>
+      <div class="ni" id="ni-quickinv" onclick="goTo('quickinv')"><span class="ni-icon">&#9889;</span><span class="ni-lbl">Quick Invoice</span></div>
+    </div>
+    <div class="nav-div"></div>
+    <div class="nav-sec">
+      <div class="ni" id="ni-shift" onclick="goTo('shift')"><span class="ni-icon">&#128202;</span><span class="ni-lbl">Shift Summary</span></div>
+      <div class="ni" id="ni-messaging" onclick="goTo('messaging')"><span class="ni-icon">&#128172;</span><span class="ni-lbl">Messaging</span></div>
+    </div>
+    <div class="nav-bot">
+      <div class="ni" onclick="confirmLogout()"><span class="ni-icon" style="font-size:14px;">&#128274;</span><span class="ni-lbl" style="font-size:12px;color:var(--muted);">Sign Out</span></div>
+    </div>
+  </div>
+
+  <div id="content">
+
+<!-- ════════ SCREEN: HOME ════════ -->
+<div class="screen on" id="screen-home">
+  <div class="pg-title">&#127968; Today at EQ</div>
+  <div class="g3" style="margin-bottom:14px;align-items:start;">
+
+    <!-- OCCUPANCY -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div class="ct">Live Occupancy</div><span class="tag tg" id="occ-tag">&#9679; Within Limit</span></div>
+      <div class="cb">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="occ-circle">
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <circle cx="44" cy="44" r="34" fill="none" stroke="var(--subtle)" stroke-width="8"/>
+              <circle id="occ-arc" cx="44" cy="44" r="34" fill="none" stroke="var(--green)" stroke-width="8" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="75"/>
+            </svg>
+            <div class="occ-inner"><div class="occ-n" id="occ-n">34</div><div class="occ-m">/ 50</div></div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--muted);">Floor</span><span style="font-weight:600;">19</span></div>
+            <div class="bar-wrap"><div class="bar-fill" style="width:38%;background:var(--accent);"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin:6px 0 3px;"><span style="color:var(--muted);">In Classes</span><span style="font-weight:600;">15</span></div>
+            <div class="bar-wrap"><div class="bar-fill" style="width:30%;background:var(--blue);"></div></div>
+            <div class="sep" style="margin:8px 0;"></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span style="color:var(--muted);">Capacity</span><span style="font-weight:600;color:var(--green);">68%</span></div>
+            <div class="bar-wrap" style="height:6px;"><div class="bar-fill" style="width:68%;background:var(--green);"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;">90-Min Alerts</div>
+          <div class="alrt alrt-o"><div>&#9201;</div><div><div class="a-t">Rohit S. — HIIT 07:00</div><div class="a-s">81 min — 9 remaining</div></div></div>
+          <div class="alrt alrt-r"><div>&#9888;</div><div><div class="a-t">Deepika N. — HIIT 07:00</div><div class="a-s">93 min — 3 over limit</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div class="stat-card"><div class="sv" style="color:var(--accent);">47</div><div class="sl">Check-ins Today</div><div class="ss">&#8593; 6 vs yesterday</div></div>
+      <div class="stat-card"><div class="sv" style="color:var(--green);">&#8377;28,450</div><div class="sl">Revenue Today</div><div class="ss">14 invoices</div></div>
+      <div class="stat-card"><div class="sv" style="color:var(--orange);">&#8377;12,800</div><div class="sl">Outstanding Dues</div><div class="ss">8 members pending</div></div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div class="ct">Alerts</div><span class="tag tr">3 urgent</span></div>
+      <div class="cb">
+        <div class="alrt alrt-r"><div>&#9888;</div><div><div class="a-t">Agreement missing — Priya K.</div><div class="a-s">Cannot invoice until signed</div></div></div>
+        <div class="alrt alrt-o"><div>&#8635;</div><div><div class="a-t">5 memberships expire this week</div><div class="a-s">Renewal reminders sent</div></div></div>
+        <div class="alrt alrt-o"><div>&#128179;</div><div><div class="a-t">POS terminal T-01 offline</div><div class="a-s">Last ping 14 min ago</div></div></div>
+        <div class="alrt alrt-b"><div>&#128100;</div><div><div class="a-t">3 new registrations pending RFID</div><div class="a-s">Cards not yet assigned</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="align-items:start;">
+    <!-- RECENT MEMBERS -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div class="ct">Recent Members</div><span style="font-size:12px;color:var(--muted);">Last processed</span></div>
+      <div class="cb" style="padding:10px;">
+        <div class="mbr-row" onclick="loadMember('aryan')">
+          <div class="m-av">AK</div><div><div class="m-name">Aryan Kapoor</div><div class="m-sub">Checked in 09:14 AM</div></div>
+          <div class="m-right"><span class="tag tg">Active</span></div>
+        </div>
+        <div class="mbr-row" onclick="loadMember('fatima')">
+          <div class="m-av">FR</div><div><div class="m-name">Fatima Rashid</div><div class="m-sub">Invoice raised 08:52 AM</div></div>
+          <div class="m-right"><span class="tag tg">Active</span></div>
+        </div>
+        <div class="mbr-row" onclick="loadMember('priya')">
+          <div class="m-av" style="background:rgba(240,68,68,.15);color:var(--red);">PK</div>
+          <div><div class="m-name">Priya Kapoor</div><div class="m-sub" style="color:var(--red);">Agreement not signed</div></div>
+          <div class="m-right"><span class="tag tr">&#9888; Gate</span></div>
+        </div>
+        <div class="mbr-row" onclick="loadMember('marcus')">
+          <div class="m-av">MC</div><div><div class="m-name">Marcus Chen</div><div class="m-sub">Checked in 08:30 AM</div></div>
+          <div class="m-right"><span class="tag tg">Active</span></div>
+        </div>
+        <div class="mbr-row" onclick="loadMember('riya')">
+          <div class="m-av" style="background:rgba(240,128,64,.15);color:var(--orange);">RS</div>
+          <div><div class="m-name">Riya Singh</div><div class="m-sub">Balance &#8377;3,500 overdue</div></div>
+          <div class="m-right"><span class="tag to">Overdue</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODAY'S CLASSES -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div class="ct">Today's Classes</div><span style="font-size:12px;color:var(--muted);">Every 30 min</span></div>
+      <div class="cb">
+        <div class="cls-row live" onclick="goTo('classes')">
+          <div class="c-time">07:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
+          <div class="c-right"><div class="c-slots slots-low">8/8</div><div class="fill-bar"><div class="fill-in" style="width:100%;background:var(--orange);"></div></div></div>
+        </div>
+        <div class="cls-row live" onclick="goTo('classes')">
+          <div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
+          <div class="c-right"><div class="c-slots slots-ok">5/8</div><div class="fill-bar"><div class="fill-in" style="width:63%;background:var(--green);"></div></div></div>
+        </div>
+        <div class="cls-row" onclick="goTo('classes')">
+          <div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
+          <div class="c-right"><div class="c-slots slots-ok">3/8</div><div class="fill-bar"><div class="fill-in" style="width:38%;background:var(--green);"></div></div></div>
+        </div>
+        <div class="cls-row" onclick="goTo('classes')">
+          <div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj Kumar</div></div>
+          <div class="c-right"><div class="c-slots slots-ok">6/10</div><div class="fill-bar"><div class="fill-in" style="width:60%;background:var(--green);"></div></div></div>
+        </div>
+        <div class="cls-row" onclick="goTo('classes')">
+          <div class="c-time">11:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
+          <div class="c-right"><div class="c-slots slots-ok">2/8</div><div class="fill-bar"><div class="fill-in" style="width:25%;background:var(--green);"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SCREEN: MEMBER ════════ -->
+<div class="screen" id="screen-member">
+  <div class="pg-title">&#128100; Member Action</div>
+  <div style="display:flex;flex-direction:column;gap:0;" id="member-empty-state">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch">
+        <div class="ct">Members at This Gym</div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshMemberList()">Refresh</button>
+      </div>
+      <div class="cb" style="padding:10px;">
+        <div id="member-list-state" style="font-size:12px;color:var(--muted);padding:8px 4px;">Open this tab to load members.</div>
+        <div id="member-list-items"></div>
+      </div>
+    </div>
+  </div>
+  <div id="member-loaded" style="display:none;">
+    <div class="g2" style="align-items:start;">
+    <!-- LEFT -->
+    <div>
+      <!-- MEMBER CARD -->
+      <div class="card" id="m-card" style="margin-bottom:12px;border-left:3px solid var(--green);">
+        <div class="cb">
+          <div style="display:flex;align-items:flex-start;gap:13px;">
+            <div style="width:50px;height:50px;border-radius:11px;background:var(--subtle);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:16px;font-weight:700;color:var(--accent);flex-shrink:0;" id="m-av-main">AK</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:var(--fh);font-size:15px;font-weight:700;" id="m-name-main">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="m-meta-main">—</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;" id="m-tags-main"></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);">Balance</div>
+              <div style="font-family:var(--fh);font-size:17px;font-weight:700;margin-top:2px;" id="m-bal-main">—</div>
+            </div>
+          </div>
+          <div class="mstats">
+            <div class="mst"><div class="mst-v" id="m-visits">—</div><div class="mst-l">Visits</div></div>
+            <div class="mst"><div class="mst-v" id="m-last">—</div><div class="mst-l">Last Visit</div></div>
+            <div class="mst"><div class="mst-v" id="m-spend">—</div><div class="mst-l">Lifetime</div></div>
+            <div class="mst"><div class="mst-v" style="color:var(--purple);" id="m-pts">—</div><div class="mst-l">Pts</div></div>
+          </div>
+          <div class="loyalty-bar">
+            <div style="font-size:14px;">&#11088;</div>
+            <div style="flex:1;"><div style="font-family:var(--fh);font-size:12px;font-weight:700;color:var(--purple);" id="m-loy-title">—</div><div style="font-size:11px;color:var(--muted);" id="m-loy-sub">—</div></div>
+            <div class="lp-prog"><div class="lp-fill" id="m-loy-bar" style="width:0%"></div></div>
+          </div>
+          <!-- PROFILE EXPAND -->
+          <button class="expand-btn" id="prof-exp-btn" onclick="toggleProfile()">
+            <span id="prof-exp-lbl">Full profile &amp; RFID</span>&nbsp;<span class="arr">&#9660;</span>
+          </button>
+          <div class="mdetail" id="prof-detail">
+            <div class="tab-bar">
+              <button class="tab on" id="tp-0" onclick="switchProfileTab(0)">Personal</button>
+              <button class="tab" id="tp-1" onclick="switchProfileTab(1)">Emergency</button>
+              <button class="tab" id="tp-2" onclick="switchProfileTab(2)">Membership</button>
+              <button class="tab" id="tp-3" onclick="switchProfileTab(3)">Documents</button>
+              <button class="tab" id="tp-4" onclick="switchProfileTab(4)">History</button>
+            </div>
+            <!-- PERSONAL -->
+            <div id="ptab-0">
+              <div class="c3 fl"><div class="fl"><label>Full Name</label><input type="text" id="pf-name"></div><div class="fl"><label>Date of Birth</label><input type="date" id="pf-dob"></div><div class="fl"><label>Gender</label><div class="sw"><select><option>Male</option><option>Female</option><option>Other</option></select></div></div></div>
+              <div class="fl"><label>Address</label><input type="text" id="pf-addr"></div>
+              <div class="c3 fl"><div class="fl"><label>City</label><input type="text" id="pf-city"></div><div class="fl"><label>Pin Code</label><input type="text" id="pf-pin"></div><div class="fl"><label>State</label><input type="text" id="pf-state" value="Karnataka"></div></div>
+              <div class="c3 fl"><div class="fl"><label>Primary Phone</label><input type="tel" id="pf-phone"></div><div class="fl"><label>Secondary Phone</label><input type="tel" id="pf-phone2"></div><div class="fl"><label>Email</label><input type="email" id="pf-email"></div></div>
+              <div style="text-align:right;"><button class="btn btn-accent btn-sm" onclick="showSuccess('Saved','Personal details updated.')">Save Changes</button></div>
+            </div>
+            <!-- EMERGENCY -->
+            <div id="ptab-1" style="display:none;">
+              <div class="c3 fl"><div class="fl"><label>Contact Name</label><input type="text" id="pf-ec-name"></div><div class="fl"><label>Relationship</label><input type="text" id="pf-ec-rel"></div><div class="fl"><label>Phone</label><input type="tel" id="pf-ec-phone"></div></div>
+              <div style="text-align:right;"><button class="btn btn-accent btn-sm" onclick="showSuccess('Saved','Emergency contact updated.')">Save Changes</button></div>
+            </div>
+            <!-- MEMBERSHIP -->
+            <div id="ptab-2" style="display:none;">
+              <div class="c2 fl">
+                <div class="fl"><label>RFID Card Number</label><div style="display:flex;gap:6px;"><input type="text" id="pf-rfid" style="flex:1;"><button class="btn btn-ghost btn-sm">&#128246; Scan</button></div></div>
+                <div class="fl"><label>Referral Number</label><input type="text" id="pf-ref"></div>
+              </div>
+              <div class="c2 fl"><div class="fl"><label>Current Plan</label><div class="sw"><select id="pf-plan"><option>Elite Monthly</option><option>Annual</option><option>Quarterly</option><option>Day Pass</option><option>Intro Climb</option></select></div></div><div class="fl"><label>Expiry</label><input type="date" id="pf-expiry"></div></div>
+              <div class="fl"><label>Internal Notes (staff only)</label><textarea rows="2" id="pf-notes" style="resize:none;" placeholder="Staff notes…"></textarea></div>
+              <!-- LOCATION ACCESS MANAGEMENT -->
+              <div class="fl" style="margin-bottom:0;">
+                <label>Location Access <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(Multi-Club plan required to enable extra locations)</span></label>
+                <div id="pf-access-list" style="display:flex;flex-direction:column;gap:5px;margin-top:4px;"></div>
+                <div style="margin-top:8px;padding:8px 10px;background:var(--s2);border-radius:7px;border:1px solid var(--border);font-size:11px;color:var(--muted);">
+                  &#128274; Changing access requires a Multi-Club plan. To upgrade, use the button on the member card or contact the member.
+                </div>
+              </div>
+              <div style="text-align:right;margin-top:10px;"><button class="btn btn-accent btn-sm" onclick="saveMembershipTab()">Save Changes</button></div>
+            </div>
+            <!-- DOCUMENTS -->
+            <div id="ptab-3" style="display:none;">
+              <div class="c2 fl"><div class="fl"><label>ID Proof Type</label><div class="sw"><select><option>Aadhaar</option><option>PAN</option><option>Passport</option><option>Driving Licence</option></select></div></div><div class="fl"><label>ID Number</label><input type="text" placeholder="XXXX XXXX XXXX"></div></div>
+              <div class="c2 fl">
+                <div class="fl"><label>Club Agreement</label><div id="pf-agmt-status" style="padding:8px 10px;border-radius:7px;font-size:13px;"></div></div>
+                <div class="fl"><label>Agreement Expiry</label><input type="date" id="pf-agmt-expiry"></div>
+              </div>
+              <div style="text-align:right;"><button class="btn btn-accent btn-sm" onclick="showSuccess('Saved','Documents updated.')">Save Changes</button></div>
+            </div>
+            <!-- HISTORY -->
+            <div id="ptab-4" style="display:none;">
+              <div class="tab-bar">
+                <button class="tab on" id="ht-0" onclick="switchHistTab(0)">Billing</button>
+                <button class="tab" id="ht-1" onclick="switchHistTab(1)">Attendance</button>
+                <button class="tab" id="ht-2" onclick="switchHistTab(2)">Class Bookings</button>
+              </div>
+              <div id="htab-0">
+                <div class="txn-row"><div><div style="font-weight:500;">HIIT Session</div><div class="txn-d">Apr 17 · Invoice #INV-512 · UPI</div></div><div class="txn-a">&#8377;800</div></div>
+                <div class="txn-row"><div><div style="font-weight:500;">Monthly Membership</div><div class="txn-d">Apr 1 · Invoice #INV-498 · Card</div></div><div class="txn-a">&#8377;3,500</div></div>
+                <div class="txn-row"><div><div style="font-weight:500;">Personal Training ×3</div><div class="txn-d">Mar 28 · Invoice #INV-480 · POS</div></div><div class="txn-a">&#8377;6,000</div></div>
+                <div class="txn-row"><div><div style="font-weight:500;">Protein Shake ×2</div><div class="txn-d">Mar 26 · Invoice #INV-476 · Cash</div></div><div class="txn-a">&#8377;200</div></div>
+                <div class="txn-row"><div><div style="font-weight:500;color:var(--orange);">Invoice #INV-448 — Overdue</div><div class="txn-d">Mar 1 · Monthly Membership · 12 days due</div></div><div class="txn-a" style="color:var(--orange);">&#8377;2,500</div></div>
+              </div>
+              <div id="htab-1" style="display:none;">
+                <div class="att-row"><span>Apr 17 Thu</span><span style="color:var(--muted);">09:14 AM</span><span>Intro Climb</span><span class="tag tg">RFID</span></div>
+                <div class="att-row"><span>Apr 15 Tue</span><span style="color:var(--muted);">07:02 AM</span><span>Floor</span><span class="tag tg">RFID</span></div>
+                <div class="att-row"><span>Apr 13 Sun</span><span style="color:var(--muted);">10:30 AM</span><span>Intro Climb</span><span class="tag tg">RFID</span></div>
+                <div class="att-row"><span>Apr 10 Thu</span><span style="color:var(--muted);">07:05 AM</span><span>Floor</span><span class="tag tb">Manual</span></div>
+                <div class="att-row"><span>Apr 8 Tue</span><span style="color:var(--muted);">08:48 AM</span><span>Intermediate</span><span class="tag tg">RFID</span></div>
+                <div style="margin-top:8px;display:flex;gap:10px;font-size:12px;color:var(--muted);">
+                  <span>Current streak: <strong style="color:var(--accent);">6 visits</strong></span>
+                  <span>Best streak: <strong style="color:var(--accent);">14 visits</strong></span>
+                </div>
+              </div>
+              <div id="htab-2" style="display:none;">
+                <div class="att-row"><span>Apr 17</span><span>Intro Climb 09:00</span><span>James Okafor</span><span class="tag tg">Attended</span></div>
+                <div class="att-row"><span>Apr 13</span><span>Intro Climb 10:00</span><span>Sarah Mitchell</span><span class="tag tg">Attended</span></div>
+                <div class="att-row"><span>Apr 10</span><span>Intermediate 09:00</span><span>Raj Kumar</span><span class="tag to">No-show</span></div>
+                <div class="att-row"><span>Apr 8</span><span>Intermediate 10:00</span><span>Raj Kumar</span><span class="tag tg">Attended</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RFID OVERRIDE -->
+      <!-- VISITING / NO-ACCESS BANNER -->
+      <div id="visit-banner" class="visit-banner">
+        <div id="visit-banner-content"></div>
+      </div>
+
+      <div id="rfid-override" style="display:none;background:rgba(78,168,248,.07);border:1px solid rgba(78,168,248,.28);border-radius:11px;padding:11px 14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div><div style="font-size:13px;font-weight:500;">&#128246; No RFID card — valid package</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Manual check-in available</div></div>
+          <button class="btn btn-blue btn-sm" onclick="doManualCI()">Manual Check-In</button>
+        </div>
+      </div>
+
+      <!-- AGREEMENT GATE -->
+      <div id="agmt-gate" style="display:none;" class="agmt-gate agmt-red">
+        <div class="agmt-body">
+          <div class="agmt-title" id="agmt-title" style="color:var(--red);">&#128274; Club Agreement Not Signed</div>
+          <div class="agmt-sub" id="agmt-sub">Invoice cannot be raised. Send the digital agreement link — member signs on their phone in under 60 seconds.</div>
+          <div class="agmt-btns">
+            <button class="btn agmt-btn a-wa btn-sm" onclick="sendAgmt('whatsapp')">&#128172; WhatsApp</button>
+            <button class="btn agmt-btn a-em btn-sm" onclick="sendAgmt('email')">&#9993; Email</button>
+            <button class="btn agmt-btn a-ov btn-sm" onclick="showMgrPin()">&#128274; Manager Override</button>
+          </div>
+          <div id="agmt-sent-bar" style="display:none;margin-top:10px;padding:8px 10px;background:rgba(240,128,64,.1);border-radius:7px;font-size:12px;color:var(--orange);">
+            &#9203; Sent — waiting for member to sign. Ask them to check their phone.
+            <span style="color:var(--muted);margin-left:6px;" id="agmt-sent-time"></span>
+            <button class="btn btn-ghost btn-sm" style="margin-left:8px;" onclick="simAgmtSigned()">Simulate Signed &#9654;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKIN BAR -->
+      <div class="ci-bar" id="ci-bar-main">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="ci-ico">&#10003;</div>
+          <div><div style="font-family:var(--fh);font-size:13px;font-weight:600;">Check In Member</div><div style="font-size:11px;color:var(--muted);margin-top:1px;" id="ci-sub-main">Auto-ticks when invoice is raised</div></div>
+        </div>
+        <label class="tog"><input type="checkbox" id="ci-tog-main" onchange="onCIMain(this)"><div class="tog-t"></div><div class="tog-k"></div></label>
+      </div>
+
+      <!-- INVOICE PANEL -->
+      <div class="card" id="inv-panel-main">
+        <div class="ch"><div class="ct">Invoice</div><span id="inv-bdg-main" style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--subtle);color:var(--muted);">Not raised</span></div>
+        <div class="cb">
+          <div class="fl">
+            <label>Service / Package</label>
+            <div class="sw"><select id="svc-main" onchange="onSvcMain(this.value)">
+              <option value="">— Select —</option>
+              <optgroup label="Climbing Sessions">
+                <option value="class|800|Intro Climb">Intro Climb — &#8377;800</option>
+                <option value="class|1200|Intermediate Climb">Intermediate — &#8377;1,200</option>
+                <option value="class|1500|Advanced Climb">Advanced — &#8377;1,500</option>
+              </optgroup>
+              <optgroup label="Memberships">
+                <option value="other|3500|Monthly">Monthly — &#8377;3,500</option>
+                <option value="other|9500|Quarterly">Quarterly — &#8377;9,500</option>
+                <option value="other|32000|Annual">Annual — &#8377;32,000</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="other|2000|Personal Training">PT — &#8377;2,000</option>
+                <option value="other|500|Day Pass">Day Pass — &#8377;500</option>
+              </optgroup>
+            </select></div>
+          </div>
+          <div class="c2 fl">
+            <div><label>Amount (&#8377;)</label><input type="text" id="amt-main" placeholder="0.00" readonly></div>
+            <div><label>Discount</label><input type="text" id="disc-main" placeholder="0.00" oninput="calcMain()"></div>
+          </div>
+          <div class="fl">
+            <label>Payment Method</label>
+            <div class="pay-grid" id="pay-grid-main">
+              <button class="pm sel" onclick="pickPayMain(this,'cash')"><span class="pmi">&#128181;</span>Cash</button>
+              <button class="pm" onclick="pickPayMain(this,'upi')"><span class="pmi">&#128249;</span>UPI</button>
+              <button class="pm" onclick="pickPayMain(this,'pos')"><span class="pmi">&#128179;</span>POS</button>
+              <button class="pm" onclick="pickPayMain(this,'card')"><span class="pmi">&#10062;</span>Card</button>
+              <button class="pm" onclick="pickPayMain(this,'bharat')"><span class="pmi">&#127470;&#127475;</span>Bharat QR</button>
+              <button class="pm" onclick="pickPayMain(this,'account')"><span class="pmi">&#127968;</span>Account</button>
+              <button class="pm" id="pm-online-main" onclick="pickPayMain(this,'online')"><span class="pmi">&#128241;</span>Online</button>
+            </div>
+            <div class="pos-box" id="pos-main" style="display:none;">
+              <div class="pos-s1" id="pm-s1" style="display:flex;"><div><div style="font-size:13px;font-weight:500;">Terminal T-01</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Ready</div></div><div style="text-align:right;"><div style="font-family:var(--fh);font-weight:700;color:var(--accent);" id="pm-amt">&#8377;0</div><button class="btn btn-blue btn-sm" style="margin-top:5px;" onclick="sendPOSMain()">&#128179; Collect</button></div></div>
+              <div class="pos-s2" id="pm-s2"><div class="pos-spin"></div><div style="flex:1;font-size:12px;color:var(--blue);">Waiting for terminal…</div><button class="btn btn-ghost btn-sm" onclick="cancelPOSMain()">Cancel</button></div>
+              <div class="pos-s3" id="pm-s3"><div class="pos-check">&#10003;</div><div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--green);">Confirmed</div><div style="font-size:11px;color:var(--muted);margin-top:2px;" id="pm-ref">—</div></div></div>
+            </div>
+            <div class="upi-box" id="upi-main" style="display:none;">
+              <div style="padding:11px 13px;display:flex;align-items:center;gap:11px;">
+                <div class="qr-wrap" id="qr-main"></div>
+                <div><div style="font-size:11px;color:var(--muted);">Scan &amp; Pay</div><div style="font-size:13px;font-weight:500;color:var(--green);" id="upi-main-id">eq.fitness@upi</div><div style="font-family:var(--fh);font-weight:700;color:var(--accent);margin-top:3px;" id="upi-main-amt">&#8377;0</div></div>
+              </div>
+              <div style="padding:8px 13px;border-top:1px solid rgba(54,232,154,.15);display:flex;align-items:center;gap:8px;">
+                <button class="btn btn-green btn-sm" onclick="confirmUPIMain()">&#10003; Mark Received</button>
+                <span style="font-size:11px;color:var(--muted);" id="upi-main-status">Waiting…</span>
+              </div>
+              <div id="upi-main-conf" style="display:none;padding:8px 13px;background:rgba(54,232,154,.08);border-top:1px solid rgba(54,232,154,.15);font-size:12px;color:var(--green);">&#10003; Payment confirmed</div>
+            </div>
+          </div>
+          <div class="fl" style="margin-bottom:0;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;">
+              <input type="checkbox" id="redeem-main" style="accent-color:var(--purple);width:14px;height:14px;" onchange="calcMain()"> Redeem loyalty points &nbsp;<span style="color:var(--purple);">1,240 pts = &#8377;124</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <!-- CLASS PANEL (conditional) -->
+      <div class="card" id="cls-panel-main" style="display:none;">
+        <div class="ch"><div class="ct">Class Booking</div><span class="tag tg">Today</span></div>
+        <div class="cb">
+          <div id="cls-list-main">
+            <div class="cls-row" onclick="pickClsMain(this,'07:00','Intro Climb','James Okafor')"><div class="c-time">07:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-full">8/8</div></div></div>
+            <div class="cls-row" onclick="pickClsMain(this,'09:00','Intro Climb','Sarah Mitchell')"><div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div><div class="c-right"><div class="c-slots slots-ok">5/8</div></div></div>
+            <div class="cls-row" onclick="pickClsMain(this,'09:30','Intro Climb','James Okafor')"><div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-ok">3/8</div></div></div>
+            <div class="cls-row" onclick="pickClsMain(this,'10:00','Intermediate','Raj Kumar')"><div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj Kumar</div></div><div class="c-right"><div class="c-slots slots-ok">4/10</div></div></div>
+          </div>
+          <div class="instr-ov" id="instr-ov-main">
+            <div class="instr-g">
+              <div><div class="flbl">Scheduled</div><div class="spill"><div class="sdot"></div><span id="sched-nm-main">—</span></div></div>
+              <div><div class="flbl">Override if different</div><div class="sw"><select id="instr-sel-main" style="font-size:12px;"><option value="">Same as scheduled</option><option>James Okafor</option><option>Sarah Mitchell</option><option>Raj Kumar</option><option>Priya Nair</option></select></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F&B -->
+      <div class="card">
+        <div class="ch"><div class="ct">Food &amp; Beverage</div><span id="fnb-bdg-main" style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--subtle);color:var(--muted);">Nothing</span></div>
+        <div class="cb">
+          <div class="fnb-grid">
+            <div class="fi" data-price="100" data-name="Protein Shake" onclick="fnbMain(this)"><div class="f-ico">&#127965;</div><div class="f-nm">Shake</div><div class="f-pr">&#8377;100</div><div class="f-qty">1</div></div>
+            <div class="fi" data-price="60" data-name="Energy Bar" onclick="fnbMain(this)"><div class="f-ico">&#127979;</div><div class="f-nm">Energy Bar</div><div class="f-pr">&#8377;60</div><div class="f-qty">1</div></div>
+            <div class="fi" data-price="80" data-name="Cold Brew" onclick="fnbMain(this)"><div class="f-ico">&#9749;</div><div class="f-nm">Cold Brew</div><div class="f-pr">&#8377;80</div><div class="f-qty">1</div></div>
+            <div class="fi" data-price="150" data-name="BCAA" onclick="fnbMain(this)"><div class="f-ico">&#127798;</div><div class="f-nm">BCAA</div><div class="f-pr">&#8377;150</div><div class="f-qty">1</div></div>
+            <div class="fi" data-price="40" data-name="Water" onclick="fnbMain(this)"><div class="f-ico">&#128167;</div><div class="f-nm">Water</div><div class="f-pr">&#8377;40</div><div class="f-qty">1</div></div>
+          </div>
+          <div id="fnb-basket-main" style="display:none;background:var(--s2);border-radius:8px;padding:9px 11px;">
+            <div id="fnb-rows-main"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:12px;"><span style="color:var(--muted);">F&amp;B Total</span><span style="font-family:var(--fh);font-weight:700;color:var(--accent);" id="fnb-total-main">&#8377;0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="card">
+        <div class="ch"><div class="ct">Notes &amp; Flags</div></div>
+        <div class="cb">
+          <div class="fl"><label>Visit Note</label><textarea rows="2" style="resize:none;" placeholder="Note for this visit…"></textarea></div>
+          <div class="fl" style="margin-bottom:0;">
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--muted);"><input type="checkbox" style="accent-color:var(--accent);width:13px;height:13px;"> Collect outstanding balance</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--muted);"><input type="checkbox" style="accent-color:var(--accent);width:13px;height:13px;"> Renewal due</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRAND TOTAL + CONFIRM -->
+      <div class="gt-bar" id="gt-bar-main">
+        <div class="gt-items" id="gt-items-main"><div>Total: <span id="gt-svc-main">&#8377;0</span></div></div>
+        <div class="gt-val" id="gt-val-main">&#8377;0</div>
+      </div>
+      <div class="cfm-bar">
+        <div class="cfm-dots">
+          <div class="cd" id="cd-ci"><div class="cdd"></div>Check-in</div>
+          <div class="cd" id="cd-inv"><div class="cdd"></div>Invoice</div>
+          <div class="cd" id="cd-cls"><div class="cdd"></div>Class</div>
+          <div class="cd" id="cd-fnb"><div class="cdd"></div>F&amp;B</div>
+        </div>
+        <button class="btn btn-accent" id="cfm-btn-main" onclick="doConfirmMain()">Confirm &amp; Process &#8594;</button>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SCREEN: CLASSES ════════ -->
+<div class="screen" id="screen-classes">
+  <div class="pg-title">&#128197; Classes — Today</div>
+  <div class="g2" style="align-items:start;">
+    <!-- LEFT: schedule -->
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="ch"><div class="ct">Schedule</div><div style="display:flex;gap:6px;align-items:center;"><span style="font-size:12px;color:var(--muted);">Every 30 min</span><button class="btn btn-accent btn-sm" onclick="showWalkinGroup()">+ Walk-in Group</button></div></div>
+        <div class="cb">
+          <div class="cls-row live" onclick="openCls('ic700')"><div class="c-time">07:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-full">8/8</div><div class="fill-bar"><div class="fill-in" style="width:100%;background:var(--red);"></div></div></div></div>
+          <div class="cls-row live" onclick="openCls('ic900')"><div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div><div class="c-right"><div class="c-slots slots-ok">5/8</div><div class="fill-bar"><div class="fill-in" style="width:63%;background:var(--green);"></div></div></div></div>
+          <div class="cls-row" onclick="openCls('ic930')"><div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-ok">3/8</div><div class="fill-bar"><div class="fill-in" style="width:38%;background:var(--green);"></div></div></div></div>
+          <div class="cls-row" onclick="openCls('int1000')"><div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj Kumar</div></div><div class="c-right"><div class="c-slots slots-ok">6/10</div><div class="fill-bar"><div class="fill-in" style="width:60%;background:var(--green);"></div></div></div></div>
+          <div class="cls-row" onclick="openCls('ic1100')"><div class="c-time">11:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div><div class="c-right"><div class="c-slots slots-ok">2/8</div><div class="fill-bar"><div class="fill-in" style="width:25%;background:var(--green);"></div></div></div></div>
+          <div class="cls-row" onclick="openCls('ic1130')"><div class="c-time">11:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-ok">0/8</div><div class="fill-bar"><div class="fill-in" style="width:0%;background:var(--green);"></div></div></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- RIGHT: class detail -->
+    <div id="cls-detail-panel">
+      <div class="card">
+        <div class="ch">
+          <div><div class="ct" id="cls-d-title">Select a class</div><div style="font-size:11px;color:var(--muted);margin-top:3px;" id="cls-d-sub"></div></div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" onclick="markAllPresent()">&#10003; All Present</button>
+            <button class="btn btn-accent btn-sm" onclick="showWalkinGroup()">+ Walk-in</button>
+          </div>
+        </div>
+        <div class="cb">
+          <div style="background:var(--s2);border-radius:9px;padding:10px 12px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div><div style="font-size:11px;color:var(--muted);">Scheduled Instructor</div><div style="font-size:13px;font-weight:600;margin-top:3px;" id="cls-d-instr">—</div></div>
+              <div style="width:150px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Override</div><div class="sw"><select id="cls-instr-ovr" style="font-size:12px;"><option value="">Same</option><option>James Okafor</option><option>Sarah Mitchell</option><option>Raj Kumar</option><option>Priya Nair</option></select></div></div>
+            </div>
+          </div>
+          <div id="cls-roster-wrap"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Select a class to view roster</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SCREEN: QUICK INVOICE ════════ -->
+<div class="screen" id="screen-quickinv">
+  <div class="pg-title">&#9889; Quick Invoice</div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="cb" style="padding:11px;">
+      <div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);">&#9906;</span><input type="text" id="qi-srch" placeholder="Search member to begin…" style="padding-left:32px;font-size:14px;" oninput="qiSearch(this.value)" onkeydown="if(event.key==='Enter')qiLoad()" autocomplete="off"></div>
+      <div id="qi-dropdown" style="display:none;margin-top:6px;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
+    </div>
+  </div>
+  <div id="qi-body" style="display:none;">
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:11px;margin-bottom:13px;">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:12px;font-weight:700;color:var(--accent);" id="qi-av">—</div>
+      <div style="flex:1;"><div style="font-family:var(--fh);font-size:14px;font-weight:700;" id="qi-name">—</div><div style="font-size:11px;color:var(--muted);" id="qi-meta">—</div></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="tag tg" id="qi-agmt-tag">&#10003; Agreement</span><label class="tog"><input type="checkbox" id="qi-ci" onchange="qiCIChange(this)"><div class="tog-t"></div><div class="tog-k"></div></label><span style="font-size:12px;color:var(--muted);">Check-in</span></div>
+    </div>
+    <div class="g2" style="align-items:start;">
+      <div>
+        <div class="card">
+          <div class="ch"><div class="ct">Service</div><span id="qi-inv-bdg" style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--subtle);color:var(--muted);">Not raised</span></div>
+          <div class="cb">
+            <div class="fl"><div class="sw"><select id="qi-svc" onchange="qiOnSvc(this.value)"><option value="">— Select —</option><optgroup label="Climbing"><option value="class|800|Intro Climb">Intro Climb — &#8377;800</option><option value="class|1200|Intermediate">Intermediate — &#8377;1,200</option></optgroup><optgroup label="Memberships"><option value="other|3500|Monthly">Monthly — &#8377;3,500</option><option value="other|9500|Quarterly">Quarterly — &#8377;9,500</option><option value="other|32000|Annual">Annual — &#8377;32,000</option></optgroup><optgroup label="Other"><option value="other|500|Day Pass">Day Pass — &#8377;500</option><option value="other|2000|PT">PT — &#8377;2,000</option></optgroup></select></div></div>
+            <div class="c2 fl" style="margin-bottom:0;"><div><label>Amount</label><input type="text" id="qi-amt" placeholder="0.00" readonly></div><div><label>Discount</label><input type="text" id="qi-disc" placeholder="0.00" oninput="qiCalc()"></div></div>
+          </div>
+        </div>
+        <div class="card" id="qi-cls-panel" style="display:none;">
+          <div class="ch"><div class="ct">Class Booking</div></div>
+          <div class="cb">
+            <div class="cls-row" onclick="qiPickCls(this,'09:00','Intro Climb','Sarah M.')"><div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah M.</div></div><div class="c-right"><div class="c-slots slots-ok">5/8</div></div></div>
+            <div class="cls-row" onclick="qiPickCls(this,'09:30','Intro Climb','James O.')"><div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James O.</div></div><div class="c-right"><div class="c-slots slots-ok">3/8</div></div></div>
+            <div class="cls-row" onclick="qiPickCls(this,'10:00','Intermediate','Raj K.')"><div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj K.</div></div><div class="c-right"><div class="c-slots slots-ok">4/10</div></div></div>
+            <div id="qi-instr-ov" style="display:none;margin-top:8px;padding:9px;background:var(--s2);border-radius:7px;">
+              <div class="instr-g"><div><div class="flbl">Scheduled</div><div class="spill"><div class="sdot"></div><span id="qi-sched-nm">—</span></div></div><div><div class="flbl">Override</div><div class="sw"><select id="qi-instr-sel" style="font-size:12px;"><option>Same</option><option>James Okafor</option><option>Sarah Mitchell</option><option>Raj Kumar</option></select></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">F&amp;B</div><span id="qi-fnb-bdg" style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--subtle);color:var(--muted);">Nothing</span></div>
+          <div class="cb">
+            <div class="fnb-grid">
+              <div class="fi" data-price="100" data-name="Shake" onclick="qiFnb(this)"><div class="f-ico">&#127965;</div><div class="f-nm">Shake</div><div class="f-pr">&#8377;100</div><div class="f-qty">1</div></div>
+              <div class="fi" data-price="60" data-name="Bar" onclick="qiFnb(this)"><div class="f-ico">&#127979;</div><div class="f-nm">Bar</div><div class="f-pr">&#8377;60</div><div class="f-qty">1</div></div>
+              <div class="fi" data-price="80" data-name="Cold Brew" onclick="qiFnb(this)"><div class="f-ico">&#9749;</div><div class="f-nm">Cold Brew</div><div class="f-pr">&#8377;80</div><div class="f-qty">1</div></div>
+              <div class="fi" data-price="150" data-name="BCAA" onclick="qiFnb(this)"><div class="f-ico">&#127798;</div><div class="f-nm">BCAA</div><div class="f-pr">&#8377;150</div><div class="f-qty">1</div></div>
+              <div class="fi" data-price="40" data-name="Water" onclick="qiFnb(this)"><div class="f-ico">&#128167;</div><div class="f-nm">Water</div><div class="f-pr">&#8377;40</div><div class="f-qty">1</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ch"><div class="ct">Payment</div></div>
+          <div class="cb">
+            <div class="pay-grid" style="margin-bottom:8px;" id="qi-pay-grid">
+              <button class="pm sel" onclick="qiPickPay(this,'cash')"><span class="pmi">&#128181;</span>Cash</button>
+              <button class="pm" onclick="qiPickPay(this,'upi')"><span class="pmi">&#128249;</span>UPI</button>
+              <button class="pm" onclick="qiPickPay(this,'pos')"><span class="pmi">&#128179;</span>POS</button>
+              <button class="pm" onclick="qiPickPay(this,'card')"><span class="pmi">&#10062;</span>Card</button>
+              <button class="pm" onclick="qiPickPay(this,'bharat')"><span class="pmi">&#127470;&#127475;</span>Bharat QR</button>
+              <button class="pm" onclick="qiPickPay(this,'account')"><span class="pmi">&#127968;</span>Account</button>
+              <button class="pm" id="pm-online-qi" onclick="qiPickPay(this,'online')"><span class="pmi">&#128241;</span>Online</button>
+            </div>
+            <div class="pos-box" id="qi-pos" style="display:none;">
+              <div class="pos-s1" id="qi-ps1" style="display:flex;"><div><div style="font-size:13px;font-weight:500;">Terminal T-01</div></div><div style="text-align:right;"><div style="font-family:var(--fh);font-weight:700;color:var(--accent);" id="qi-pos-amt">&#8377;0</div><button class="btn btn-blue btn-sm" style="margin-top:4px;" onclick="qiSendPOS()">Collect</button></div></div>
+              <div class="pos-s2" id="qi-ps2"><div class="pos-spin"></div><div style="flex:1;font-size:12px;color:var(--blue);">Waiting for terminal…</div><button class="btn btn-ghost btn-sm" onclick="qiCancelPOS()">Cancel</button></div>
+              <div class="pos-s3" id="qi-ps3"><div class="pos-check">&#10003;</div><div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--green);">Confirmed</div><div style="font-size:11px;color:var(--muted);" id="qi-pos-ref">—</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;color:var(--muted);">Total</span>
+          <span style="font-family:var(--fh);font-size:20px;font-weight:700;color:var(--accent);" id="qi-total">&#8377;0</span>
+        </div>
+        <button class="btn btn-accent" id="qi-cfm-btn" style="width:100%;padding:11px;font-size:14px;" onclick="qiConfirm()">Confirm &amp; Process &#8594;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SCREEN: SHIFT SUMMARY ════════ -->
+<div class="screen" id="screen-shift">
+  <div class="pg-title">&#128202; Shift Summary</div>
+  <div class="g3" style="margin-bottom:14px;">
+    <div class="stat-card"><div class="sv" style="color:var(--accent);">&#8377;28,450</div><div class="sl">Total Revenue</div><div class="ss">14 transactions</div></div>
+    <div class="stat-card"><div class="sv" style="color:var(--green);">47</div><div class="sl">Check-ins</div><div class="ss">+6 vs yesterday</div></div>
+    <div class="stat-card"><div class="sv" style="color:var(--orange);">&#8377;12,800</div><div class="sl">Outstanding</div><div class="ss">8 members</div></div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch"><div class="ct">Revenue by Payment Method</div></div><div class="cb">
+        <div class="sum-row"><span class="sum-lbl">Cash</span><span class="sum-val">&#8377;4,200</span></div>
+        <div class="sum-row"><span class="sum-lbl">UPI</span><span class="sum-val">&#8377;9,800</span></div>
+        <div class="sum-row"><span class="sum-lbl">POS / Card</span><span class="sum-val">&#8377;11,450</span></div>
+        <div class="sum-row"><span class="sum-lbl">Bharat QR</span><span class="sum-val">&#8377;1,200</span></div>
+        <div class="sum-row"><span class="sum-lbl">Account</span><span class="sum-val">&#8377;1,800</span></div>
+        <div style="background:var(--s2);border-radius:8px;padding:9px 12px;display:flex;justify-content:space-between;margin-top:9px;"><span style="font-size:12px;color:var(--muted);">Total</span><span style="font-family:var(--fh);font-size:17px;font-weight:800;color:var(--accent);">&#8377;28,450</span></div>
+      </div></div>
+      <div class="card"><div class="ch"><div class="ct">Occupancy Log</div></div><div class="cb">
+        <div class="sum-row"><span class="sum-lbl">Peak Occupancy</span><span class="sum-val">48 / 50</span></div>
+        <div class="sum-row"><span class="sum-lbl">Peak Time</span><span class="sum-val" style="color:var(--green);">07:45 AM</span></div>
+        <div class="sum-row"><span class="sum-lbl">Time at Capacity</span><span class="sum-val" style="color:var(--orange);">22 min</span></div>
+        <div class="sum-row"><span class="sum-lbl">Avg Occupancy</span><span class="sum-val">31</span></div>
+      </div></div>
+    </div>
+    <div>
+      <div class="card"><div class="ch"><div class="ct">Class Attendance</div></div><div class="cb">
+        <div class="sum-row"><span class="sum-lbl">Intro Climb 07:00</span><span class="sum-val">8/8</span></div>
+        <div class="sum-row"><span class="sum-lbl">Intro Climb 09:00</span><span class="sum-val">5/8</span></div>
+        <div class="sum-row"><span class="sum-lbl">Intermediate 10:00</span><span class="sum-val">6/10</span></div>
+        <div class="sum-row"><span class="sum-lbl">Intro Climb 11:00</span><span class="sum-val">— upcoming</span></div>
+      </div></div>
+      <div class="card"><div class="ch"><div class="ct">Manual RFID Overrides</div><span class="tag to">2</span></div><div class="cb">
+        <div class="mbr-row" style="cursor:default;margin-bottom:7px;"><div class="m-av">RS</div><div><div class="m-name">Rohit Sharma</div><div class="m-sub">09:14 AM · No card · Valid package</div></div><div class="m-right"><span class="tag tb">Manual</span></div></div>
+        <div class="mbr-row" style="cursor:default;"><div class="m-av">NP</div><div><div class="m-name">Neha Patel</div><div class="m-sub">11:32 AM · No card · Valid package</div></div><div class="m-right"><span class="tag tb">Manual</span></div></div>
+      </div></div>
+      <div class="card"><div class="ch"><div class="ct">Manager Overrides</div></div><div class="cb">
+        <div class="mbr-row" style="cursor:default;"><div class="m-av" style="background:rgba(167,139,250,.15);color:var(--purple);">PK</div><div><div class="m-name">Priya Kapoor</div><div class="m-sub">10:05 AM · Agreement bypass · Reason: Technical delay</div></div><div class="m-right"><span class="tag tp">Override</span></div></div>
+      </div></div>
+      <div style="text-align:right;"><button class="btn btn-red" onclick="closeShift()">&#9209; Close Shift</button></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════ SCREEN: MESSAGING & AUTOMATION ════════ -->
+<div class="screen" id="screen-messaging">
+  <div class="pg-title">&#128172; Messaging &amp; Automation</div>
+
+  <div class="g2" style="align-items:start;margin-bottom:14px;">
+    <!-- QUICK SEND -->
+    <div class="card">
+      <div class="ch"><div class="ct">Quick Message</div><span style="font-size:12px;color:var(--muted);">Send to a specific member now</span></div>
+      <div class="cb">
+        <div class="fl">
+          <label>Member</label>
+          <div style="position:relative;">
+            <input type="text" id="msg-member-search" placeholder="Search member…" oninput="msgSearch(this.value)" autocomplete="off" style="width:100%;">
+            <div id="msg-member-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s1);border:1px solid var(--border);border-radius:8px;z-index:100;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.4);"></div>
+          </div>
+          <div id="msg-member-selected" style="display:none;margin-top:6px;background:var(--s2);border-radius:7px;padding:7px 10px;display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;border-radius:6px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:10px;font-weight:700;color:var(--accent);" id="msg-mbr-av">—</div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:500;" id="msg-mbr-name">—</div><div style="font-size:11px;color:var(--muted);" id="msg-mbr-contact">—</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="msgClearMember()" style="font-size:11px;">&#10005;</button>
+          </div>
+        </div>
+        <div class="fl">
+          <label>Template</label>
+          <div class="sw"><select id="msg-template" onchange="msgLoadTemplate(this.value)">
+            <option value="">— Choose template —</option>
+            <optgroup label="Re-engagement">
+              <option value="miss1">We miss you — Day 3 follow-up</option>
+              <option value="miss2">Come back — Day 7 with incentive</option>
+              <option value="miss3">Last chance — Day 14 offer</option>
+            </optgroup>
+            <optgroup label="Post First Visit">
+              <option value="first1">Thanks for your first visit</option>
+              <option value="first2">Day 2 — How was it?</option>
+            </optgroup>
+            <optgroup label="Membership">
+              <option value="renew1">Renewal reminder — 7 days</option>
+              <option value="renew2">Renewal reminder — 1 day</option>
+              <option value="upgrade1">Multi-Club upgrade offer</option>
+            </optgroup>
+            <optgroup label="Custom">
+              <option value="custom">Custom message</option>
+            </optgroup>
+          </select></div>
+        </div>
+        <div class="fl">
+          <label>Message</label>
+          <textarea id="msg-body" rows="5" style="resize:none;line-height:1.6;" placeholder="Select a template or write a custom message…"></textarea>
+        </div>
+        <div class="fl" style="margin-bottom:0;">
+          <label>Send Via</label>
+          <div style="display:flex;gap:8px;">
+            <button class="pm sel" id="msg-via-wa" onclick="msgPickVia(this,'whatsapp')" style="flex:1;"><span class="pmi">&#128172;</span>WhatsApp</button>
+            <button class="pm" id="msg-via-em" onclick="msgPickVia(this,'email')" style="flex:1;"><span class="pmi">&#9993;</span>Email</button>
+            <button class="pm" id="msg-via-both" onclick="msgPickVia(this,'both')" style="flex:1;"><span class="pmi">&#128256;</span>Both</button>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-ghost btn-sm" onclick="msgPreview()">&#128065; Preview</button>
+          <button class="btn btn-accent" onclick="msgSend()">Send Now &#8594;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTOMATION FLOWS -->
+    <div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Automated Flows</div>
+          <button class="btn btn-accent btn-sm" onclick="editFlow('new')">+ New Flow</button>
+        </div>
+        <div class="cb" style="padding:10px;">
+
+          <!-- FLOW 1: Post-first-visit -->
+          <div style="background:var(--s2);border-radius:9px;border:1px solid rgba(54,232,154,.2);padding:11px 13px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-family:var(--fh);font-size:13px;font-weight:700;">Post First Visit — Re-engagement</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">Triggers when a member completes their first session</div>
+              </div>
+              <label class="tog"><input type="checkbox" checked><div class="tog-t"></div><div class="tog-k"></div></label>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--green);font-weight:600;width:48px;flex-shrink:0;">Day 0</span>
+                <span style="color:var(--muted);">Immediately after session</span>
+                <span style="margin-left:auto;" class="tag tg">&#128172; WhatsApp</span>
+                <span>Thanks for your first climb! 🧗</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--accent);font-weight:600;width:48px;flex-shrink:0;">Day 2</span>
+                <span style="color:var(--muted);">If no return visit</span>
+                <span style="margin-left:auto;" class="tag tg">&#128172; WhatsApp</span>
+                <span>How did you find it? Come back this week</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--orange);font-weight:600;width:48px;flex-shrink:0;">Day 7</span>
+                <span style="color:var(--muted);">If still no return</span>
+                <span style="margin-left:auto;" class="tag tb">&#9993; Email</span>
+                <span>20% off your next session — link inside</span>
+              </div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+              <span style="font-size:11px;color:var(--muted);margin-right:auto;align-self:center;">Sent to 14 members this month</span>
+              <button class="btn btn-ghost btn-sm" onclick="editFlow('first')">Edit</button>
+            </div>
+          </div>
+
+          <!-- FLOW 2: Drop-off recovery -->
+          <div style="background:var(--s2);border-radius:9px;border:1px solid rgba(78,168,248,.2);padding:11px 13px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-family:var(--fh);font-size:13px;font-weight:700;">Drop-off Recovery</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">Member hasn't visited in 14+ days</div>
+              </div>
+              <label class="tog"><input type="checkbox" checked><div class="tog-t"></div><div class="tog-k"></div></label>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--blue);font-weight:600;width:48px;flex-shrink:0;">Day 14</span>
+                <span style="color:var(--muted);">No visit since</span>
+                <span style="margin-left:auto;" class="tag tg">&#128172; WhatsApp</span>
+                <span>We miss you at EQ! Your next session is waiting</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--orange);font-weight:600;width:48px;flex-shrink:0;">Day 21</span>
+                <span style="color:var(--muted);">Still no visit</span>
+                <span style="margin-left:auto;" class="tag tb">&#9993; Email</span>
+                <span>Here's a complimentary session to come back 🎁</span>
+              </div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+              <span style="font-size:11px;color:var(--muted);margin-right:auto;align-self:center;">Active for 31 members right now</span>
+              <button class="btn btn-ghost btn-sm" onclick="editFlow('dropout')">Edit</button>
+            </div>
+          </div>
+
+          <!-- FLOW 3: Membership renewal -->
+          <div style="background:var(--s2);border-radius:9px;border:1px solid var(--border);padding:11px 13px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-family:var(--fh);font-size:13px;font-weight:700;">Membership Renewal Reminder</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">Triggers 7 days before expiry</div>
+              </div>
+              <label class="tog"><input type="checkbox" checked><div class="tog-t"></div><div class="tog-k"></div></label>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--muted);font-weight:600;width:48px;flex-shrink:0;">7 days</span>
+                <span style="color:var(--muted);">Before expiry</span>
+                <span style="margin-left:auto;" class="tag tg">&#128172; WhatsApp</span>
+                <span>Your membership expires in 7 days — renew now</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s1);border-radius:7px;font-size:12px;">
+                <span style="color:var(--orange);font-weight:600;width:48px;flex-shrink:0;">1 day</span>
+                <span style="color:var(--muted);">Before expiry</span>
+                <span style="margin-left:auto;" class="tag tg">&#128172; WhatsApp</span>
+                <span>Last day! Renew today to keep your streak going</span>
+              </div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+              <span style="font-size:11px;color:var(--muted);margin-right:auto;align-self:center;">8 members expiring this week</span>
+              <button class="btn btn-ghost btn-sm" onclick="editFlow('renewal')">Edit</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGE LOG -->
+  <div class="card">
+    <div class="ch"><div class="ct">Recent Messages Sent</div><span style="font-size:12px;color:var(--muted);">Today</span></div>
+    <div class="cb">
+      <div class="txn-row"><div><div style="font-weight:500;">Aryan Kapoor</div><div class="txn-d">WhatsApp · Post first visit Day 2 · 09:14 AM</div></div><div class="txn-a" style="color:var(--green);">Delivered &#10003;</div></div>
+      <div class="txn-row"><div><div style="font-weight:500;">Riya Singh</div><div class="txn-d">Email · Renewal reminder 7 days · 08:30 AM</div></div><div class="txn-a" style="color:var(--green);">Opened &#10003;&#10003;</div></div>
+      <div class="txn-row"><div><div style="font-weight:500;">Marcus Chen</div><div class="txn-d">WhatsApp · Drop-off recovery Day 14 · 08:00 AM</div></div><div class="txn-a" style="color:var(--orange);">Pending &#9203;</div></div>
+      <div class="txn-row"><div><div style="font-weight:500;">Priya Kapoor</div><div class="txn-d">WhatsApp · Agreement reminder · 07:45 AM</div></div><div class="txn-a" style="color:var(--green);">Delivered &#10003;</div></div>
+    </div>
+  </div>
+</div>
+
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
+
+<!-- WALK-IN GROUP MODAL -->
+<div class="modal-bg" id="modal-walkin">
+  <div class="modal wide">
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0;">
+      <div style="font-family:var(--fh);font-size:16px;font-weight:700;">Walk-in Group Booking</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-walkin')" style="flex-shrink:0;">&#10005; Cancel</button>
+    </div>
+    <!-- STEPS -->
+    <div class="steps" style="flex-shrink:0;">
+      <div class="step" id="wi-step-1" onclick="wiGoStep(1)">1 · Select Class</div>
+      <div class="step" id="wi-step-2" onclick="wiGoStep(2)">2 · Add Members</div>
+      <div class="step" id="wi-step-3" onclick="wiGoStep(3)">3 · Payment</div>
+    </div>
+    <!-- SCROLLABLE BODY -->
+    <div class="modal-body" id="wi-modal-body">
+
+      <!-- ── STEP 1: CLASS SELECTION ── -->
+      <div id="wi-panel-1">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Select the class for this group. Staff can suggest based on availability.</div>
+        <div id="wi-cls-list">
+          <div class="cls-row" onclick="wiSelectCls(this,'09:00','Intro Climb','Sarah Mitchell',5,8)">
+            <div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
+            <div class="c-right"><div class="c-slots slots-ok">5/8</div><div style="font-size:10px;color:var(--green);">3 left</div></div>
+          </div>
+          <div class="cls-row" onclick="wiSelectCls(this,'09:30','Intro Climb','James Okafor',3,8)">
+            <div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
+            <div class="c-right"><div class="c-slots slots-ok">3/8</div><div style="font-size:10px;color:var(--green);">5 left</div></div>
+          </div>
+          <div class="cls-row" onclick="wiSelectCls(this,'11:00','Intro Climb','Sarah Mitchell',2,8)">
+            <div class="c-time">11:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
+            <div class="c-right"><div class="c-slots slots-ok">2/8</div><div style="font-size:10px;color:var(--green);">6 left</div></div>
+          </div>
+          <div class="cls-row" onclick="wiSelectCls(this,'11:30','Intro Climb','James Okafor',0,8)">
+            <div class="c-time">11:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
+            <div class="c-right"><div class="c-slots slots-ok">0/8</div><div style="font-size:10px;color:var(--green);">8 left</div></div>
+          </div>
+          <div class="cls-row" onclick="wiSelectCls(this,'12:00','Intro Climb','Raj Kumar',0,8)">
+            <div class="c-time">12:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Raj Kumar</div></div>
+            <div class="c-right"><div class="c-slots slots-ok">0/8</div><div style="font-size:10px;color:var(--green);">8 left</div></div>
+          </div>
+        </div>
+        <!-- Selected class confirmation bar -->
+        <div id="wi-cls-selected" style="display:none;background:rgba(200,240,60,.08);border:1.5px solid var(--accent);border-radius:9px;padding:10px 13px;margin-top:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div>
+              <div style="font-family:var(--fh);font-weight:700;color:var(--accent);font-size:14px;" id="wi-sel-cls-name">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="wi-sel-cls-info">—</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:var(--muted);">Instructor override:</span>
+              <div class="sw" style="width:160px;">
+                <select id="wi-instr-ovr" style="font-size:12px;padding:5px 22px 5px 8px;">
+                  <option value="">Same as scheduled</option>
+                  <option>James Okafor</option><option>Sarah Mitchell</option><option>Raj Kumar</option><option>Priya Nair</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="wiClearCls()" style="font-size:11px;">Change</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+          <button class="btn btn-accent" id="wi-next-1" disabled onclick="wiGoStep(2)">Next: Add Members &#8594;</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: ADD MEMBERS ── -->
+      <div id="wi-panel-2" style="display:none;">
+        <!-- Selected class reminder -->
+        <div id="wi-step2-cls-reminder" style="background:var(--s2);border-radius:8px;padding:8px 11px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;"><span style="color:var(--muted);">Class: </span><span style="font-weight:600;color:var(--accent);" id="wi-step2-cls-label">—</span></div>
+          <button class="btn btn-ghost btn-sm" onclick="wiGoStep(1)" style="font-size:11px;">&#8592; Change Class</button>
+        </div>
+        <!-- Search -->
+        <div style="position:relative;margin-bottom:10px;">
+          <input type="text" id="wi-search" placeholder="Search member by name, phone or ID…" style="width:100%;font-size:13px;padding:9px 12px;" oninput="wiSearch(this.value)" autocomplete="off">
+          <div id="wi-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s1);border:1px solid var(--border);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.5);"></div>
+        </div>
+        <!-- Roster -->
+        <div id="wi-roster" style="display:flex;flex-direction:column;min-height:48px;">
+          <div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Search and add members above</div>
+        </div>
+        <!-- Capacity warning -->
+        <div id="wi-cap-warning" style="display:none;margin-top:8px;padding:8px 11px;background:rgba(240,128,64,.08);border:1px solid rgba(240,128,64,.25);border-radius:8px;font-size:12px;color:var(--orange);display:flex;align-items:center;justify-content:space-between;">
+          <span id="wi-cap-warning-txt">&#9888; Exceeds available slots</span>
+          <button class="btn btn-ghost btn-sm" onclick="wiOverrideCap()" style="font-size:11px;flex-shrink:0;">Override Capacity</button>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+          <button class="btn btn-ghost btn-sm" onclick="wiGoStep(1)">&#8592; Back</button>
+          <button class="btn btn-accent" id="wi-next-2" disabled onclick="wiGoStep(3)">Next: Payment &#8594;</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: PAYMENT ── -->
+      <div id="wi-panel-3" style="display:none;">
+        <!-- Summary reminder -->
+        <div style="background:var(--s2);border-radius:8px;padding:8px 11px;margin-bottom:12px;font-size:12px;display:flex;justify-content:space-between;">
+          <span><span style="color:var(--muted);">Class: </span><span style="color:var(--accent);font-weight:600;" id="wi-step3-cls">—</span></span>
+          <span><span style="color:var(--muted);">Members: </span><span id="wi-step3-count" style="font-weight:600;">0</span></span>
+          <button class="btn btn-ghost btn-sm" onclick="wiGoStep(2)" style="font-size:11px;">&#8592; Edit Group</button>
+        </div>
+        <!-- Per-member payer assignment -->
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;">Who pays for each person?</div>
+        <div id="wi-payer-groups" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+        <!-- Payment method -->
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;">Payment Method</div>
+        <div class="pay-grid" id="wi-pay-grid" style="margin-bottom:12px;">
+          <button class="pm sel" onclick="wiPickPay(this,'cash')"><span class="pmi">&#128181;</span>Cash</button>
+          <button class="pm" onclick="wiPickPay(this,'upi')"><span class="pmi">&#128249;</span>UPI</button>
+          <button class="pm" onclick="wiPickPay(this,'pos')"><span class="pmi">&#128179;</span>POS</button>
+          <button class="pm" onclick="wiPickPay(this,'card')"><span class="pmi">&#10062;</span>Card</button>
+          <button class="pm" onclick="wiPickPay(this,'bharat')"><span class="pmi">&#127470;&#127475;</span>Bharat QR</button>
+          <button class="pm" onclick="wiPickPay(this,'account')"><span class="pmi">&#127968;</span>Account</button>
+        </div>
+        <!-- Total -->
+        <div style="background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--muted);">Total — <span id="wi-count">0</span> members at &#8377;<span id="wi-price-each">800</span> each</div>
+          <div style="font-family:var(--fh);font-size:20px;font-weight:700;color:var(--accent);" id="wi-total">&#8377;0</div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:space-between;">
+          <button class="btn btn-ghost btn-sm" onclick="wiGoStep(2)">&#8592; Back</button>
+          <button class="btn btn-accent" id="wi-confirm-btn" onclick="wiConfirm()">Confirm &amp; Check In All &#8594;</button>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+  </div>
+</div>
+
+<!-- AGREEMENT SEND CONFIRM -->
+<div class="modal-bg" id="modal-agmt">
+  <div class="modal">
+    <div class="modal-title" id="agmt-modal-title">Send Agreement?</div>
+    <div class="modal-sub" id="agmt-modal-sub">Send the club agreement to the member.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-agmt')">Cancel</button>
+      <button class="btn btn-accent" onclick="confirmSendAgmt()">Send Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGER PIN -->
+<div class="modal-bg" id="modal-mgr">
+  <div class="modal">
+    <div class="modal-title">&#128274; Manager Override</div>
+    <div class="modal-sub">Enter manager PIN and reason. This will be logged in the shift summary.</div>
+    <div class="fl"><label>Manager PIN</label><input type="password" id="mgr-pin" placeholder="Enter PIN" style="letter-spacing:4px;font-size:18px;text-align:center;" maxlength="6"></div>
+    <div class="fl"><label>Reason</label><input type="text" id="mgr-reason" placeholder="e.g. Technical delay, member confirmed offline"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-mgr')">Cancel</button>
+      <button class="btn btn-orange" onclick="applyMgrOverride()">Apply Override</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="modal-bg" id="modal-success">
+  <div class="modal" style="text-align:center;">
+    <div class="s-icon">&#10003;</div>
+    <div class="modal-title" id="suc-title">Done!</div>
+    <div class="modal-sub" id="suc-sub"></div>
+    <div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-success')">Close</button><button class="btn btn-accent" onclick="closeModal('modal-success')">OK</button></div>
+  </div>
+</div>
+
+<!-- LOGOUT CONFIRM -->
+<div class="modal-bg" id="modal-logout">
+  <div class="modal">
+    <div class="modal-title">Sign Out?</div>
+    <div class="modal-sub" id="logout-sub">End session for this staff member.</div>
+    <div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-logout')">Cancel</button><button class="btn btn-red" onclick="doLogout()">Sign Out</button></div>
+  </div>
+</div>
+
+<!-- CLOSE SHIFT -->
+<div class="modal-bg" id="modal-close-shift">
+  <div class="modal">
+    <div class="modal-title">Close Shift?</div>
+    <div class="modal-sub">This locks the shift report and sends a summary to the manager. Time: <strong id="shift-close-time"></strong></div>
+    <div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-close-shift')">Cancel</button><button class="btn btn-red" onclick="confirmCloseShift()">Close Shift</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+//  API LAYER
+// ════════════════════════════════════════════
+var BASE_URL = 'http://localhost:8000';
+var _accessToken = null, _refreshToken = null;
+var _apiGyms = [];
+
+function decodeJWT(token) {
+  try {
+    var b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(atob(b64));
+  } catch(e) { return {}; }
+}
+
+function apiRefreshToken() {
+  return fetch(BASE_URL+'/api/auth/token/refresh/',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({refresh:_refreshToken})
+  }).then(function(r){
+    if(!r.ok) throw new Error('refresh_failed');
+    return r.json();
+  }).then(function(d){
+    _accessToken=d.access;
+    if(d.refresh) _refreshToken=d.refresh;
+  });
+}
+
+function apiFetch(path, options) {
+  options=options||{};
+  var headers=Object.assign({'Content-Type':'application/json'},options.headers||{});
+  if(_accessToken) headers['Authorization']='Bearer '+_accessToken;
+  return fetch(BASE_URL+path,Object.assign({},options,{headers:headers}))
+    .then(function(r){
+      if(r.status===401&&_refreshToken){
+        return apiRefreshToken().then(function(){
+          headers['Authorization']='Bearer '+_accessToken;
+          return fetch(BASE_URL+path,Object.assign({},options,{headers:headers}));
+        });
+      }
+      return r;
+    });
+}
+
+// ── SERVICE CATALOG ──
+var _serviceMap = {}; // variation_id → {id, name, price, service_type, uiType}
+
+function loadServiceCatalog() {
+  var gymParam=currentLocation&&currentLocation.gymId?'?gym_id='+currentLocation.gymId:'';
+  var classesP=apiFetch('/api/explore-classes/'+gymParam).then(function(r){return r.json();});
+  var membershipsP=apiFetch('/api/explore-memberships/'+gymParam).then(function(r){return r.json();});
+  Promise.all([classesP,membershipsP]).then(function(results){
+    var classData=results[0], membershipData=results[1];
+    var groups=[];
+    if(classData&&classData.classes) groups=groups.concat(classData.classes.map(function(g){return Object.assign({},g,{_uiType:'class'});}));
+    if(membershipData&&membershipData.memberships) groups=groups.concat(membershipData.memberships.map(function(g){return Object.assign({},g,{_uiType:'other'});}));
+    if(!groups.length) return;
+    _serviceMap={};
+    var html='<option value="">— Select —</option>';
+    groups.forEach(function(group){
+      if(!group.variations||!group.variations.length) return;
+      html+='<optgroup label="'+escHtml(group.name)+'">';
+      group.variations.forEach(function(v){
+        if(!v.is_active) return;
+        var price=parseFloat(v.price)||0;
+        var optVal=group._uiType+'|'+price+'|'+escHtml(v.name)+'|'+v.id;
+        _serviceMap[v.id]={id:v.id,name:v.name,price:price,uiType:group._uiType};
+        html+='<option value="'+optVal+'">'+escHtml(v.name)+' \u2014 \u20b9'+price.toLocaleString('en-IN')+'</option>';
+      });
+      html+='</optgroup>';
+    });
+    var selMain=$('svc-main'), selQI=$('qi-svc');
+    if(selMain) selMain.innerHTML=html;
+    if(selQI) selQI.innerHTML=html;
+    console.log('Service catalog loaded: '+groups.length+' groups.');
+  }).catch(function(err){
+    console.warn('Service catalog load failed, using hardcoded fallback:',err);
+  });
+}
+
+function escHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── RAZORPAY PAYMENT FLOW ──
+function startRazorpayPayment(context) {
+  var varId=(context==='main')?_selectedVariationId:_qiSelectedVariationId;
+  var member=(context==='main')?curMbr:qiMbr;
+  if(!varId){showSuccess('Select a Service','Choose a service from the catalog before paying online.');return;}
+  if(typeof Razorpay==='undefined'){showSuccess('Razorpay Unavailable','Checkout SDK failed to load. Check internet connection.');return;}
+  var btn=(context==='main')?$('cfm-btn-main'):$('qi-cfm-btn');
+  if(btn){btn.disabled=true;btn.textContent='Creating order\u2026';}
+  apiFetch('/api/payments/create-order/',{
+    method:'POST',body:JSON.stringify({service_id:varId})
+  }).then(function(r){return r.json().then(function(d){return{ok:r.ok,data:d};});})
+  .then(function(res){
+    if(btn){btn.disabled=false;btn.textContent='Confirm & Process \u2192';}
+    if(!res.ok){showSuccess('Order Failed',res.data.error||res.data.detail||'Could not create order.');return;}
+    var d=res.data;
+    var options={
+      key:d.razorpay_key_id,
+      amount:d.amount_paise,
+      currency:d.currency||'INR',
+      order_id:d.razorpay_order_id,
+      name:'EQ Climbing',
+      description:'Service Payment',
+      prefill:{
+        name:d.prefill_name||(member?member.name:''),
+        email:d.prefill_email||(member?member.email:''),
+        contact:d.prefill_contact||(member?member.phone:'')
+      },
+      theme:{color:'#c8f03c'},
+      handler:function(response){verifyRazorpayPayment(response,member);},
+      modal:{ondismiss:function(){markPaymentFailed(d.razorpay_order_id);}}
+    };
+    var rzp=new Razorpay(options);
+    rzp.open();
+  }).catch(function(){
+    if(btn){btn.disabled=false;btn.textContent='Confirm & Process \u2192';}
+    showSuccess('Error','Could not connect to server. Is the backend running?');
+  });
+}
+
+function verifyRazorpayPayment(response, member) {
+  apiFetch('/api/payments/verify/',{
+    method:'POST',
+    body:JSON.stringify({
+      razorpay_order_id:response.razorpay_order_id,
+      razorpay_payment_id:response.razorpay_payment_id,
+      razorpay_signature:response.razorpay_signature
+    })
+  }).then(function(r){return r.json().then(function(d){return{ok:r.ok,data:d};});})
+  .then(function(res){
+    var name=member?member.name.split(' ')[0]:'Member';
+    if(res.ok){showSuccess(name+' \u2014 Payment Complete!',res.data.detail||'Payment verified and recorded.');}
+    else{showSuccess('Verification Failed',res.data.detail||'Payment may not have been recorded. Contact manager.');}
+  }).catch(function(){
+    showSuccess('Verify Error','Payment received but verification failed. Contact support.');
+  });
+}
+
+function markPaymentFailed(orderId) {
+  apiFetch('/api/payments/mark-failed/',{
+    method:'POST',body:JSON.stringify({razorpay_order_id:orderId})
+  }).catch(function(){});
+}
+
+// ═══ DATA.JS ═══
+var LOCATIONS = [
+  {id:'LOC_001', name:'EQ Koramangala', short:'Koramangala', addr:'4th Block, Koramangala'},
+  {id:'LOC_002', name:'EQ Indiranagar', short:'Indiranagar',  addr:'100ft Road, Indiranagar'},
+  {id:'LOC_003', name:'EQ Whitefield',  short:'Whitefield',   addr:'ITPL Main Road, Whitefield'},
+];
+
+var STAFF_DB = [
+  {id:'ananya',  init:'AS', name:'Ananya S.',  role:'Front Desk',  locations:['LOC_001']},
+  {id:'rohan',   init:'RM', name:'Rohan M.',   role:'Senior Desk', locations:['LOC_001','LOC_002']},
+  {id:'preethi', init:'PK', name:'Preethi K.', role:'Front Desk',  locations:['LOC_002']},
+  {id:'kiran',   init:'KD', name:'Kiran D.',   role:'Manager',     locations:['LOC_001','LOC_002','LOC_003']},
+];
+
+var MEMBERS = [
+  {
+    id:'aryan', init:'AK', name:'Aryan Kapoor',
+    phone:'+91 98200 34567', email:'aryan@email.com',
+    plan:'Multi-Club Monthly', planType:'multi',
+    status:'active', homeLocation:'LOC_001',
+    accessLocations:['LOC_001','LOC_002','LOC_003'],
+    balance:2500, visits:47, lastVisit:'Apr 17',
+    spend:'\u20b942.8k', pts:1240,
+    agreement:'valid', rfid:'RFID-4829-0031',
+    dob:'1992-04-15', addr:'42 Koramangala 4th Block',
+    city:'Bengaluru', pin:'560034', state:'Karnataka',
+    ec_name:'Sunita Kapoor', ec_rel:'Mother', ec_phone:'+91 98100 22334',
+    ref:'REF-082-AK', expiry:'2026-04-23',
+    notes:'Prefers morning slots',
+    recentVisits:[
+      {date:'Apr 18', loc:'LOC_002', locName:'Indiranagar', activity:'Floor Access', method:'RFID'},
+      {date:'Apr 17', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
+      {date:'Apr 15', loc:'LOC_001', locName:'Koramangala', activity:'Floor Access', method:'RFID'},
+      {date:'Apr 13', loc:'LOC_003', locName:'Whitefield',  activity:'Intro Climb',  method:'RFID'},
+      {date:'Apr 10', loc:'LOC_001', locName:'Koramangala', activity:'Floor Access', method:'Manual'},
+    ]
+  },
+  {
+    id:'fatima', init:'FR', name:'Fatima Rashid',
+    phone:'+91 97100 55432', email:'fatima@email.com',
+    plan:'Annual', planType:'single',
+    status:'active', homeLocation:'LOC_001',
+    accessLocations:['LOC_001'],
+    balance:0, visits:89, lastVisit:'Apr 18',
+    spend:'\u20b968.2k', pts:3200,
+    agreement:'valid', rfid:'RFID-2201-9981',
+    dob:'1990-08-22', addr:'15 Indiranagar 100ft Rd',
+    city:'Bengaluru', pin:'560038', state:'Karnataka',
+    ec_name:'Ahmed Rashid', ec_rel:'Father', ec_phone:'+91 98220 11234',
+    ref:'REF-044-FR', expiry:'2027-01-10', notes:'',
+    recentVisits:[
+      {date:'Apr 18', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
+      {date:'Apr 16', loc:'LOC_001', locName:'Koramangala', activity:'Floor Access', method:'RFID'},
+      {date:'Apr 14', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
+    ]
+  },
+  {
+    id:'priya', init:'PK', name:'Priya Kapoor',
+    phone:'+91 90000 12345', email:'priya@email.com',
+    plan:'Monthly', planType:'single',
+    status:'no-agreement', homeLocation:'LOC_001',
+    accessLocations:['LOC_001'],
+    balance:0, visits:3, lastVisit:'Apr 10',
+    spend:'\u20b92.4k', pts:120,
+    agreement:'missing', rfid:'',
+    dob:'1998-12-01', addr:'8 HSR Layout Sector 2',
+    city:'Bengaluru', pin:'560102', state:'Karnataka',
+    ec_name:'Raj Kapoor', ec_rel:'Brother', ec_phone:'+91 97800 44321',
+    ref:'', expiry:'2026-04-30', notes:'New member',
+    recentVisits:[]
+  },
+  {
+    id:'marcus', init:'MC', name:'Marcus Chen',
+    phone:'+91 91234 56789', email:'marcus@email.com',
+    plan:'Multi-Club Quarterly', planType:'multi',
+    status:'active', homeLocation:'LOC_002',
+    accessLocations:['LOC_001','LOC_002','LOC_003'],
+    balance:0, visits:22, lastVisit:'Apr 18',
+    spend:'\u20b915.4k', pts:610,
+    agreement:'valid', rfid:'RFID-7712-3340',
+    dob:'1995-03-10', addr:'22 Whitefield Main Rd',
+    city:'Bengaluru', pin:'560066', state:'Karnataka',
+    ec_name:'Linda Chen', ec_rel:'Sister', ec_phone:'+91 90090 99008',
+    ref:'REF-031-MC', expiry:'2026-04-28', notes:'',
+    recentVisits:[
+      {date:'Apr 18', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
+      {date:'Apr 15', loc:'LOC_002', locName:'Indiranagar', activity:'Floor Access', method:'RFID'},
+    ]
+  },
+  {
+    id:'riya', init:'RS', name:'Riya Singh',
+    phone:'+91 88001 23456', email:'riya@email.com',
+    plan:'Monthly', planType:'single',
+    status:'overdue', homeLocation:'LOC_001',
+    accessLocations:['LOC_001'],
+    balance:3500, visits:18, lastVisit:'Apr 12',
+    spend:'\u20b911.2k', pts:440,
+    agreement:'valid', rfid:'RFID-5512-0092',
+    dob:'1994-07-19', addr:'33 JP Nagar 3rd Phase',
+    city:'Bengaluru', pin:'560078', state:'Karnataka',
+    ec_name:'Vikram Singh', ec_rel:'Husband', ec_phone:'+91 98400 55667',
+    ref:'REF-019-RS', expiry:'2026-04-20', notes:'Overdue since Apr 1',
+    recentVisits:[]
+  },
+  {
+    id:'vikram', init:'VS', name:'Vikram Sharma',
+    phone:'+91 99800 11223', email:'vikram@email.com',
+    plan:'Monthly', planType:'single',
+    status:'active', homeLocation:'LOC_002',
+    accessLocations:['LOC_002'],
+    balance:0, visits:14, lastVisit:'Apr 17',
+    spend:'\u20b99.8k', pts:350,
+    agreement:'valid', rfid:'RFID-9901-0044',
+    dob:'1991-06-25', addr:'12 Indiranagar 5th Cross',
+    city:'Bengaluru', pin:'560038', state:'Karnataka',
+    ec_name:'Meena Sharma', ec_rel:'Wife', ec_phone:'+91 98700 33445',
+    ref:'REF-055-VS', expiry:'2026-05-01', notes:'Home club: Indiranagar',
+    recentVisits:[
+      {date:'Apr 17', loc:'LOC_002', locName:'Indiranagar', activity:'Floor Access', method:'RFID'},
+      {date:'Apr 15', loc:'LOC_002', locName:'Indiranagar', activity:'Intro Climb',  method:'RFID'},
+    ]
+  },
+];
+
+var CLS_DATA = {
+  ic700:{name:'Intro Climb',time:'07:00',instr:'James Okafor',capacity:8,
+    roster:[
+      {n:'Aryan Kapoor',i:'AK',ci:true,min:82},
+      {n:'Rohit Sharma',i:'RS',ci:true,min:81},
+      {n:'Deepika Nair',i:'DN',ci:true,min:93},
+      {n:'Fatima Rashid',i:'FR',ci:true,min:78},
+      {n:'Marcus Chen',i:'MC',ci:true,min:65},
+      {n:'Priya Nair',i:'PN',ci:false,min:0},
+      {n:'Dev Sharma',i:'DS',ci:true,min:55},
+      {n:'Anita Roy',i:'AR',ci:true,min:45},
+    ]},
+  ic900:{name:'Intro Climb',time:'09:00',instr:'Sarah Mitchell',capacity:8,
+    roster:[
+      {n:'Riya Singh',i:'RS',ci:true,min:40},
+      {n:'Sanjay Gupta',i:'SG',ci:false,min:0},
+      {n:'Meera Patel',i:'MP',ci:true,min:38},
+      {n:'Arun Kumar',i:'AK',ci:false,min:0},
+      {n:'Nina Verma',i:'NV',ci:true,min:22},
+    ]},
+  ic930:{name:'Intro Climb',time:'09:30',instr:'James Okafor',capacity:8,
+    roster:[
+      {n:'Kabir Mehta',i:'KM',ci:false,min:0},
+      {n:'Zara Sheikh',i:'ZS',ci:false,min:0},
+      {n:'Tanvi Rao',i:'TR',ci:false,min:0},
+    ]},
+  int1000:{name:'Intermediate',time:'10:00',instr:'Raj Kumar',capacity:10,
+    roster:[
+      {n:'Vikram Singh',i:'VS',ci:false,min:0},
+      {n:'Pooja Nair',i:'PN',ci:false,min:0},
+      {n:'Arjun Mehta',i:'AM',ci:false,min:0},
+      {n:'Kavita Sharma',i:'KS',ci:false,min:0},
+      {n:'Rohit Das',i:'RD',ci:false,min:0},
+      {n:'Simran Gill',i:'SG',ci:false,min:0},
+    ]},
+  ic1100:{name:'Intro Climb',time:'11:00',instr:'Sarah Mitchell',capacity:8,
+    roster:[{n:'Priya Kapoor',i:'PK',ci:false,min:0},{n:'Dev Rao',i:'DR',ci:false,min:0}]},
+  ic1130:{name:'Intro Climb',time:'11:30',instr:'James Okafor',capacity:8,roster:[]},
+  ic1200:{name:'Intro Climb',time:'12:00',instr:'Raj Kumar',capacity:8,roster:[]},
+};
+
+// ── HELPERS ──
+var _apiMembers=[];
+var _isLoadingMembers=false;
+var _memberListLoadedForGym=null;
+
+function initialsFromName(name){
+  var parts=(name||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return 'MB';
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+
+function normalizeYoActivMember(raw){
+  if(!raw||typeof raw!=='object') return null;
+  var mobile=String(raw.Mobile_No||raw.Mobile||raw.Phone||raw.phone||'').trim();
+  var yoId=String(raw.User_Id||raw.UserID||raw.UserId||raw.id||mobile||Math.random().toString(36).slice(2));
+  var name=String(raw.Name||raw.FullName||raw.User_Name||raw.Username||raw.MemberName||('Member '+yoId)).trim();
+  var email=String(raw.Email||raw.EmailId||raw.email||'').trim();
+  var statusRaw=String(raw.Status||'Active').toLowerCase();
+  var status=statusRaw.indexOf('active')>-1?'active':'inactive';
+  return {
+    id:'ya-'+yoId,
+    init:initialsFromName(name),
+    name:name,
+    phone:mobile,
+    email:email,
+    plan:String(raw.PlanName||raw.ServiceName||raw.PackageName||'Member'),
+    planType:'single',
+    status:status,
+    homeLocation:currentLocation?currentLocation.id:'1',
+    accessLocations:[currentLocation?currentLocation.id:'1'],
+    balance:Number(raw.Balance||0)||0,
+    visits:Number(raw.VisitCount||0)||0,
+    lastVisit:String(raw.LastVisitDate||raw.LastVisit||'—'),
+    spend:'₹0',
+    pts:0,
+    agreement:'valid',
+    rfid:String(raw.RFID||raw.Rfid||''),
+    dob:'',
+    addr:'',
+    city:'',
+    pin:'',
+    state:'Karnataka',
+    ec_name:'',
+    ec_rel:'',
+    ec_phone:'',
+    ref:'',
+    expiry:'',
+    notes:'',
+    recentVisits:[]
+  };
+}
+
+function extractMembersFromYoActivPayload(payload){
+  if(Array.isArray(payload)) return payload;
+  if(!payload||typeof payload!=='object') return [];
+  if(Array.isArray(payload.Results)) return payload.Results;
+  if(Array.isArray(payload.results)) return payload.results;
+  if(Array.isArray(payload.Data)) return payload.Data;
+  if(Array.isArray(payload.data)) return payload.data;
+  if(Array.isArray(payload.Users)) return payload.Users;
+  if(Array.isArray(payload.users)) return payload.users;
+  return [];
+}
+
+function renderMemberList(){
+  var stateEl=$('member-list-state');
+  var listEl=$('member-list-items');
+  if(!stateEl||!listEl) return;
+
+  if(_isLoadingMembers){
+    stateEl.style.display='block';
+    stateEl.textContent='Loading members…';
+    listEl.innerHTML='';
+    return;
+  }
+
+  if(!_apiMembers.length){
+    stateEl.style.display='block';
+    stateEl.textContent='No members found for this gym.';
+    listEl.innerHTML='';
+    return;
+  }
+
+  stateEl.style.display='none';
+  var html='';
+  _apiMembers.forEach(function(m){
+    var tagCls=m.status==='active'?'tg':'to';
+    var tagTxt=m.status==='active'?'Active':'Inactive';
+    html+='<div class="mbr-row" onclick="loadMember(\''+m.id+'\')">'+
+      '<div class="m-av">'+m.init+'</div>'+
+      '<div><div class="m-name">'+m.name+'</div><div class="m-sub">'+(m.phone||'No phone')+'</div></div>'+
+      '<div class="m-right"><span class="tag '+tagCls+'">'+tagTxt+'</span></div>'+
+      '</div>';
+  });
+  listEl.innerHTML=html;
+}
+
+function fetchMembersForCurrentGym(force){
+  if(!currentLocation) return;
+  var gymId=currentLocation.gymId||currentLocation.id;
+  if(!gymId) return;
+  if(!force&&_memberListLoadedForGym===String(gymId)&&_apiMembers.length){
+    renderMemberList();
+    return;
+  }
+
+  _isLoadingMembers=true;
+  renderMemberList();
+  apiFetch('/api/members/?gym_id='+encodeURIComponent(gymId))
+    .then(function(r){return r.json().then(function(d){return{ok:r.ok,data:d};});})
+    .then(function(res){
+      if(!res.ok) throw new Error((res.data&&res.data.detail)||'Could not load members.');
+      var rawMembers=extractMembersFromYoActivPayload(res.data);
+      _apiMembers=rawMembers.map(normalizeYoActivMember).filter(Boolean);
+      _memberListLoadedForGym=String(gymId);
+      _isLoadingMembers=false;
+      renderMemberList();
+    })
+    .catch(function(err){
+      _isLoadingMembers=false;
+      _apiMembers=[];
+      _memberListLoadedForGym=null;
+      renderMemberList();
+      var stateEl=$('member-list-state');
+      if(stateEl) stateEl.textContent=err&&err.message?err.message:'Could not load members for this gym.';
+    });
+}
+
+function refreshMemberList(){
+  _memberListLoadedForGym=null;
+  fetchMembersForCurrentGym(true);
+}
+
+function getMember(id){
+  var source=_apiMembers.length?_apiMembers:MEMBERS;
+  return source.find(function(m){return m.id===id;})||null;
+}
+
+function searchMembers(q){
+  if(!q||q.length<2) return [];
+  q=q.toLowerCase().replace(/\s/g,'');
+  var source=_apiMembers.length?_apiMembers:MEMBERS;
+  return source.filter(function(m){
+    return m.name.toLowerCase().replace(/\s/g,'').indexOf(q)>-1 ||
+           m.phone.replace(/\s/g,'').indexOf(q)>-1 ||
+           (m.email||'').toLowerCase().indexOf(q)>-1 ||
+           (m.rfid||'').toLowerCase().replace(/-/g,'').indexOf(q.replace(/-/g,''))>-1;
+  });
+}
+
+
+// ═══ UTILS.JS ═══
+// ── DOM SHORTHAND ──
+function $(id){ return document.getElementById(id); }
+function show(id,d){ var e=$(id); if(e) e.style.display=d||'block'; }
+function hide(id){ var e=$(id); if(e) e.style.display='none'; }
+function flex(id){ var e=$(id); if(e) e.style.display='flex'; }
+
+// ── SESSION STATE ──
+var currentStaff = null;
+var currentLocation = null;
+
+// ── CLOCK ──
+(function tick(){
+  var e=$('clk');
+  if(e) e.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  setTimeout(tick, 1000);
+})();
+
+// ── QR MOCK ──
+function buildQR(id){
+  var el=$(id); if(!el||el.children.length) return;
+  for(var i=0;i<25;i++){
+    var d=document.createElement('div');
+    d.style.opacity=Math.random()>.4?'1':'0';
+    el.appendChild(d);
+  }
+}
+
+// ── HELPERS ──
+function now(){ return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); }
+function rndRef(){ return Math.floor(100000+Math.random()*900000); }
+
+// ── MODALS ──
+function showModal(id){ var e=$(id); if(e) e.classList.add('show'); }
+function closeModal(id){ var e=$(id); if(e) e.classList.remove('show'); }
+
+function showSuccess(title, sub){
+  $('suc-title').textContent=title;
+  $('suc-sub').innerHTML=(sub||'').replace(/\n/g,'<br>');
+  showModal('modal-success');
+}
+
+// ── LOGIN ──
+function doLogin(){
+  var username=($('login-username').value||'').trim();
+  var password=($('login-password').value||'').trim();
+  if(!username||!password){$('login-err').textContent='Enter username and password.';return;}
+  var btn=$('login-btn');
+  btn.disabled=true; btn.textContent='Signing in\u2026';
+  $('login-err').textContent='';
+  fetch(BASE_URL+'/api/auth/token/',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username:username,password:password})
+  }).then(function(r){return r.json().then(function(d){return{ok:r.ok,data:d};});})
+  .then(function(res){
+    btn.disabled=false; btn.textContent='Sign In';
+    if(!res.ok){$('login-err').textContent=res.data.detail||'Invalid credentials.';return;}
+    _accessToken=res.data.access; _refreshToken=res.data.refresh;
+    var claims=decodeJWT(_accessToken);
+    currentStaff={
+      id:String(claims.user_id||username),
+      name:username,
+      init:username.slice(0,2).toUpperCase(),
+      role:'Staff',locations:[]
+    };
+    $('login-err').textContent='';
+    $('login-step-sso').style.display='none';
+    $('login-step-loc').style.display='block';
+    $('loc-step-av').textContent=currentStaff.init;
+    $('loc-step-name').textContent=currentStaff.name;
+    loadGymLocations();
+  }).catch(function(){
+    btn.disabled=false; btn.textContent='Sign In';
+    $('login-err').textContent='Cannot connect to server. Is the backend running?';
+  });
+}
+
+function loadGymLocations(){
+  $('loc-err').textContent='';
+  apiFetch('/api/gyms/').then(function(r){
+    return r.json().then(function(d){ return { ok:r.ok, data:d }; });
+  })
+  .then(function(data){
+    if(!data.ok){
+      throw new Error((data.data&&data.data.detail)||'Could not load gyms from backend.');
+    }
+    var gyms=data.data.results||data.data;
+    if(!Array.isArray(gyms)||!gyms.length){
+      _apiGyms=[];
+      currentStaff.locations=[];
+      renderLocPickerFromGyms(_apiGyms);
+      $('loc-err').textContent='No gyms found in backend.';
+      return;
+    }
+    _apiGyms=gyms.map(function(g){
+      var short=g.name.replace(/^eq\s*/i,'').trim()||g.name;
+      return{id:String(g.id),gymId:g.id,name:g.name,short:short,addr:''};
+    });
+    currentStaff.locations=_apiGyms.map(function(l){return l.id;});
+    renderLocPickerFromGyms(_apiGyms);
+  }).catch(function(err){
+    _apiGyms=[];
+    currentStaff.locations=[];
+    renderLocPickerFromGyms(_apiGyms);
+    $('loc-err').textContent=(err&&err.message)?err.message:'Cannot load gyms from backend.';
+  });
+}
+
+function renderLocPickerFromGyms(gyms){
+  if(!gyms||!gyms.length){
+    $('loc-grid-picker').innerHTML='<div style="grid-column:1/-1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;">No gym locations available.</div>';
+    $('loc-confirm-btn').disabled=true;
+    return;
+  }
+  var html='';
+  gyms.forEach(function(loc,idx){
+    html+='<button class="loc-btn" onclick="selectLocGym(this,'+idx+')" type="button">';
+    html+='<div class="loc-icon">&#127965;</div>';
+    html+='<div class="loc-info"><div class="loc-name">'+loc.name+'</div>';
+    if(loc.addr) html+='<div class="loc-addr">'+loc.addr+'</div>';
+    html+='</div>';
+    html+='<span class="tag tg" style="font-size:10px;">&#10003; Access</span>';
+    html+='</button>';
+  });
+  $('loc-grid-picker').innerHTML=html;
+  $('loc-confirm-btn').disabled=true;
+}
+
+function selectLocGym(btn,idx){
+  var loc=_apiGyms[idx];
+  document.querySelectorAll('.loc-btn').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected');
+  currentLocation={id:loc.id,gymId:loc.gymId,name:loc.name,short:loc.short,addr:loc.addr||''};
+  $('loc-confirm-btn').disabled=false;
+}
+
+function backToSSO(){
+  currentStaff=null; currentLocation=null;
+  _accessToken=null; _refreshToken=null;
+  $('login-step-loc').style.display='none';
+  $('login-step-sso').style.display='block';
+  if($('login-username')){$('login-username').value='';$('login-password').value='';}
+}
+
+function doLocationLogin(){
+  if(!currentStaff||!currentLocation) return;
+  hide('login-screen');
+  $('topbar').style.display='flex';
+  $('layout').style.display='flex';
+  $('staff-chip-name').textContent=currentStaff.name;
+  $('loc-badge-name').textContent=currentLocation.short;
+  buildQR('qr-main');
+  // reset login for next time
+  $('login-step-sso').style.display='block';
+  $('login-step-loc').style.display='none';
+  document.querySelectorAll('.loc-btn').forEach(function(b){b.classList.remove('selected');});
+  // Load real service catalog from API
+  loadServiceCatalog();
+  _apiMembers=[];
+  _memberListLoadedForGym=null;
+  _isLoadingMembers=false;
+  renderMemberList();
+}
+
+function confirmLogout(){
+  $('logout-sub').textContent='End session for '+currentStaff.name+' at '+currentLocation.name+'.';
+  showModal('modal-logout');
+}
+
+function doLogout(){
+  closeModal('modal-logout');
+  if(_refreshToken){
+    apiFetch('/api/auth/logout/',{method:'POST',body:JSON.stringify({refresh:_refreshToken})}).catch(function(){});
+  }
+  _accessToken=null; _refreshToken=null;
+  hide('topbar'); hide('layout');
+  show('login-screen');
+  currentStaff=null; currentLocation=null;
+  $('gsearch').value='';
+  if($('login-username')){$('login-username').value='';$('login-password').value='';}
+  $('login-step-sso').style.display='block';
+  $('login-step-loc').style.display='none';
+}
+
+// ── NAV ──
+var navOpen=true;
+function toggleNav(){
+  navOpen=!navOpen;
+  document.getElementById('nav').classList.toggle('collapsed',!navOpen);
+}
+
+function goTo(screen){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  var s=$('screen-'+screen), n=$('ni-'+screen);
+  if(s) s.classList.add('on');
+  if(n) n.classList.add('on');
+  $('content').scrollTop=0;
+  if(screen==='member') fetchMembersForCurrentGym(false);
+}
+
+// ── GLOBAL SEARCH ──
+function onSearch(v){
+  var dd=$('search-dropdown');
+  if(!v||v.length<2){dd.style.display='none';return;}
+  var results=searchMembers(v);
+  if(!results.length){
+    dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted);">No members found</div>';
+    dd.style.display='block'; return;
+  }
+  var html='';
+  results.forEach(function(m){
+    var tagCls=m.status==='active'?'tg':m.status==='no-agreement'?'tr':m.status==='overdue'?'to':'tg';
+    var tagTxt=m.status==='active'?'Active':m.status==='no-agreement'?'\u26a0 Agreement':m.status==='overdue'?'Overdue':'Active';
+    html+='<div class="sd-item" onclick="selectSearchMember(\''+m.id+'\')">'+
+      '<div class="sd-av">'+m.init+'</div>'+
+      '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+' \u00b7 '+m.plan+'</div></div>'+
+      '<div style="margin-left:auto;"><span class="tag '+tagCls+'">'+tagTxt+'</span></div></div>';
+  });
+  dd.innerHTML=html; dd.style.display='block';
+}
+
+function onSearchKey(e){
+  if(e.key==='Escape'){$('search-dropdown').style.display='none'; $('gsearch').value='';}
+}
+
+function selectSearchMember(id){
+  $('search-dropdown').style.display='none';
+  $('gsearch').value='';
+  loadMember(id);
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.t-search')) $('search-dropdown').style.display='none';
+  if(!e.target.closest('#qi-srch-wrap')) { var qd=$('qi-dropdown'); if(qd) qd.style.display='none'; }
+  if(!e.target.closest('#wi-search-wrap')) { var wd=$('wi-search-results'); if(wd) wd.style.display='none'; }
+  if(!e.target.closest('#msg-srch-wrap')) { var md=$('msg-member-results'); if(md) md.style.display='none'; }
+});
+
+// ── MANAGER PIN OVERRIDE ──
+function applyMgrOverride(){
+  var pin=$('mgr-pin').value, reason=$('mgr-reason').value;
+  if(pin.length<4){alert('PIN must be at least 4 digits.'); return;}
+  if(!reason.trim()){alert('Please enter a reason.'); return;}
+  closeModal('modal-mgr');
+  // Unlock invoice on member screen
+  $('agmt-gate').style.display='none';
+  $('inv-panel-main').classList.remove('invoice-lock');
+  $('cfm-btn-main').disabled=false;
+  if(curMbr) $('m-card').style.borderLeftColor='var(--green)';
+  showSuccess('Override Applied','Logged: '+reason+'. Recorded in shift summary.');
+}
+
+function showMgrPin(){
+  $('mgr-pin').value=''; $('mgr-reason').value='';
+  showModal('modal-mgr');
+}
+
+function closeShift(){
+  $('shift-close-time').textContent=now();
+  showModal('modal-close-shift');
+}
+
+function confirmCloseShift(){
+  closeModal('modal-close-shift');
+  showSuccess('Shift Closed','Report saved and sent to manager.');
+}
+
+
+// ═══ MEMBER.JS ═══
+// ── STATE ──
+var curMbr=null, mSvcAmt=0, mPayMethod='cash';
+var mPickedCls=null, mFnbMap={}, mCI=false;
+var _selectedVariationId=null;
+
+// ── LOAD MEMBER ──
+function loadMember(id){
+  var m=getMember(id); if(!m) return;
+  curMbr=m;
+  mSvcAmt=0; mPayMethod='cash'; mPickedCls=null; mFnbMap={}; mCI=false; _selectedVariationId=null;
+
+  var thisLoc=currentLocation?currentLocation.id:'LOC_001';
+  var hasAccess=m.accessLocations.indexOf(thisLoc)>-1;
+  var isHomeClub=m.homeLocation===thisLoc;
+  var isVisiting=!isHomeClub&&hasAccess;
+  var isUnknown=!hasAccess;
+  var homeLoc=LOCATIONS.find(function(l){return l.id===m.homeLocation;})||{name:m.homeLocation};
+  var curLocName=currentLocation?currentLocation.name:'this location';
+
+  // Visit banner
+  var bannerEl=$('visit-banner');
+  var bannerContent=$('visit-banner-content');
+  if(isUnknown){
+    bannerContent.innerHTML=
+      '<div style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--orange);margin-bottom:3px;">\u26a0 No Access at This Location</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.55;">'+m.name+' is on <strong style="color:var(--text);">'+m.plan+'</strong> at <strong style="color:var(--text);">'+homeLoc.name+'</strong>. This plan does not include '+curLocName+'.<br>Options: upgrade to Multi-Club, or issue a Day Pass.</div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;">'+
+      '<button class="btn btn-accent btn-sm" onclick="upgradePlan()">\u2191 Upgrade to Multi-Club</button>'+
+      '<button class="btn btn-ghost btn-sm" onclick="allowDayPass()">Issue Day Pass \u20b9500</button></div>';
+    bannerEl.style.cssText='background:rgba(240,128,64,.07);border:1px solid rgba(240,128,64,.28);border-radius:11px;padding:12px 14px;margin-bottom:12px;';
+    bannerEl.classList.add('show');
+    $('m-card').style.borderLeftColor='var(--orange)';
+  } else if(isVisiting){
+    bannerContent.innerHTML=
+      '<div style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--blue);margin-bottom:3px;">\ud83d\udccd Multi-Club \u2014 Visiting from '+homeLoc.name+'</div>'+
+      '<div style="font-size:12px;color:var(--muted);">Full access confirmed. All activity syncs to their global profile.</div>';
+    bannerEl.style.cssText='background:rgba(78,168,248,.07);border:1px solid rgba(78,168,248,.25);border-radius:11px;padding:12px 14px;margin-bottom:12px;';
+    bannerEl.classList.add('show');
+    $('m-card').style.borderLeftColor='var(--blue)';
+  } else {
+    bannerEl.classList.remove('show');
+    bannerEl.style.cssText='';
+    $('m-card').style.borderLeftColor=m.agreement==='valid'?'var(--green)':'var(--red)';
+  }
+
+  // Card
+  $('m-av-main').textContent=m.init;
+  $('m-name-main').textContent=m.name;
+  $('m-meta-main').textContent='ID #EQ-'+m.id.toUpperCase()+' \u00b7 '+m.phone+' \u00b7 '+m.email;
+
+  var balEl=$('m-bal-main');
+  if(m.balance>0){balEl.innerHTML='\u20b9'+m.balance.toLocaleString('en-IN');balEl.style.color='var(--orange)';}
+  else{balEl.textContent='Clear';balEl.style.color='var(--green)';}
+
+  var planTagCls=m.planType==='multi'?'tag-multi':m.planType==='pack'?'tag-pack':'tag-single';
+  var planIcon=m.planType==='multi'?'\ud83c\udf0d':m.planType==='pack'?'\ud83d\udce6':'\ud83d\udccd';
+  var tags='<span class="tag tg">\u25cf Active</span><span class="tag '+planTagCls+'">'+planIcon+' '+m.plan+'</span>';
+  if(m.pts>=1000) tags+='<span class="tag tp">\u2605 Gold</span>';
+  if(m.status==='overdue') tags+='<span class="tag to">\u26a0 Overdue</span>';
+  tags+=m.agreement==='valid'?'<span class="tag tg">\u2713 Agreement</span>':'<span class="tag tr">\u26a0 No Agreement</span>';
+  $('m-tags-main').innerHTML=tags;
+
+  // Access strip
+  var oldStrip=$('access-strip-main'); if(oldStrip) oldStrip.remove();
+  var strip=document.createElement('div');
+  strip.id='access-strip-main'; strip.className='access-strip';
+  strip.style.cursor='pointer'; strip.title='Click to edit location access';
+  strip.onclick=function(){
+    // Open profile expander and go to membership tab
+    var d=$('prof-detail'), b=$('prof-exp-btn');
+    if(!d.classList.contains('open')){d.classList.add('open');b.classList.add('open');$('prof-exp-lbl').textContent='Hide profile';}
+    switchProfileTab(2);
+    d.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+  var sHtml='<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);width:100%;margin-bottom:4px;">Club Access <span style=\"font-size:9px;opacity:.6;\">(tap to edit)</span></div>';
+  LOCATIONS.forEach(function(loc){
+    var has=m.accessLocations.indexOf(loc.id)>-1;
+    var isCur=loc.id===thisLoc;
+    sHtml+='<span class="acc-loc '+(has?'has':'none')+(isCur?' here':'')+'">'+
+      (isCur?'\ud83d\udccd':has?'\u2713':'\ud83d\udd12')+' '+loc.short+'</span>';
+  });
+  strip.innerHTML=sHtml;
+  var loyEl=$('m-loy-bar');
+  if(loyEl) loyEl.closest('.loyalty-bar').after(strip);
+
+  // Stats
+  $('m-visits').textContent=m.visits;
+  $('m-last').textContent=m.lastVisit;
+  $('m-spend').innerHTML=m.spend;
+  $('m-pts').textContent=m.pts.toLocaleString('en-IN');
+  $('m-loy-title').textContent=m.pts.toLocaleString('en-IN')+' pts \u2014 '+(m.pts>=2000?'Platinum':m.pts>=1000?'Gold':'Silver');
+  $('m-loy-sub').textContent=(m.pts>=2000?'Platinum member':'260 pts to Platinum')+' \u00b7 Redeemable: \u20b9'+Math.floor(m.pts/10);
+  $('m-loy-bar').style.width=Math.min(100,Math.floor(m.pts/2000*100))+'%';
+
+  // Profile fields
+  $('pf-name').value=m.name; $('pf-dob').value=m.dob||'';
+  $('pf-addr').value=m.addr||''; $('pf-city').value=m.city||'';
+  $('pf-pin').value=m.pin||''; $('pf-phone').value=m.phone||'';
+  $('pf-email').value=m.email||''; $('pf-ec-name').value=m.ec_name||'';
+  $('pf-ec-rel').value=m.ec_rel||''; $('pf-ec-phone').value=m.ec_phone||'';
+  $('pf-rfid').value=m.rfid||''; $('pf-ref').value=m.ref||'';
+  $('pf-expiry').value=m.expiry||''; $('pf-notes').value=m.notes||'';
+  var agEl=$('pf-agmt-status');
+  if(m.agreement==='valid'){agEl.textContent='\u2713 Signed \u2014 Jan 12, 2023';agEl.style.cssText='background:rgba(54,232,154,.08);border:1px solid rgba(54,232,154,.25);color:var(--green);border-radius:7px;padding:8px 10px;font-size:13px;';}
+  else{agEl.textContent='\u26a0 Not signed';agEl.style.cssText='background:rgba(240,68,68,.08);border:1px solid rgba(240,68,68,.25);color:var(--red);border-radius:7px;padding:8px 10px;font-size:13px;';}
+
+  // Cross-location attendance
+  if(m.recentVisits&&m.recentVisits.length){
+    var vHtml='';
+    m.recentVisits.forEach(function(v){
+      var here=v.loc===thisLoc;
+      vHtml+='<div class="att-row">'+
+        '<span>'+v.date+'</span>'+
+        '<span style="'+(here?'color:var(--accent);font-weight:500;':'color:var(--muted);')+'">'+v.locName+(here?' \u25cf':'')+'</span>'+
+        '<span>'+v.activity+'</span>'+
+        '<span class="tag '+(v.method==='RFID'?'tg':'tb')+'" style="font-size:10px;">'+v.method+'</span>'+
+        '</div>';
+    });
+    vHtml+='<div style="margin-top:8px;display:flex;gap:10px;font-size:12px;color:var(--muted);">'+
+      '<span>Streak: <strong style="color:var(--accent);">6</strong></span>'+
+      '<span>Best: <strong style="color:var(--accent);">14</strong></span></div>';
+    $('htab-1').innerHTML=vHtml;
+  }
+
+  // Agreement gate
+  if(m.agreement!=='valid'){
+    show('agmt-gate'); $('agmt-sent-bar').style.display='none';
+    $('inv-panel-main').classList.add('invoice-lock');
+    $('cfm-btn-main').disabled=true;
+  } else {
+    hide('agmt-gate');
+    $('inv-panel-main').classList.remove('invoice-lock');
+    $('cfm-btn-main').disabled=false;
+  }
+
+  // RFID override
+  $('rfid-override').style.display=(m.agreement==='valid'&&!m.rfid)?'block':'none';
+
+  // Invoice defaults — pre-select Day Pass for unknown visitors
+  if(isUnknown){
+    $('svc-main').value='other|500|Day Pass';
+    onSvcMain('other|500|Day Pass');
+  } else {
+    $('svc-main').value=''; $('amt-main').value=''; $('disc-main').value='';
+    $('inv-bdg-main').textContent='Not raised'; $('inv-bdg-main').removeAttribute('style');
+  }
+
+  // Reset form
+  $('cls-panel-main').style.display='none'; $('instr-ov-main').classList.remove('show');
+  $('pos-main').style.display='none'; $('upi-main').style.display='none';
+  $('ci-tog-main').checked=false; $('ci-bar-main').classList.remove('on');
+  $('ci-sub-main').textContent='Auto-ticks when invoice is raised';
+  document.querySelectorAll('#pay-grid-main .pm').forEach(function(b,i){b.classList.toggle('sel',i===0);b.style.cssText='';});
+  document.querySelectorAll('#cls-list-main .cls-row').forEach(function(r){r.classList.remove('picked');});
+  document.querySelectorAll('#screen-member .fi').forEach(function(fi){fi.classList.remove('sel');fi.querySelector('.f-qty').textContent='1';});
+  $('fnb-basket-main').style.display='none'; $('fnb-rows-main').innerHTML='';
+  $('fnb-bdg-main').textContent='Nothing'; $('fnb-bdg-main').removeAttribute('style');
+  $('redeem-main').checked=false;
+  $('prof-detail').classList.remove('open'); $('prof-exp-btn').classList.remove('open');
+  $('prof-exp-lbl').textContent='Full profile & RFID';
+  switchProfileTab(0);
+  calcMain(); updDots();
+
+  hide('member-empty-state'); show('member-loaded');
+  goTo('member');
+}
+
+// ── PROFILE ──
+function toggleProfile(){
+  var d=$('prof-detail'), b=$('prof-exp-btn');
+  d.classList.toggle('open'); b.classList.toggle('open');
+  $('prof-exp-lbl').textContent=d.classList.contains('open')?'Hide profile':'Full profile & RFID';
+}
+
+function switchProfileTab(i){
+  for(var j=0;j<5;j++){
+    var t=$('tp-'+j), p=$('ptab-'+j);
+    if(t) t.classList.toggle('on',j===i);
+    if(p) p.style.display=(j===i)?'block':'none';
+  }
+  if(i===2&&curMbr) renderAccessList(curMbr);
+}
+
+function switchHistTab(i){
+  for(var j=0;j<3;j++){
+    var t=$('ht-'+j), p=$('htab-'+j);
+    if(t) t.classList.toggle('on',j===i);
+    if(p) p.style.display=(j===i)?'block':'none';
+  }
+}
+
+// ── ACCESS MANAGEMENT ──
+function renderAccessList(m){
+  var el=$('pf-access-list'); if(!el||!m) return;
+  var isMulti=m.planType==='multi';
+  var html='';
+
+  if(!isMulti){
+    html+='<div style="background:rgba(78,168,248,.07);border:1px solid rgba(78,168,248,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;">' +
+      '<div style="font-weight:500;color:var(--blue);margin-bottom:4px;">&#128274; Single-Location Plan</div>' +
+      '<div style="color:var(--muted);margin-bottom:8px;">'+m.name+' is on <strong style="color:var(--text);">'+m.plan+'</strong>. ' +
+      'To grant access to additional locations, upgrade to a Multi-Club plan.</div>' +
+      '<button class="btn btn-blue btn-sm" onclick="upgradePlan()">&#8593; Upgrade to Multi-Club</button>' +
+      '</div>';
+  }
+
+  LOCATIONS.forEach(function(loc){
+    var has=m.accessLocations.indexOf(loc.id)>-1;
+    var isHome=m.homeLocation===loc.id;
+    html+='<div class="access-edit-row">' +
+      '<div>' +
+        '<div style="font-size:13px;font-weight:500;">'+loc.name+(isHome?' <span style=\"font-size:10px;color:var(--muted);\">(Home)</span>':'')+'</div>' +
+        '<div style="font-size:11px;color:var(--muted);">'+loc.addr+'</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">';
+    if(isHome){
+      html+='<span class="tag tg" style="font-size:11px;">&#10003; Home Club</span>';
+    } else if(!isMulti){
+      html+='<span style="font-size:11px;color:var(--muted);">No access</span>';
+    } else {
+      html+=
+        '<span style="font-size:11px;color:'+(has?'var(--green)':'var(--muted)')+';min-width:80px;text-align:right;">' +
+          (has?'&#10003; Granted':'&#10005; No access') +
+        '</span>' +
+        '<label class="tog" style="flex-shrink:0;">' +
+          '<input type="checkbox" '+(has?'checked ':'')+'onchange="toggleLocAccess(\'' + loc.id + '\',this.checked)">' +
+          '<div class="tog-t"></div><div class="tog-k"></div>' +
+        '</label>';
+    }
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function toggleLocAccess(locId,grant){
+  if(!curMbr) return;
+  // Never remove home club access
+  if(!grant && locId===curMbr.homeLocation){
+    showSuccess('Cannot Remove',''+curMbr.homeLocation+' is '+curMbr.name+"'s home club and cannot be removed.");
+    renderAccessList(curMbr); return;
+  }
+  if(grant){ if(curMbr.accessLocations.indexOf(locId)===-1) curMbr.accessLocations.push(locId); }
+  else { curMbr.accessLocations=curMbr.accessLocations.filter(function(l){return l!==locId;}); }
+  // rebuild access strip
+  var oldStrip=$('access-strip-main'); if(oldStrip) oldStrip.remove();
+  var strip=document.createElement('div');
+  strip.id='access-strip-main'; strip.className='access-strip';
+  var thisLoc=currentLocation?currentLocation.id:'LOC_001';
+  var sHtml='<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);width:100%;margin-bottom:4px;">Club Access</div>';
+  LOCATIONS.forEach(function(loc){
+    var has=curMbr.accessLocations.indexOf(loc.id)>-1, isCur=loc.id===thisLoc;
+    sHtml+='<span class="acc-loc '+(has?'has':'none')+(isCur?' here':'')+'">'+
+      (isCur?'\ud83d\udccd':has?'\u2713':'\ud83d\udd12')+' '+loc.short+'</span>';
+  });
+  strip.innerHTML=sHtml;
+  var loyEl=$('m-loy-bar'); if(loyEl) loyEl.closest('.loyalty-bar').after(strip);
+  renderAccessList(curMbr);
+  var locName=(LOCATIONS.find(function(l){return l.id===locId;})||{name:locId}).name;
+  showSuccess('Access Updated',curMbr.name+(grant?' now has access to ':' no longer has access to ')+locName+'. Syncing to Yoactiv.');
+}
+
+function saveMembershipTab(){
+  if(curMbr){
+    curMbr.rfid=$('pf-rfid').value;
+    curMbr.ref=$('pf-ref').value;
+    curMbr.notes=$('pf-notes').value;
+  }
+  showSuccess('Saved','Membership details updated.');
+}
+
+// ── CHECK-IN ──
+function onCIMain(el){
+  mCI=el.checked;
+  $('ci-bar-main').classList.toggle('on',mCI);
+  $('ci-sub-main').textContent=mCI?'Checked in at '+now():'Auto-ticks when invoice is raised';
+  updDots();
+}
+
+function doManualCI(){
+  hide('rfid-override');
+  $('ci-tog-main').checked=true;
+  mCI=true;
+  $('ci-bar-main').classList.add('on');
+  $('ci-sub-main').textContent='Checked in at '+now()+' (manual)';
+  updDots();
+  showSuccess('Manual Check-In','Logged without RFID. Recorded in shift summary.');
+}
+
+// ── INVOICE ──
+function onSvcMain(v){
+  if(!v){
+    mSvcAmt=0; _selectedVariationId=null; $('amt-main').value=''; $('disc-main').value='';
+    $('inv-bdg-main').textContent='Not raised'; $('inv-bdg-main').removeAttribute('style');
+    $('cls-panel-main').style.display='none'; mPickedCls=null;
+    calcMain(); updDots(); return;
+  }
+  var p=v.split('|'), price=parseInt(p[1]);
+  _selectedVariationId=p[3]?parseInt(p[3]):null;
+  mSvcAmt=price;
+  $('amt-main').value=price.toFixed(2);
+  $('inv-bdg-main').textContent='\u20b9'+price.toLocaleString('en-IN');
+  $('inv-bdg-main').style.cssText='background:rgba(200,240,60,.1);color:var(--accent);border:1px solid rgba(200,240,60,.2);border-radius:10px;padding:2px 8px;font-size:11px;';
+  if(!mCI){$('ci-tog-main').checked=true; mCI=true; $('ci-bar-main').classList.add('on'); $('ci-sub-main').textContent='Checked in at '+now();}
+  var isCls=(p[0]==='class');
+  $('cls-panel-main').style.display=isCls?'block':'none';
+  if(!isCls){mPickedCls=null; $('instr-ov-main').classList.remove('show'); document.querySelectorAll('#cls-list-main .cls-row').forEach(function(r){r.classList.remove('picked');});}
+  calcMain(); updDots();
+}
+
+function calcMain(){
+  var disc=parseFloat($('disc-main').value)||0;
+  var pts=$('redeem-main').checked?124:0;
+  var fnb=getFnbMain();
+  var total=Math.max(0,mSvcAmt+fnb-disc-pts);
+  $('gt-items-main').innerHTML='Service: <span>\u20b9'+mSvcAmt.toLocaleString('en-IN')+'</span>'+
+    (fnb?' &nbsp;F&B: <span>\u20b9'+fnb.toLocaleString('en-IN')+'</span>':'')+
+    (disc?' &nbsp;Disc: <span style="color:var(--green)">-\u20b9'+disc+'</span>':'')+
+    (pts?' &nbsp;Pts: <span style="color:var(--purple)">-\u20b9124</span>':'');
+  $('gt-val-main').textContent='\u20b9'+total.toLocaleString('en-IN');
+  if($('pm-amt')) $('pm-amt').textContent='\u20b9'+total.toLocaleString('en-IN');
+  if($('upi-main-amt')) $('upi-main-amt').textContent='\u20b9'+total.toLocaleString('en-IN');
+}
+
+function getFnbMain(){ var t=0; Object.values(mFnbMap).forEach(function(i){t+=i.price*i.qty;}); return t; }
+
+// ── PAYMENT ──
+function pickPayMain(btn,m){
+  document.querySelectorAll('#pay-grid-main .pm').forEach(function(b){b.classList.remove('sel');b.style.cssText='';});
+  btn.classList.add('sel'); mPayMethod=m;
+  $('pos-main').style.display='none'; $('upi-main').style.display='none';
+  $('cfm-btn-main').disabled=false;
+  $('cfm-btn-main').textContent='Confirm & Process \u2192';
+  if(m==='pos'){
+    show('pos-main'); $('pm-s1').style.display='flex'; hide('pm-s2'); hide('pm-s3');
+    $('cfm-btn-main').disabled=true; calcMain();
+  } else if(m==='upi'||m==='bharat'){
+    show('upi-main');
+    $('upi-main-id').textContent=m==='bharat'?'EQ \u2014 Bharat QR':'eq.climbing@upi';
+    hide('upi-main-conf'); $('upi-main-status').textContent='Waiting\u2026';
+    $('cfm-btn-main').disabled=true; calcMain();
+  } else if(m==='online'){
+    if(!_selectedVariationId){
+      $('cfm-btn-main').textContent='Select a service first';
+      $('cfm-btn-main').disabled=true;
+    }
+  }
+}
+
+function sendPOSMain(){
+  hide('pm-s1'); flex('pm-s2');
+  setTimeout(function(){
+    hide('pm-s2'); flex('pm-s3');
+    $('pm-ref').textContent='Ref: POS-'+rndRef()+' \u00b7 T-01';
+    $('cfm-btn-main').disabled=false;
+    document.querySelectorAll('#pay-grid-main .pm').forEach(function(b){if((b.getAttribute('onclick')||'').indexOf("'pos'")>-1&&b.classList.contains('sel')) b.classList.add('pay-ok');});
+  }, 2500);
+}
+function cancelPOSMain(){ hide('pm-s2'); flex('pm-s1'); $('cfm-btn-main').disabled=true; }
+function confirmUPIMain(){
+  show('upi-main-conf'); $('upi-main-status').textContent='';
+  $('cfm-btn-main').disabled=false;
+  document.querySelectorAll('#pay-grid-main .pm').forEach(function(b){
+    var oc=b.getAttribute('onclick')||'';
+    if((oc.indexOf("'upi'")>-1||oc.indexOf("'bharat'")>-1)&&b.classList.contains('sel')) b.classList.add('pay-ok');
+  });
+}
+
+// ── F&B ──
+function fnbMain(el){
+  var price=parseInt(el.dataset.price), name=el.dataset.name, key=name.replace(/\s/g,'_');
+  if(!mFnbMap[key]){mFnbMap[key]={name:name,price:price,qty:1}; el.classList.add('sel');}
+  else{mFnbMap[key].qty++; el.querySelector('.f-qty').textContent=mFnbMap[key].qty;}
+  renderFnbMain(); calcMain(); updDots();
+}
+
+function renderFnbMain(){
+  var keys=Object.keys(mFnbMap);
+  if(!keys.length){$('fnb-basket-main').style.display='none'; $('fnb-bdg-main').textContent='Nothing'; $('fnb-bdg-main').removeAttribute('style'); return;}
+  var rows=''; keys.forEach(function(k){var i=mFnbMap[k]; rows+='<div class="txn-row"><span style="color:var(--muted);">'+i.name+(i.qty>1?' \u00d7'+i.qty:'')+'</span><span class="txn-a">\u20b9'+(i.price*i.qty).toLocaleString('en-IN')+'</span></div>';});
+  $('fnb-rows-main').innerHTML=rows;
+  $('fnb-total-main').textContent='\u20b9'+getFnbMain().toLocaleString('en-IN');
+  show('fnb-basket-main');
+  $('fnb-bdg-main').textContent=keys.length+' item(s)';
+  $('fnb-bdg-main').style.cssText='background:rgba(200,240,60,.1);color:var(--accent);border:1px solid rgba(200,240,60,.2);border-radius:10px;padding:2px 8px;font-size:11px;';
+}
+
+// ── CLASS BOOKING ──
+function pickClsMain(el,time,name,instr){
+  document.querySelectorAll('#cls-list-main .cls-row').forEach(function(r){r.classList.remove('picked');});
+  el.classList.add('picked'); mPickedCls={time:time,name:name,instr:instr};
+  $('sched-nm-main').textContent=instr; $('instr-sel-main').value='';
+  $('instr-ov-main').classList.add('show'); updDots();
+}
+
+// ── AGREEMENT ──
+var agmtCh='';
+function sendAgmt(ch){
+  agmtCh=ch;
+  $('agmt-modal-title').textContent='Send via '+(ch==='whatsapp'?'WhatsApp':'Email')+'?';
+  $('agmt-modal-sub').textContent='Send club agreement to '+(curMbr?curMbr.phone:'member')+'. Member signs on their phone in under 60 seconds.';
+  showModal('modal-agmt');
+}
+function confirmSendAgmt(){
+  closeModal('modal-agmt');
+  show('agmt-sent-bar'); $('agmt-sent-time').textContent='Sent '+now();
+}
+function simAgmtSigned(){
+  hide('agmt-gate'); $('inv-panel-main').classList.remove('invoice-lock');
+  $('cfm-btn-main').disabled=false; $('m-card').style.borderLeftColor='var(--green)';
+  if(curMbr) curMbr.agreement='valid';
+  showSuccess('Agreement Signed!','Invoice section is now unlocked.');
+}
+
+// ── VISITOR ACTIONS ──
+function upgradePlan(){
+  showSuccess('Plan Upgrade','Redirecting to Yoactiv to upgrade '+( curMbr?curMbr.name:'member')+' to Multi-Club. Access will reflect here once updated.');
+}
+function allowDayPass(){
+  $('svc-main').value='other|500|Day Pass'; onSvcMain('other|500|Day Pass');
+  hide('visit-banner'); $('visit-banner').classList.remove('show');
+  showSuccess('Day Pass Selected','Invoice pre-set. Proceed to payment.');
+}
+
+// ── CONFIRM DOTS ──
+function updDots(){
+  toggleDot('cd-ci',mCI); toggleDot('cd-inv',mSvcAmt>0);
+  toggleDot('cd-cls',mPickedCls!==null); toggleDot('cd-fnb',getFnbMain()>0);
+}
+function toggleDot(id,on){ var e=$(id); if(e) e.classList.toggle('on',on); }
+
+// ── CONFIRM ──
+function doConfirmMain(){
+  if(!curMbr) return;
+  if(mPayMethod==='online'){startRazorpayPayment('main');return;}
+  var parts=[];
+  if(mCI) parts.push('Checked in');
+  if(mSvcAmt>0) parts.push('Invoice \u20b9'+mSvcAmt.toLocaleString('en-IN'));
+  if(getFnbMain()>0) parts.push('F&B \u20b9'+getFnbMain().toLocaleString('en-IN'));
+  if(mPickedCls) parts.push(mPickedCls.name+' at '+mPickedCls.time);
+  showSuccess(curMbr.name.split(' ')[0]+' processed!', parts.join(' \u00b7 ')||'Action recorded.');
+}
+
+
+// ═══ CLASSES.JS ═══
+// ── CLASSES SCREEN ──
+function openCls(id){
+  var c=CLS_DATA[id]; if(!c) return;
+  $('cls-d-title').textContent=c.name+' \u2014 '+c.time;
+  $('cls-d-sub').textContent=c.instr+' \u00b7 '+c.roster.length+'/'+c.capacity+' booked';
+  $('cls-d-instr').textContent=c.instr;
+  $('cls-instr-ovr').value='';
+  var html='';
+  if(!c.roster.length){
+    html='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">No bookings yet</div>';
+  } else {
+    c.roster.forEach(function(m){
+      var timer='';
+      if(m.ci&&m.min>0){
+        var cls=m.min>90?'t-over':m.min>75?'t-warn':'t-ok';
+        var rem=m.min>90?'+'+(m.min-90)+'m over':'('+(90-m.min)+'m left)';
+        timer='<span class="timer-b '+cls+'">'+m.min+'m '+rem+'</span>';
+      }
+      var ciTag=m.ci?'<span class="tag tg" style="font-size:10px;">\u2713 In</span>':'<span class="tag" style="font-size:10px;background:var(--subtle);color:var(--muted);">Pending</span>';
+      html+='<div class="ros-item"><div class="ros-av">'+m.i+'</div><div style="flex:1;"><div>'+m.n+'</div></div>'+timer+'<div style="margin-left:auto;">'+ciTag+'</div></div>';
+    });
+  }
+  $('cls-roster-wrap').innerHTML=html;
+  document.querySelectorAll('#screen-classes .cls-row').forEach(function(r){r.classList.remove('picked');});
+}
+
+function markAllPresent(){
+  showSuccess('All Present Marked','All booked members marked as attended for this class.');
+}
+
+// ── WALK-IN GROUP — STEP-BASED ──
+var wiGroup=[], wiSelCls=null, wiClsCapacity=0, wiClsFilled=0;
+var WI_PRICE=800;
+
+function showWalkinGroup(){
+  wiGroup=[]; wiSelCls=null;
+  document.querySelectorAll('#wi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
+  $('wi-cls-selected').style.display='none';
+  $('wi-next-1').disabled=true;
+  $('wi-search').value=''; $('wi-search-results').style.display='none';
+  $('wi-roster').innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Search and add members above</div>';
+  $('wi-cap-warning').style.display='none';
+  $('wi-next-2').disabled=true;
+  $('wi-payer-groups').innerHTML='';
+  document.querySelectorAll('#wi-pay-grid .pm').forEach(function(b,i){b.classList.toggle('sel',i===0);});
+  wiShowStep(1);
+  showModal('modal-walkin');
+}
+
+function wiShowStep(n){
+  [1,2,3].forEach(function(i){
+    var panel=$('wi-panel-'+i), step=$('wi-step-'+i);
+    if(panel) panel.style.display=(i===n)?'block':'none';
+    if(step){
+      step.className='step'+(i<n?' done':(i===n?' active':''));
+    }
+  });
+  var body=$('wi-modal-body'); if(body) body.scrollTop=0;
+}
+
+function wiGoStep(n){
+  if(n===1){ wiShowStep(1); return; }
+  if(n===2){ if(!wiSelCls) return; wiShowStep(2); return; }
+  if(n===3){
+    if(!wiSelCls||!wiGroup.length) return;
+    wiRenderPayment(); wiShowStep(3);
+    // update labels
+    $('wi-step3-cls').textContent=wiSelCls.name+' \u2014 '+wiSelCls.time;
+    $('wi-step3-count').textContent=wiGroup.length;
+    $('wi-count').textContent=wiGroup.length;
+    $('wi-total').textContent='\u20b9'+(wiGroup.length*WI_PRICE).toLocaleString('en-IN');
+  }
+}
+
+function wiClearCls(){
+  wiSelCls=null;
+  document.querySelectorAll('#wi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
+  $('wi-cls-selected').style.display='none';
+  $('wi-next-1').disabled=true;
+}
+
+function wiSelectCls(el,time,name,instr,filled,cap){
+  document.querySelectorAll('#wi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
+  el.classList.add('picked');
+  wiSelCls={time:time,name:name,instr:instr};
+  wiClsCapacity=cap; wiClsFilled=filled;
+  $('wi-sel-cls-name').textContent=name+' \u2014 '+time;
+  $('wi-sel-cls-info').textContent=instr+' \u00b7 '+(cap-filled)+' slots remaining';
+  $('wi-cls-selected').style.display='block';
+  $('wi-next-1').disabled=false;
+  // update step 2 reminder label
+  if($('wi-step2-cls-label')) $('wi-step2-cls-label').textContent=name+' \u2014 '+time;
+}
+
+function wiSearch(v){
+  var dd=$('wi-search-results');
+  if(!v||v.length<2){dd.style.display='none'; return;}
+  var results=searchMembers(v).slice(0,5);
+  if(!results.length){dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';dd.style.display='block';return;}
+  var html='';
+  results.forEach(function(m){
+    var already=wiGroup.find(function(g){return g.id===m.id;});
+    var agOk=m.agreement==='valid';
+    html+='<div class="sd-item" '+(already?'style="opacity:.5;pointer-events:none;"':'')+' onclick="wiAddMember(\''+m.id+'\')">'+
+      '<div class="sd-av">'+m.init+'</div>'+
+      '<div><div class="sd-name">'+m.name+(already?' \u2014 added':'')+'</div><div class="sd-meta">'+m.phone+'</div></div>'+
+      '<div style="margin-left:auto;"><span class="tag '+(agOk?'tg':'tr')+'" style="font-size:10px;">'+(agOk?'\u2713':'\u26a0')+'</span></div></div>';
+  });
+  dd.innerHTML=html; dd.style.display='block';
+}
+
+function wiAddMember(id){
+  $('wi-search-results').style.display='none'; $('wi-search').value='';
+  if(wiGroup.find(function(g){return g.id===id;})) return;
+  var m=getMember(id); if(!m) return;
+  wiGroup.push({id:m.id,init:m.init,name:m.name,agreement:m.agreement,balance:m.balance,payerId:'self'});
+  wiRenderRoster(); wiCheckNext2();
+}
+
+function wiRemoveMember(id){
+  wiGroup=wiGroup.filter(function(g){return g.id!==id;});
+  wiRenderRoster(); wiCheckNext2();
+}
+
+function wiRenderRoster(){
+  if(!wiGroup.length){
+    $('wi-roster').innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Search and add members above</div>';
+    $('wi-cap-warning').style.display='none'; return;
+  }
+  var slotsLeft=wiSelCls?(wiClsCapacity-wiClsFilled):99;
+  var html='';
+  wiGroup.forEach(function(g,idx){
+    var agOk=g.agreement==='valid', overSlot=idx>=slotsLeft;
+    html+='<div class="grp-slot-row '+(agOk&&!overSlot?'filled':'blocked')+'">'+
+      '<div class="slot-num">'+(idx+1)+'</div>'+
+      '<div class="slot-info"><div class="slot-name">'+g.name+'</div>'+
+      '<div class="slot-tags">'+
+      (agOk?'<span class="tag tg" style="font-size:10px;">\u2713 Agreement</span>':'<span class="tag tr" style="font-size:10px;">\u26a0 No Agreement</span>')+
+      (g.balance>0?'<span class="tag to" style="font-size:10px;">Bal \u20b9'+g.balance+'</span>':'')+
+      (overSlot?'<span class="tag tr" style="font-size:10px;">No slot</span>':'')+
+      '</div></div>'+
+      '<div style="font-family:var(--fh);font-weight:700;color:var(--accent);font-size:13px;flex-shrink:0;">\u20b9'+WI_PRICE+'</div>'+
+      '<button class="btn btn-ghost btn-sm" onclick="wiRemoveMember(\''+g.id+'\')" style="font-size:11px;padding:4px 9px;flex-shrink:0;">\u2715</button>'+
+      '</div>';
+  });
+  $('wi-roster').innerHTML=html;
+  var capWarn=$('wi-cap-warning');
+  if(wiGroup.length>slotsLeft){
+    $('wi-cap-warning-txt').textContent='\u26a0 '+wiGroup.length+' members but only '+slotsLeft+' slots. Override or remove members.';
+    capWarn.style.display='flex';
+  } else { capWarn.style.display='none'; }
+}
+
+function wiCheckNext2(){
+  var blocked=wiGroup.filter(function(g){return g.agreement!=='valid';});
+  var btn=$('wi-next-2');
+  if(!wiGroup.length){btn.disabled=true;btn.textContent='Add members to continue';return;}
+  if(blocked.length){btn.disabled=true;btn.textContent=blocked.length+' member(s) missing agreement';return;}
+  btn.disabled=false;
+  btn.textContent='Next: Payment ('+wiGroup.length+') \u2192';
+}
+
+function wiOverrideCap(){
+  wiClsFilled=Math.max(0,wiClsFilled-4);
+  wiRenderRoster(); wiCheckNext2();
+  showSuccess('Capacity Overridden','Extra slots approved by instructor.');
+}
+
+function wiRenderPayment(){
+  var html='';
+  wiGroup.forEach(function(g){
+    var others=wiGroup.filter(function(x){return x.id!==g.id;});
+    var opts=others.map(function(x){return '<option value="'+x.id+'">Paid by '+x.name+'</option>';}).join('');
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--s2);border-radius:8px;border:1px solid var(--border);">'+
+      '<div style="width:28px;height:28px;border-radius:6px;background:var(--subtle);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;">'+g.init+'</div>'+
+      '<div style="flex:1;font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+g.name+'</div>'+
+      '<div class="sw" style="width:180px;flex-shrink:0;"><select style="font-size:12px;padding:6px 22px 6px 8px;" onchange="wiSetPayer(\''+g.id+'\',this.value)">'+
+      '<option value="self">Self \u2014 \u20b9'+WI_PRICE+'</option>'+opts+
+      '</select></div></div>';
+  });
+  $('wi-payer-groups').innerHTML=html;
+}
+
+function wiSetPayer(memberId,payerId){
+  var g=wiGroup.find(function(x){return x.id===memberId;});
+  if(g) g.payerId=payerId;
+}
+
+function wiPickPay(btn,m){
+  document.querySelectorAll('#wi-pay-grid .pm').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');
+}
+
+function wiConfirm(){
+  if(!wiSelCls||!wiGroup.length) return;
+  var names=wiGroup.map(function(g){return g.name;}).join(', ');
+  closeModal('modal-walkin');
+  showSuccess(
+    '\u2713 Group Booked \u2014 '+wiGroup.length+' members',
+    'Class: '+wiSelCls.name+' at '+wiSelCls.time+'\nMembers: '+names+'\nIndividual invoices raised.'
+  );
+  wiGroup=[]; wiSelCls=null;
+}
+
+
+// ═══ QUICKINV.JS ═══
+var qiMbr=null, qiSvcAmt=0, qiFnbMap={}, qiCls=null, _qiSelectedVariationId=null, _qiPayMethod='cash';
+
+function qiSearch(v){
+  var dd=$('qi-dropdown');
+  if(!v||v.length<2){dd.style.display='none';return;}
+  var results=searchMembers(v).slice(0,5);
+  if(!results.length){dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';dd.style.display='block';return;}
+  var html='';
+  results.forEach(function(m){
+    html+='<div class="sd-item" onclick="qiLoadMember(\''+m.id+'\')">'+
+      '<div class="sd-av">'+m.init+'</div>'+
+      '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+'</div></div></div>';
+  });
+  dd.innerHTML=html; dd.style.display='block';
+}
+
+function qiLoadByEnter(){
+  var v=$('qi-srch').value;
+  if(v.length>1){var r=searchMembers(v);if(r.length) qiLoadMember(r[0].id);}
+}
+
+function qiLoadMember(id){
+  var m=getMember(id); if(!m) return;
+  qiMbr=m; qiSvcAmt=0; qiFnbMap={}; qiCls=null; _qiSelectedVariationId=null; _qiPayMethod='cash';
+  $('qi-dropdown').style.display='none'; $('qi-srch').value=m.name;
+  $('qi-av').textContent=m.init;
+  $('qi-name').textContent=m.name;
+  $('qi-meta').textContent=m.plan+' \u00b7 '+m.phone;
+  $('qi-agmt-tag').innerHTML=m.agreement==='valid'?'\u2713 Agreement':'\u26a0 No Agreement';
+  $('qi-agmt-tag').className='tag '+(m.agreement==='valid'?'tg':'tr');
+  $('qi-svc').value=''; $('qi-amt').value=''; $('qi-disc').value='';
+  $('qi-inv-bdg').textContent='Not raised'; $('qi-inv-bdg').removeAttribute('style');
+  $('qi-cls-panel').style.display='none'; $('qi-instr-ov').style.display='none';
+  $('qi-pos').style.display='none';
+  document.querySelectorAll('#qi-pay-grid .pm').forEach(function(b,i){b.classList.toggle('sel',i===0);b.style.cssText='';});
+  document.querySelectorAll('#screen-quickinv .fi').forEach(function(fi){fi.classList.remove('sel');fi.querySelector('.f-qty').textContent='1';});
+  $('qi-fnb-bdg').textContent='Nothing'; $('qi-fnb-bdg').removeAttribute('style');
+  $('qi-cfm-btn').disabled=(m.agreement!=='valid');
+  qiCalc();
+  show('qi-body');
+}
+
+function qiOnSvc(v){
+  if(!v){qiSvcAmt=0;_qiSelectedVariationId=null;$('qi-amt').value='';$('qi-inv-bdg').textContent='Not raised';$('qi-inv-bdg').removeAttribute('style');$('qi-cls-panel').style.display='none';qiCalc();return;}
+  var p=v.split('|'),price=parseInt(p[1]);
+  _qiSelectedVariationId=p[3]?parseInt(p[3]):null;
+  qiSvcAmt=price; $('qi-amt').value=price.toFixed(2);
+  $('qi-inv-bdg').textContent='\u20b9'+price.toLocaleString('en-IN');
+  $('qi-inv-bdg').style.cssText='background:rgba(200,240,60,.1);color:var(--accent);border:1px solid rgba(200,240,60,.2);border-radius:10px;padding:2px 8px;font-size:11px;';
+  $('qi-cls-panel').style.display=(p[0]==='class')?'block':'none';
+  if(p[0]!=='class'){qiCls=null; $('qi-instr-ov').style.display='none'; document.querySelectorAll('#qi-cls-panel .cls-row').forEach(function(r){r.classList.remove('picked');});}
+  qiCalc();
+}
+
+function qiCalc(){
+  var disc=parseFloat($('qi-disc').value)||0;
+  var fnb=Object.values(qiFnbMap).reduce(function(t,i){return t+i.price*i.qty;},0);
+  var total=Math.max(0,qiSvcAmt+fnb-disc);
+  $('qi-total').textContent='\u20b9'+total.toLocaleString('en-IN');
+  if($('qi-pos-amt')) $('qi-pos-amt').textContent='\u20b9'+total.toLocaleString('en-IN');
+}
+
+function qiFnb(el){
+  var price=parseInt(el.dataset.price),name=el.dataset.name,key=name.replace(/\s/g,'_');
+  if(!qiFnbMap[key]){qiFnbMap[key]={name:name,price:price,qty:1};el.classList.add('sel');}
+  else{qiFnbMap[key].qty++;el.querySelector('.f-qty').textContent=qiFnbMap[key].qty;}
+  var c=Object.keys(qiFnbMap).length;
+  $('qi-fnb-bdg').textContent=c?c+' item(s)':'Nothing';
+  if(c) $('qi-fnb-bdg').style.cssText='background:rgba(200,240,60,.1);color:var(--accent);border:1px solid rgba(200,240,60,.2);border-radius:10px;padding:2px 8px;font-size:11px;';
+  qiCalc();
+}
+
+function qiPickCls(el,time,name,instr){
+  document.querySelectorAll('#qi-cls-panel .cls-row').forEach(function(r){r.classList.remove('picked');});
+  el.classList.add('picked'); qiCls={time:time,name:name,instr:instr};
+  $('qi-sched-nm').textContent=instr; $('qi-instr-ov').style.display='block';
+}
+
+function qiPickPay(btn,m){
+  document.querySelectorAll('#qi-pay-grid .pm').forEach(function(b){b.classList.remove('sel');b.style.cssText='';});
+  btn.classList.add('sel'); _qiPayMethod=m;
+  $('qi-pos').style.display='none'; $('qi-cfm-btn').disabled=false;
+  $('qi-cfm-btn').textContent='Confirm & Process \u2192';
+  if(m==='pos'){
+    show('qi-pos'); $('qi-ps1').style.display='flex'; hide('qi-ps2'); hide('qi-ps3');
+    $('qi-cfm-btn').disabled=true; qiCalc();
+  } else if(m==='online'){
+    if(!_qiSelectedVariationId){
+      $('qi-cfm-btn').textContent='Select a service first';
+      $('qi-cfm-btn').disabled=true;
+    }
+  }
+}
+
+function qiSendPOS(){
+  hide('qi-ps1'); flex('qi-ps2');
+  setTimeout(function(){
+    hide('qi-ps2'); flex('qi-ps3');
+    $('qi-pos-ref').textContent='Ref: POS-'+rndRef();
+    $('qi-cfm-btn').disabled=false;
+  }, 2500);
+}
+function qiCancelPOS(){ hide('qi-ps2'); flex('qi-ps1'); $('qi-cfm-btn').disabled=true; }
+
+function qiConfirm(){
+  if(!qiMbr) return;
+  if(_qiPayMethod==='online'){startRazorpayPayment('qi');return;}
+  showSuccess('Invoice Processed!','Quick invoice for '+qiMbr.name+' completed.');
+}
+
+function qiCIChange(el){
+  // Check-in toggle on quick invoice
+  var ci = el.checked;
+  var ciLbl = document.getElementById('qi-ci-status');
+  if(ciLbl) ciLbl.textContent = ci ? 'Checked in at ' + now() : 'Check in on confirm';
+}
+
+
+// ═══ MESSAGING.JS ═══
+var msgSelectedMember=null, msgVia='whatsapp';
+
+var MSG_TEMPLATES={
+  miss1:{body:'Hey {first_name}! It\'s been a few days since your last climb at EQ {location}. Your favourite routes are waiting!\n\nBook your next session: https://eqclimbing.in/book\n\nSee you on the wall!'},
+  miss2:{body:'Hey {first_name}! Missing you at EQ {location}.\n\nBook this week and get \u20b9100 off with code COMEBACK. Valid 3 days only.\n\nSee you soon!'},
+  miss3:{body:'Hey {first_name}!\n\nWe haven\'t seen you in a while. Here\'s a complimentary session on us.\n\nClaim it: https://eqclimbing.in/free\n\nOffer valid 3 days.'},
+  first1:{body:'Hey {first_name}! Thank you for your first session at EQ {location}!\n\nHope you had an amazing time. Ready for round 2?\n\nBook here: https://eqclimbing.in/book'},
+  first2:{body:'Hey {first_name}! How was your first climb?\n\nReady for round 2? https://eqclimbing.in/book\n\nKeep climbing!'},
+  renew1:{body:'Hey {first_name}! Your {plan} at EQ expires in 7 days ({expiry}).\n\nRenew now: https://eqclimbing.in/renew'},
+  renew2:{body:'Hey {first_name}! Your membership expires tomorrow!\n\nRenew today: https://eqclimbing.in/renew'},
+  upgrade1:{body:'Hey {first_name}! Access all 3 EQ locations with our Multi-Club plan.\n\nKoramangala, Indiranagar and Whitefield \u2014 one price.\n\nUpgrade: https://eqclimbing.in/multiclub'},
+  custom:{body:''}
+};
+
+function msgSearch(v){
+  var dd=$('msg-member-results');
+  if(!v||v.length<2){dd.style.display='none';return;}
+  var results=searchMembers(v).slice(0,5);
+  if(!results.length){dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';dd.style.display='block';return;}
+  var html='';
+  results.forEach(function(m){
+    html+='<div class="sd-item" onclick="msgSelectMember(\''+m.id+'\')">'+
+      '<div class="sd-av">'+m.init+'</div>'+
+      '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+' \u00b7 '+m.email+'</div></div></div>';
+  });
+  dd.innerHTML=html; dd.style.display='block';
+}
+
+function msgSelectMember(id){
+  var m=getMember(id); if(!m) return;
+  msgSelectedMember=m;
+  $('msg-member-results').style.display='none';
+  $('msg-member-search').value=m.name;
+  $('msg-mbr-av').textContent=m.init;
+  $('msg-mbr-name').textContent=m.name;
+  $('msg-mbr-contact').textContent=m.phone+' \u00b7 '+m.email;
+  show('msg-member-selected','flex');
+  var tpl=$('msg-template').value;
+  if(tpl) msgLoadTemplate(tpl);
+}
+
+function msgClearMember(){
+  msgSelectedMember=null;
+  $('msg-member-search').value='';
+  hide('msg-member-selected');
+}
+
+function msgLoadTemplate(tpl){
+  if(!tpl) return;
+  var t=MSG_TEMPLATES[tpl]; if(!t) return;
+  var m=msgSelectedMember;
+  var body=t.body;
+  if(m){
+    body=body.replace(/{first_name}/g,m.name.split(' ')[0]);
+    body=body.replace(/{name}/g,m.name);
+    body=body.replace(/{plan}/g,m.plan);
+    body=body.replace(/{location}/g,currentLocation?currentLocation.short:'EQ');
+    body=body.replace(/{expiry}/g,m.expiry||'soon');
+    body=body.replace(/{streak}/g,m.visits);
+  }
+  $('msg-body').value=body;
+}
+
+function msgPickVia(btn,via){
+  document.querySelectorAll('#screen-messaging .pm').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel'); msgVia=via;
+}
+
+function msgPreview(){
+  var body=$('msg-body').value;
+  if(!body.trim()){showSuccess('Empty Message','Select a template or write a message first.');return;}
+  showSuccess('Preview \u2014 '+(msgSelectedMember?msgSelectedMember.name:'no member selected'),body);
+}
+
+function msgSend(){
+  if(!msgSelectedMember){showSuccess('Select a Member','Search and select a member first.');return;}
+  var body=$('msg-body').value;
+  if(!body.trim()){showSuccess('No Message','Write a message or select a template.');return;}
+  var via=msgVia==='both'?'WhatsApp + Email':msgVia==='email'?'Email':'WhatsApp';
+  showSuccess('Sent \u2713','Message sent to '+msgSelectedMember.name+' via '+via+'.\nLogged to their profile.');
+  $('msg-body').value=''; $('msg-template').value='';
+  msgClearMember();
+}
+
+function editFlow(id){
+  showSuccess('Edit Flow','Flow editor: modify triggers, delay days, template and channel. (Full editor coming in next build)');
+}
+
+</script>
+</body>
+</html>
