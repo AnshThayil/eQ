@@ -375,6 +375,12 @@ class MemberSearchView(APIView):
 				data = client.fetch_user(mobile)
 			else:
 				data = client.get_user_list()
+		except ValueError as exc:
+			logger.error('YoActiv misconfiguration for gym %s: %s', gym_id, exc)
+			return Response(
+				{'detail': 'YoActiv is not configured correctly on this server.', 'error': str(exc)},
+				status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+			)
 		except YoActivAPIError as exc:
 			logger.error('YoActiv member search failed for gym %s: %s', gym_id, exc)
 			return Response(
