@@ -83,14 +83,68 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #nav.collapsed .ni-lbl{opacity:0;pointer-events:none;}
 .nav-div{height:1px;background:var(--border);margin:5px 7px;}
 .nav-bot{margin-top:auto;padding:7px;}
-#content{flex:1;overflow-y:auto;position:relative;background:var(--bg);}
-.screen{display:none;padding:18px;min-height:100%;}
+#content{flex:1;min-height:0;overflow-y:auto;position:relative;background:var(--bg);}
+.screen{display:none;padding:18px;min-height:100%;box-sizing:border-box;}
 .screen.on{display:block;}
-.pg-title{font-family:var(--fh);font-size:19px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.pg-title{font-family:var(--fh);font-size:19px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
 /* ── GRID ── */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* Classes screen: fixed viewport panels, independent scroll */
+#screen-classes.on{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+#screen-classes .cls-layout{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  align-items:stretch;
+}
+#screen-classes .cls-col{
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+#screen-classes .cls-col>.card{
+  flex:1;
+  min-height:0;
+  margin-bottom:0;
+  display:flex;
+  flex-direction:column;
+}
+#screen-classes .cls-col>.card>.cb{
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+#cls-schedule-list{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+}
+#cls-detail-body{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#cls-roster-wrap{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+}
 
 /* ── CARD ── */
 .card{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
@@ -502,57 +556,17 @@ select option{background:#18181f;}
   <div class="g2" style="align-items:start;">
     <!-- RECENT MEMBERS -->
     <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div class="ct">Recent Members</div><span style="font-size:12px;color:var(--muted);">Last processed</span></div>
-      <div class="cb" style="padding:10px;">
-        <div class="mbr-row" onclick="loadMember('aryan')">
-          <div class="m-av">AK</div><div><div class="m-name">Aryan Kapoor</div><div class="m-sub">Checked in 09:14 AM</div></div>
-          <div class="m-right"><span class="tag tg">Active</span></div>
-        </div>
-        <div class="mbr-row" onclick="loadMember('fatima')">
-          <div class="m-av">FR</div><div><div class="m-name">Fatima Rashid</div><div class="m-sub">Invoice raised 08:52 AM</div></div>
-          <div class="m-right"><span class="tag tg">Active</span></div>
-        </div>
-        <div class="mbr-row" onclick="loadMember('priya')">
-          <div class="m-av" style="background:rgba(240,68,68,.15);color:var(--red);">PK</div>
-          <div><div class="m-name">Priya Kapoor</div><div class="m-sub" style="color:var(--red);">Agreement not signed</div></div>
-          <div class="m-right"><span class="tag tr">&#9888; Gate</span></div>
-        </div>
-        <div class="mbr-row" onclick="loadMember('marcus')">
-          <div class="m-av">MC</div><div><div class="m-name">Marcus Chen</div><div class="m-sub">Checked in 08:30 AM</div></div>
-          <div class="m-right"><span class="tag tg">Active</span></div>
-        </div>
-        <div class="mbr-row" onclick="loadMember('riya')">
-          <div class="m-av" style="background:rgba(240,128,64,.15);color:var(--orange);">RS</div>
-          <div><div class="m-name">Riya Singh</div><div class="m-sub">Balance &#8377;3,500 overdue</div></div>
-          <div class="m-right"><span class="tag to">Overdue</span></div>
-        </div>
+      <div class="ch"><div class="ct">Members</div><button class="btn btn-ghost btn-sm" onclick="goTo('member')" style="font-size:11px;">View all</button></div>
+      <div class="cb" style="padding:10px;" id="home-member-list">
+        <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading members…</div>
       </div>
     </div>
 
     <!-- TODAY'S CLASSES -->
     <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div class="ct">Today's Classes</div><span style="font-size:12px;color:var(--muted);">Every 30 min</span></div>
-      <div class="cb">
-        <div class="cls-row live" onclick="goTo('classes')">
-          <div class="c-time">07:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
-          <div class="c-right"><div class="c-slots slots-low">8/8</div><div class="fill-bar"><div class="fill-in" style="width:100%;background:var(--orange);"></div></div></div>
-        </div>
-        <div class="cls-row live" onclick="goTo('classes')">
-          <div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
-          <div class="c-right"><div class="c-slots slots-ok">5/8</div><div class="fill-bar"><div class="fill-in" style="width:63%;background:var(--green);"></div></div></div>
-        </div>
-        <div class="cls-row" onclick="goTo('classes')">
-          <div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
-          <div class="c-right"><div class="c-slots slots-ok">3/8</div><div class="fill-bar"><div class="fill-in" style="width:38%;background:var(--green);"></div></div></div>
-        </div>
-        <div class="cls-row" onclick="goTo('classes')">
-          <div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj Kumar</div></div>
-          <div class="c-right"><div class="c-slots slots-ok">6/10</div><div class="fill-bar"><div class="fill-in" style="width:60%;background:var(--green);"></div></div></div>
-        </div>
-        <div class="cls-row" onclick="goTo('classes')">
-          <div class="c-time">11:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
-          <div class="c-right"><div class="c-slots slots-ok">2/8</div><div class="fill-bar"><div class="fill-in" style="width:25%;background:var(--green);"></div></div></div>
-        </div>
+      <div class="ch"><div class="ct">Today's Classes</div><span style="font-size:12px;color:var(--muted);" id="home-cls-date">Loading…</span></div>
+      <div class="cb" id="home-cls-list" style="max-height:min(420px,48vh);overflow-y:auto;">
+        <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading schedule…</div>
       </div>
     </div>
   </div>
@@ -803,10 +817,7 @@ select option{background:#18181f;}
         <div class="ch"><div class="ct">Class Booking</div><span class="tag tg">Today</span></div>
         <div class="cb">
           <div id="cls-list-main">
-            <div class="cls-row" onclick="pickClsMain(this,'07:00','Intro Climb','James Okafor')"><div class="c-time">07:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-full">8/8</div></div></div>
-            <div class="cls-row" onclick="pickClsMain(this,'09:00','Intro Climb','Sarah Mitchell')"><div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div><div class="c-right"><div class="c-slots slots-ok">5/8</div></div></div>
-            <div class="cls-row" onclick="pickClsMain(this,'09:30','Intro Climb','James Okafor')"><div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-ok">3/8</div></div></div>
-            <div class="cls-row" onclick="pickClsMain(this,'10:00','Intermediate','Raj Kumar')"><div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj Kumar</div></div><div class="c-right"><div class="c-slots slots-ok">4/10</div></div></div>
+            <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading today's classes…</div>
           </div>
           <div class="instr-ov" id="instr-ov-main">
             <div class="instr-g">
@@ -871,23 +882,20 @@ select option{background:#18181f;}
 <!-- ════════ SCREEN: CLASSES ════════ -->
 <div class="screen" id="screen-classes">
   <div class="pg-title">&#128197; Classes — Today</div>
-  <div class="g2" style="align-items:start;">
+  <div class="cls-layout">
     <!-- LEFT: schedule -->
-    <div>
-      <div class="card" style="margin-bottom:14px;">
-        <div class="ch"><div class="ct">Schedule</div><div style="display:flex;gap:6px;align-items:center;"><span style="font-size:12px;color:var(--muted);">Every 30 min</span><button class="btn btn-accent btn-sm" onclick="showWalkinGroup()">+ Walk-in Group</button></div></div>
-        <div class="cb">
-          <div class="cls-row live" onclick="openCls('ic700')"><div class="c-time">07:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-full">8/8</div><div class="fill-bar"><div class="fill-in" style="width:100%;background:var(--red);"></div></div></div></div>
-          <div class="cls-row live" onclick="openCls('ic900')"><div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div><div class="c-right"><div class="c-slots slots-ok">5/8</div><div class="fill-bar"><div class="fill-in" style="width:63%;background:var(--green);"></div></div></div></div>
-          <div class="cls-row" onclick="openCls('ic930')"><div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-ok">3/8</div><div class="fill-bar"><div class="fill-in" style="width:38%;background:var(--green);"></div></div></div></div>
-          <div class="cls-row" onclick="openCls('int1000')"><div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj Kumar</div></div><div class="c-right"><div class="c-slots slots-ok">6/10</div><div class="fill-bar"><div class="fill-in" style="width:60%;background:var(--green);"></div></div></div></div>
-          <div class="cls-row" onclick="openCls('ic1100')"><div class="c-time">11:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div><div class="c-right"><div class="c-slots slots-ok">2/8</div><div class="fill-bar"><div class="fill-in" style="width:25%;background:var(--green);"></div></div></div></div>
-          <div class="cls-row" onclick="openCls('ic1130')"><div class="c-time">11:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div><div class="c-right"><div class="c-slots slots-ok">0/8</div><div class="fill-bar"><div class="fill-in" style="width:0%;background:var(--green);"></div></div></div></div>
+    <div class="cls-col">
+      <div class="card">
+        <div class="ch"><div class="ct">Schedule</div><div style="display:flex;gap:6px;align-items:center;"><span style="font-size:12px;color:var(--muted);" id="cls-schedule-date"></span><button class="btn btn-accent btn-sm" onclick="showWalkinGroup()">+ Walk-in Group</button></div></div>
+        <div class="cb" style="padding:0;">
+          <div id="cls-schedule-list" style="padding:14px;">
+            <div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Select a location to load today's schedule</div>
+          </div>
         </div>
       </div>
     </div>
     <!-- RIGHT: class detail -->
-    <div id="cls-detail-panel">
+    <div class="cls-col" id="cls-detail-panel">
       <div class="card">
         <div class="ch">
           <div><div class="ct" id="cls-d-title">Select a class</div><div style="font-size:11px;color:var(--muted);margin-top:3px;" id="cls-d-sub"></div></div>
@@ -896,8 +904,8 @@ select option{background:#18181f;}
             <button class="btn btn-accent btn-sm" onclick="showWalkinGroup()">+ Walk-in</button>
           </div>
         </div>
-        <div class="cb">
-          <div style="background:var(--s2);border-radius:9px;padding:10px 12px;margin-bottom:12px;">
+        <div class="cb" id="cls-detail-body">
+          <div style="background:var(--s2);border-radius:9px;padding:10px 12px;margin-bottom:12px;flex-shrink:0;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
               <div><div style="font-size:11px;color:var(--muted);">Scheduled Instructor</div><div style="font-size:13px;font-weight:600;margin-top:3px;" id="cls-d-instr">—</div></div>
               <div style="width:150px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Override</div><div class="sw"><select id="cls-instr-ovr" style="font-size:12px;"><option value="">Same</option><option>James Okafor</option><option>Sarah Mitchell</option><option>Raj Kumar</option><option>Priya Nair</option></select></div></div>
@@ -937,9 +945,9 @@ select option{background:#18181f;}
         <div class="card" id="qi-cls-panel" style="display:none;">
           <div class="ch"><div class="ct">Class Booking</div></div>
           <div class="cb">
-            <div class="cls-row" onclick="qiPickCls(this,'09:00','Intro Climb','Sarah M.')"><div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah M.</div></div><div class="c-right"><div class="c-slots slots-ok">5/8</div></div></div>
-            <div class="cls-row" onclick="qiPickCls(this,'09:30','Intro Climb','James O.')"><div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James O.</div></div><div class="c-right"><div class="c-slots slots-ok">3/8</div></div></div>
-            <div class="cls-row" onclick="qiPickCls(this,'10:00','Intermediate','Raj K.')"><div class="c-time">10:00</div><div><div class="c-name">Intermediate</div><div class="c-instr">Raj K.</div></div><div class="c-right"><div class="c-slots slots-ok">4/10</div></div></div>
+            <div id="qi-cls-list">
+              <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading today's classes…</div>
+            </div>
             <div id="qi-instr-ov" style="display:none;margin-top:8px;padding:9px;background:var(--s2);border-radius:7px;">
               <div class="instr-g"><div><div class="flbl">Scheduled</div><div class="spill"><div class="sdot"></div><span id="qi-sched-nm">—</span></div></div><div><div class="flbl">Override</div><div class="sw"><select id="qi-instr-sel" style="font-size:12px;"><option>Same</option><option>James Okafor</option><option>Sarah Mitchell</option><option>Raj Kumar</option></select></div></div></div>
             </div>
@@ -1228,41 +1236,25 @@ select option{background:#18181f;}
       <div style="font-family:var(--fh);font-size:16px;font-weight:700;">Walk-in Group Booking</div>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-walkin')" style="flex-shrink:0;">&#10005; Cancel</button>
     </div>
-    <!-- STEPS -->
+    <!-- STEPS
+         NOTE: Class-selection step is disabled for now — walk-in uses the class
+         already selected on the Classes screen. Re-enable when we group same
+         class types on the Django layer (so staff can pick among instances).
+    -->
     <div class="steps" style="flex-shrink:0;">
-      <div class="step" id="wi-step-1" onclick="wiGoStep(1)">1 · Select Class</div>
-      <div class="step" id="wi-step-2" onclick="wiGoStep(2)">2 · Add Members</div>
-      <div class="step" id="wi-step-3" onclick="wiGoStep(3)">3 · Payment</div>
+      <!-- <div class="step" id="wi-step-1" onclick="wiGoStep(1)">1 · Select Class</div> -->
+      <div class="step" id="wi-step-2" onclick="wiGoStep(2)">1 · Add Members</div>
+      <div class="step" id="wi-step-3" onclick="wiGoStep(3)">2 · Payment</div>
     </div>
     <!-- SCROLLABLE BODY -->
     <div class="modal-body" id="wi-modal-body">
 
-      <!-- ── STEP 1: CLASS SELECTION ── -->
+      <!-- ── STEP 1: CLASS SELECTION (disabled — restore when Django groups class types) ──
       <div id="wi-panel-1">
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Select the class for this group. Staff can suggest based on availability.</div>
         <div id="wi-cls-list">
-          <div class="cls-row" onclick="wiSelectCls(this,'09:00','Intro Climb','Sarah Mitchell',5,8)">
-            <div class="c-time">09:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
-            <div class="c-right"><div class="c-slots slots-ok">5/8</div><div style="font-size:10px;color:var(--green);">3 left</div></div>
-          </div>
-          <div class="cls-row" onclick="wiSelectCls(this,'09:30','Intro Climb','James Okafor',3,8)">
-            <div class="c-time">09:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
-            <div class="c-right"><div class="c-slots slots-ok">3/8</div><div style="font-size:10px;color:var(--green);">5 left</div></div>
-          </div>
-          <div class="cls-row" onclick="wiSelectCls(this,'11:00','Intro Climb','Sarah Mitchell',2,8)">
-            <div class="c-time">11:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Sarah Mitchell</div></div>
-            <div class="c-right"><div class="c-slots slots-ok">2/8</div><div style="font-size:10px;color:var(--green);">6 left</div></div>
-          </div>
-          <div class="cls-row" onclick="wiSelectCls(this,'11:30','Intro Climb','James Okafor',0,8)">
-            <div class="c-time">11:30</div><div><div class="c-name">Intro Climb</div><div class="c-instr">James Okafor</div></div>
-            <div class="c-right"><div class="c-slots slots-ok">0/8</div><div style="font-size:10px;color:var(--green);">8 left</div></div>
-          </div>
-          <div class="cls-row" onclick="wiSelectCls(this,'12:00','Intro Climb','Raj Kumar',0,8)">
-            <div class="c-time">12:00</div><div><div class="c-name">Intro Climb</div><div class="c-instr">Raj Kumar</div></div>
-            <div class="c-right"><div class="c-slots slots-ok">0/8</div><div style="font-size:10px;color:var(--green);">8 left</div></div>
-          </div>
+          <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading today's classes…</div>
         </div>
-        <!-- Selected class confirmation bar -->
         <div id="wi-cls-selected" style="display:none;background:rgba(200,240,60,.08);border:1.5px solid var(--accent);border-radius:9px;padding:10px 13px;margin-top:10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div>
@@ -1285,16 +1277,19 @@ select option{background:#18181f;}
           <button class="btn btn-accent" id="wi-next-1" disabled onclick="wiGoStep(2)">Next: Add Members &#8594;</button>
         </div>
       </div>
+      -->
 
       <!-- ── STEP 2: ADD MEMBERS ── -->
       <div id="wi-panel-2" style="display:none;">
         <!-- Selected class reminder -->
         <div id="wi-step2-cls-reminder" style="background:var(--s2);border-radius:8px;padding:8px 11px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
           <div style="font-size:12px;"><span style="color:var(--muted);">Class: </span><span style="font-weight:600;color:var(--accent);" id="wi-step2-cls-label">—</span></div>
+          <!-- Change Class — restore with class-selection step when Django groups class types
           <button class="btn btn-ghost btn-sm" onclick="wiGoStep(1)" style="font-size:11px;">&#8592; Change Class</button>
+          -->
         </div>
         <!-- Search -->
-        <div style="position:relative;margin-bottom:10px;">
+        <div id="wi-search-wrap" style="position:relative;margin-bottom:10px;">
           <input type="text" id="wi-search" placeholder="Search member by name, phone or ID…" style="width:100%;font-size:13px;padding:9px 12px;" oninput="wiSearch(this.value)" autocomplete="off">
           <div id="wi-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--s1);border:1px solid var(--border);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.5);"></div>
         </div>
@@ -1307,8 +1302,8 @@ select option{background:#18181f;}
           <span id="wi-cap-warning-txt">&#9888; Exceeds available slots</span>
           <button class="btn btn-ghost btn-sm" onclick="wiOverrideCap()" style="font-size:11px;flex-shrink:0;">Override Capacity</button>
         </div>
-        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
-          <button class="btn btn-ghost btn-sm" onclick="wiGoStep(1)">&#8592; Back</button>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;align-items:center;">
+          <!-- <button class="btn btn-ghost btn-sm" onclick="wiGoStep(1)">&#8592; Back</button> -->
           <button class="btn btn-accent" id="wi-next-2" disabled onclick="wiGoStep(3)">Next: Payment &#8594;</button>
         </div>
       </div>
@@ -1449,6 +1444,104 @@ function apiFetch(path, options) {
     });
 }
 
+function currentGymId(){
+  if(!currentLocation) return null;
+  return currentLocation.gymId||currentLocation.id||null;
+}
+
+function memberYoActivId(m){
+  if(!m) return '';
+  if(m.yoactiv_id) return String(m.yoactiv_id);
+  var id=String(m.id||'');
+  if(id.indexOf('ya-')===0) return id.slice(3);
+  return id;
+}
+
+function reserveClassesForMember(memberId, classIds, classDate){
+  var gymId=currentGymId();
+  if(!gymId) return Promise.reject(new Error('Select a location first.'));
+  if(!memberId) return Promise.reject(new Error('Member id is required.'));
+  var mid=String(memberId).trim();
+  if(!/^\d+$/.test(mid) || Number(mid)>2147483647){
+    return Promise.reject(new Error('Invalid YoActiv MemberId (missing MemberId on member record).'));
+  }
+  var ids=Array.isArray(classIds)?classIds:[classIds];
+  // YoActiv Class_Date is date-only (YYYY-MM-DD), never datetime/time.
+  var dateStr=String(classDate||_clsScheduleDate||'').trim();
+  if(dateStr.indexOf('T')>-1) dateStr=dateStr.split('T')[0];
+  else if(dateStr.indexOf(' ')>-1) dateStr=dateStr.split(' ')[0];
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){
+    return Promise.reject(new Error('Class date is unknown or invalid.'));
+  }
+  var reserves=ids.filter(Boolean).map(function(cid){
+    return {class_date:dateStr, class_id:cid};
+  });
+  if(!reserves.length) return Promise.reject(new Error('No class selected.'));
+  return apiFetch('/api/class-reserve/',{
+    method:'POST',
+    body:JSON.stringify({gym_id:gymId, member_id:Number(mid), reserves:reserves})
+  }).then(function(r){
+    return r.json().then(function(d){
+      if(!r.ok) throw new Error((d&&(d.detail||d.error))||('HTTP '+r.status));
+      return d;
+    });
+  });
+}
+
+function cancelClassReservation(memberId, classBookId){
+  var gymId=currentGymId();
+  if(!gymId) return Promise.reject(new Error('Select a location first.'));
+  if(!memberId) return Promise.reject(new Error('Member id is required.'));
+  if(!classBookId) return Promise.reject(new Error('Booking id is required.'));
+  return apiFetch('/api/class-reserve-cancel/',{
+    method:'POST',
+    body:JSON.stringify({gym_id:gymId, member_id:memberId, class_book_id:classBookId})
+  }).then(function(r){
+    return r.json().then(function(d){
+      if(!r.ok) throw new Error((d&&(d.detail||d.error))||('HTTP '+r.status));
+      return d;
+    });
+  });
+}
+
+function sortedClsIds(){
+  return Object.keys(CLS_DATA).sort(function(a,b){
+    var ta=timeToMinutes(CLS_DATA[a].start_time||CLS_DATA[a].time);
+    var tb=timeToMinutes(CLS_DATA[b].start_time||CLS_DATA[b].time);
+    if(ta===null&&tb===null) return 0;
+    if(ta===null) return 1;
+    if(tb===null) return -1;
+    if(ta!==tb) return ta-tb;
+    return String(CLS_DATA[a].name||'').localeCompare(String(CLS_DATA[b].name||''));
+  });
+}
+
+function renderBookableClassList(containerId, onPickFnName){
+  var el=$(containerId);
+  if(!el) return;
+  var ids=sortedClsIds();
+  if(!ids.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">No classes scheduled today</div>';
+    return;
+  }
+  var html='';
+  ids.forEach(function(id){
+    var c=CLS_DATA[id];
+    var booked=c.bookings||0;
+    var cap=c.capacity||0;
+    var full=cap>0&&booked>=cap;
+    var slotCls=full?'slots-full':'slots-ok';
+    var left=Math.max(0,cap-booked);
+    html+='<div class="cls-row" data-cls-id="'+id+'" onclick="'+onPickFnName+'(this,\''+id+'\')">'+
+      '<div class="c-time">'+(c.time||'')+'</div>'+
+      '<div><div class="c-name">'+(c.name||'')+'</div><div class="c-instr">'+(c.instr||'—')+'</div></div>'+
+      '<div class="c-right"><div class="c-slots '+slotCls+'">'+booked+'/'+cap+'</div>'+
+      (containerId==='wi-cls-list'?'<div style="font-size:10px;color:'+(full?'var(--red)':'var(--green)')+';">'+(full?'Full':left+' left')+'</div>':'')+
+      '</div></div>';
+  });
+  el.innerHTML=html;
+}
+
 // ── SERVICE CATALOG ──
 var _serviceMap = {}; // variation_id → {id, name, price, service_type, uiType}
 
@@ -1566,161 +1659,18 @@ var STAFF_DB = [
   {id:'kiran',   init:'KD', name:'Kiran D.',   role:'Manager',     locations:['LOC_001','LOC_002','LOC_003']},
 ];
 
-var MEMBERS = [
-  {
-    id:'aryan', init:'AK', name:'Aryan Kapoor',
-    phone:'+91 98200 34567', email:'aryan@email.com',
-    plan:'Multi-Club Monthly', planType:'multi',
-    status:'active', homeLocation:'LOC_001',
-    accessLocations:['LOC_001','LOC_002','LOC_003'],
-    balance:2500, visits:47, lastVisit:'Apr 17',
-    spend:'\u20b942.8k', pts:1240,
-    agreement:'valid', rfid:'RFID-4829-0031',
-    dob:'1992-04-15', addr:'42 Koramangala 4th Block',
-    city:'Bengaluru', pin:'560034', state:'Karnataka',
-    ec_name:'Sunita Kapoor', ec_rel:'Mother', ec_phone:'+91 98100 22334',
-    ref:'REF-082-AK', expiry:'2026-04-23',
-    notes:'Prefers morning slots',
-    recentVisits:[
-      {date:'Apr 18', loc:'LOC_002', locName:'Indiranagar', activity:'Floor Access', method:'RFID'},
-      {date:'Apr 17', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
-      {date:'Apr 15', loc:'LOC_001', locName:'Koramangala', activity:'Floor Access', method:'RFID'},
-      {date:'Apr 13', loc:'LOC_003', locName:'Whitefield',  activity:'Intro Climb',  method:'RFID'},
-      {date:'Apr 10', loc:'LOC_001', locName:'Koramangala', activity:'Floor Access', method:'Manual'},
-    ]
-  },
-  {
-    id:'fatima', init:'FR', name:'Fatima Rashid',
-    phone:'+91 97100 55432', email:'fatima@email.com',
-    plan:'Annual', planType:'single',
-    status:'active', homeLocation:'LOC_001',
-    accessLocations:['LOC_001'],
-    balance:0, visits:89, lastVisit:'Apr 18',
-    spend:'\u20b968.2k', pts:3200,
-    agreement:'valid', rfid:'RFID-2201-9981',
-    dob:'1990-08-22', addr:'15 Indiranagar 100ft Rd',
-    city:'Bengaluru', pin:'560038', state:'Karnataka',
-    ec_name:'Ahmed Rashid', ec_rel:'Father', ec_phone:'+91 98220 11234',
-    ref:'REF-044-FR', expiry:'2027-01-10', notes:'',
-    recentVisits:[
-      {date:'Apr 18', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
-      {date:'Apr 16', loc:'LOC_001', locName:'Koramangala', activity:'Floor Access', method:'RFID'},
-      {date:'Apr 14', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
-    ]
-  },
-  {
-    id:'priya', init:'PK', name:'Priya Kapoor',
-    phone:'+91 90000 12345', email:'priya@email.com',
-    plan:'Monthly', planType:'single',
-    status:'no-agreement', homeLocation:'LOC_001',
-    accessLocations:['LOC_001'],
-    balance:0, visits:3, lastVisit:'Apr 10',
-    spend:'\u20b92.4k', pts:120,
-    agreement:'missing', rfid:'',
-    dob:'1998-12-01', addr:'8 HSR Layout Sector 2',
-    city:'Bengaluru', pin:'560102', state:'Karnataka',
-    ec_name:'Raj Kapoor', ec_rel:'Brother', ec_phone:'+91 97800 44321',
-    ref:'', expiry:'2026-04-30', notes:'New member',
-    recentVisits:[]
-  },
-  {
-    id:'marcus', init:'MC', name:'Marcus Chen',
-    phone:'+91 91234 56789', email:'marcus@email.com',
-    plan:'Multi-Club Quarterly', planType:'multi',
-    status:'active', homeLocation:'LOC_002',
-    accessLocations:['LOC_001','LOC_002','LOC_003'],
-    balance:0, visits:22, lastVisit:'Apr 18',
-    spend:'\u20b915.4k', pts:610,
-    agreement:'valid', rfid:'RFID-7712-3340',
-    dob:'1995-03-10', addr:'22 Whitefield Main Rd',
-    city:'Bengaluru', pin:'560066', state:'Karnataka',
-    ec_name:'Linda Chen', ec_rel:'Sister', ec_phone:'+91 90090 99008',
-    ref:'REF-031-MC', expiry:'2026-04-28', notes:'',
-    recentVisits:[
-      {date:'Apr 18', loc:'LOC_001', locName:'Koramangala', activity:'Intro Climb',  method:'RFID'},
-      {date:'Apr 15', loc:'LOC_002', locName:'Indiranagar', activity:'Floor Access', method:'RFID'},
-    ]
-  },
-  {
-    id:'riya', init:'RS', name:'Riya Singh',
-    phone:'+91 88001 23456', email:'riya@email.com',
-    plan:'Monthly', planType:'single',
-    status:'overdue', homeLocation:'LOC_001',
-    accessLocations:['LOC_001'],
-    balance:3500, visits:18, lastVisit:'Apr 12',
-    spend:'\u20b911.2k', pts:440,
-    agreement:'valid', rfid:'RFID-5512-0092',
-    dob:'1994-07-19', addr:'33 JP Nagar 3rd Phase',
-    city:'Bengaluru', pin:'560078', state:'Karnataka',
-    ec_name:'Vikram Singh', ec_rel:'Husband', ec_phone:'+91 98400 55667',
-    ref:'REF-019-RS', expiry:'2026-04-20', notes:'Overdue since Apr 1',
-    recentVisits:[]
-  },
-  {
-    id:'vikram', init:'VS', name:'Vikram Sharma',
-    phone:'+91 99800 11223', email:'vikram@email.com',
-    plan:'Monthly', planType:'single',
-    status:'active', homeLocation:'LOC_002',
-    accessLocations:['LOC_002'],
-    balance:0, visits:14, lastVisit:'Apr 17',
-    spend:'\u20b99.8k', pts:350,
-    agreement:'valid', rfid:'RFID-9901-0044',
-    dob:'1991-06-25', addr:'12 Indiranagar 5th Cross',
-    city:'Bengaluru', pin:'560038', state:'Karnataka',
-    ec_name:'Meena Sharma', ec_rel:'Wife', ec_phone:'+91 98700 33445',
-    ref:'REF-055-VS', expiry:'2026-05-01', notes:'Home club: Indiranagar',
-    recentVisits:[
-      {date:'Apr 17', loc:'LOC_002', locName:'Indiranagar', activity:'Floor Access', method:'RFID'},
-      {date:'Apr 15', loc:'LOC_002', locName:'Indiranagar', activity:'Intro Climb',  method:'RFID'},
-    ]
-  },
-];
-
-var CLS_DATA = {
-  ic700:{name:'Intro Climb',time:'07:00',instr:'James Okafor',capacity:8,
-    roster:[
-      {n:'Aryan Kapoor',i:'AK',ci:true,min:82},
-      {n:'Rohit Sharma',i:'RS',ci:true,min:81},
-      {n:'Deepika Nair',i:'DN',ci:true,min:93},
-      {n:'Fatima Rashid',i:'FR',ci:true,min:78},
-      {n:'Marcus Chen',i:'MC',ci:true,min:65},
-      {n:'Priya Nair',i:'PN',ci:false,min:0},
-      {n:'Dev Sharma',i:'DS',ci:true,min:55},
-      {n:'Anita Roy',i:'AR',ci:true,min:45},
-    ]},
-  ic900:{name:'Intro Climb',time:'09:00',instr:'Sarah Mitchell',capacity:8,
-    roster:[
-      {n:'Riya Singh',i:'RS',ci:true,min:40},
-      {n:'Sanjay Gupta',i:'SG',ci:false,min:0},
-      {n:'Meera Patel',i:'MP',ci:true,min:38},
-      {n:'Arun Kumar',i:'AK',ci:false,min:0},
-      {n:'Nina Verma',i:'NV',ci:true,min:22},
-    ]},
-  ic930:{name:'Intro Climb',time:'09:30',instr:'James Okafor',capacity:8,
-    roster:[
-      {n:'Kabir Mehta',i:'KM',ci:false,min:0},
-      {n:'Zara Sheikh',i:'ZS',ci:false,min:0},
-      {n:'Tanvi Rao',i:'TR',ci:false,min:0},
-    ]},
-  int1000:{name:'Intermediate',time:'10:00',instr:'Raj Kumar',capacity:10,
-    roster:[
-      {n:'Vikram Singh',i:'VS',ci:false,min:0},
-      {n:'Pooja Nair',i:'PN',ci:false,min:0},
-      {n:'Arjun Mehta',i:'AM',ci:false,min:0},
-      {n:'Kavita Sharma',i:'KS',ci:false,min:0},
-      {n:'Rohit Das',i:'RD',ci:false,min:0},
-      {n:'Simran Gill',i:'SG',ci:false,min:0},
-    ]},
-  ic1100:{name:'Intro Climb',time:'11:00',instr:'Sarah Mitchell',capacity:8,
-    roster:[{n:'Priya Kapoor',i:'PK',ci:false,min:0},{n:'Dev Rao',i:'DR',ci:false,min:0}]},
-  ic1130:{name:'Intro Climb',time:'11:30',instr:'James Okafor',capacity:8,roster:[]},
-  ic1200:{name:'Intro Climb',time:'12:00',instr:'Raj Kumar',capacity:8,roster:[]},
-};
+var CLS_DATA = {};
+var _clsScheduleDate = null;
+var _isLoadingClassSchedule = false;
+var _clsScheduleLoadedForGym = null;
+var _selectedClsId = null;
+var _rosterLoadingForId = null;
 
 // ── HELPERS ──
 var _apiMembers=[];
 var _isLoadingMembers=false;
 var _memberListLoadedForGym=null;
+var _membersLoadPromise=null;
 
 function initialsFromName(name){
   var parts=(name||'').trim().split(/\s+/).filter(Boolean);
@@ -1732,13 +1682,22 @@ function initialsFromName(name){
 function normalizeYoActivMember(raw){
   if(!raw||typeof raw!=='object') return null;
   var mobile=String(raw.Mobile_No||raw.Mobile||raw.Phone||raw.phone||'').trim();
-  var yoId=String(raw.User_Id||raw.UserID||raw.UserId||raw.id||mobile||Math.random().toString(36).slice(2));
+  // GetUserList uses MemberId; Users/Fetch may use User_Id. Never fall back to
+  // mobile — YoActiv Reserve expects an Int32 Member_Id and phone numbers overflow.
+  var yoId=raw.MemberId||raw.Member_Id||raw.MemberID||
+           raw.User_Id||raw.UserID||raw.UserId||raw.Customer_Id||raw.CustomerId;
+  if(yoId===undefined||yoId===null||yoId==='') return null;
+  yoId=String(yoId).trim();
+  if(!/^\d+$/.test(yoId)) return null;
+  // Int32 max is 2147483647; phone numbers are larger and will overflow on Reserve.
+  if(Number(yoId)>2147483647) return null;
   var name=String(raw.Name||raw.FullName||raw.User_Name||raw.Username||raw.MemberName||('Member '+yoId)).trim();
-  var email=String(raw.Email||raw.EmailId||raw.email||'').trim();
-  var statusRaw=String(raw.Status||'Active').toLowerCase();
+  var email=String(raw.Email||raw.EmailId||raw.Mail||raw.email||'').trim();
+  var statusRaw=String(raw.Member_Status||raw.Status||'Active').toLowerCase();
   var status=statusRaw.indexOf('active')>-1?'active':'inactive';
   return {
     id:'ya-'+yoId,
+    yoactiv_id:yoId,
     init:initialsFromName(name),
     name:name,
     phone:mobile,
@@ -1785,23 +1744,23 @@ function extractMembersFromYoActivPayload(payload){
 function renderMemberList(){
   var stateEl=$('member-list-state');
   var listEl=$('member-list-items');
-  if(!stateEl||!listEl) return;
+  var homeEl=$('home-member-list');
 
   if(_isLoadingMembers){
-    stateEl.style.display='block';
-    stateEl.textContent='Loading members…';
-    listEl.innerHTML='';
+    if(stateEl){ stateEl.style.display='block'; stateEl.textContent='Loading members…'; }
+    if(listEl) listEl.innerHTML='';
+    if(homeEl) homeEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading members…</div>';
     return;
   }
 
   if(!_apiMembers.length){
-    stateEl.style.display='block';
-    stateEl.textContent='No members found for this gym.';
-    listEl.innerHTML='';
+    if(stateEl){ stateEl.style.display='block'; stateEl.textContent='No members found for this gym.'; }
+    if(listEl) listEl.innerHTML='';
+    if(homeEl) homeEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">No members found for this gym</div>';
     return;
   }
 
-  stateEl.style.display='none';
+  if(stateEl) stateEl.style.display='none';
   var html='';
   _apiMembers.forEach(function(m){
     var tagCls=m.status==='active'?'tg':'to';
@@ -1812,21 +1771,37 @@ function renderMemberList(){
       '<div class="m-right"><span class="tag '+tagCls+'">'+tagTxt+'</span></div>'+
       '</div>';
   });
-  listEl.innerHTML=html;
+  if(listEl) listEl.innerHTML=html;
+  if(homeEl){
+    var homeHtml='';
+    _apiMembers.slice(0,6).forEach(function(m){
+      var tagCls=m.status==='active'?'tg':'to';
+      var tagTxt=m.status==='active'?'Active':'Inactive';
+      homeHtml+='<div class="mbr-row" onclick="loadMember(\''+m.id+'\')">'+
+        '<div class="m-av">'+m.init+'</div>'+
+        '<div><div class="m-name">'+m.name+'</div><div class="m-sub">'+(m.phone||'No phone')+'</div></div>'+
+        '<div class="m-right"><span class="tag '+tagCls+'">'+tagTxt+'</span></div>'+
+        '</div>';
+    });
+    homeEl.innerHTML=homeHtml;
+  }
 }
 
 function fetchMembersForCurrentGym(force){
-  if(!currentLocation) return;
+  if(!currentLocation) return Promise.resolve([]);
   var gymId=currentLocation.gymId||currentLocation.id;
-  if(!gymId) return;
+  if(!gymId) return Promise.resolve([]);
   if(!force&&_memberListLoadedForGym===String(gymId)&&_apiMembers.length){
     renderMemberList();
-    return;
+    return Promise.resolve(_apiMembers);
+  }
+  if(!force&&_isLoadingMembers&&_membersLoadPromise){
+    return _membersLoadPromise;
   }
 
   _isLoadingMembers=true;
   renderMemberList();
-  apiFetch('/api/members/?gym_id='+encodeURIComponent(gymId))
+  _membersLoadPromise=apiFetch('/api/members/?gym_id='+encodeURIComponent(gymId))
     .then(function(r){return r.json().then(function(d){return{ok:r.ok,data:d};});})
     .then(function(res){
       if(!res.ok) throw new Error((res.data&&res.data.detail)||'Could not load members.');
@@ -1835,6 +1810,7 @@ function fetchMembersForCurrentGym(force){
       _memberListLoadedForGym=String(gymId);
       _isLoadingMembers=false;
       renderMemberList();
+      return _apiMembers;
     })
     .catch(function(err){
       _isLoadingMembers=false;
@@ -1843,7 +1819,12 @@ function fetchMembersForCurrentGym(force){
       renderMemberList();
       var stateEl=$('member-list-state');
       if(stateEl) stateEl.textContent=err&&err.message?err.message:'Could not load members for this gym.';
+      return [];
+    })
+    .finally(function(){
+      _membersLoadPromise=null;
     });
+  return _membersLoadPromise;
 }
 
 function refreshMemberList(){
@@ -1852,19 +1833,29 @@ function refreshMemberList(){
 }
 
 function getMember(id){
-  var source=_apiMembers.length?_apiMembers:MEMBERS;
-  return source.find(function(m){return m.id===id;})||null;
+  return _apiMembers.find(function(m){return m.id===id;})||null;
 }
 
 function searchMembers(q){
   if(!q||q.length<2) return [];
   q=q.toLowerCase().replace(/\s/g,'');
-  var source=_apiMembers.length?_apiMembers:MEMBERS;
-  return source.filter(function(m){
+  return _apiMembers.filter(function(m){
     return m.name.toLowerCase().replace(/\s/g,'').indexOf(q)>-1 ||
-           m.phone.replace(/\s/g,'').indexOf(q)>-1 ||
+           (m.phone||'').replace(/\s/g,'').indexOf(q)>-1 ||
            (m.email||'').toLowerCase().indexOf(q)>-1 ||
-           (m.rfid||'').toLowerCase().replace(/-/g,'').indexOf(q.replace(/-/g,''))>-1;
+           (m.rfid||'').toLowerCase().replace(/-/g,'').indexOf(q.replace(/-/g,''))>-1 ||
+           String(m.yoactiv_id||'').indexOf(q)>-1;
+  });
+}
+
+function ensureMembersForSearch(query, renderFn){
+  if(_apiMembers.length){
+    renderFn(query);
+    return;
+  }
+  renderFn(query, {loading:true});
+  fetchMembersForCurrentGym(false).then(function(){
+    renderFn(query);
   });
 }
 
@@ -2027,10 +2018,13 @@ function doLocationLogin(){
   document.querySelectorAll('.loc-btn').forEach(function(b){b.classList.remove('selected');});
   // Load real service catalog from API
   loadServiceCatalog();
+  _clsScheduleLoadedForGym=null;
+  loadClassSchedule(true);
   _apiMembers=[];
   _memberListLoadedForGym=null;
   _isLoadingMembers=false;
-  renderMemberList();
+  _membersLoadPromise=null;
+  fetchMembersForCurrentGym(true);
 }
 
 function confirmLogout(){
@@ -2068,27 +2062,35 @@ function goTo(screen){
   if(n) n.classList.add('on');
   $('content').scrollTop=0;
   if(screen==='member') fetchMembersForCurrentGym(false);
+  if(screen==='classes') loadClassSchedule(false);
 }
 
 // ── GLOBAL SEARCH ──
 function onSearch(v){
   var dd=$('search-dropdown');
   if(!v||v.length<2){dd.style.display='none';return;}
-  var results=searchMembers(v);
-  if(!results.length){
-    dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted);">No members found</div>';
-    dd.style.display='block'; return;
-  }
-  var html='';
-  results.forEach(function(m){
-    var tagCls=m.status==='active'?'tg':m.status==='no-agreement'?'tr':m.status==='overdue'?'to':'tg';
-    var tagTxt=m.status==='active'?'Active':m.status==='no-agreement'?'\u26a0 Agreement':m.status==='overdue'?'Overdue':'Active';
-    html+='<div class="sd-item" onclick="selectSearchMember(\''+m.id+'\')">'+
-      '<div class="sd-av">'+m.init+'</div>'+
-      '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+' \u00b7 '+m.plan+'</div></div>'+
-      '<div style="margin-left:auto;"><span class="tag '+tagCls+'">'+tagTxt+'</span></div></div>';
+  ensureMembersForSearch(v, function(query, opts){
+    if(opts&&opts.loading){
+      dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted);">Loading members…</div>';
+      dd.style.display='block';
+      return;
+    }
+    var results=searchMembers(query);
+    if(!results.length){
+      dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted);">No members found</div>';
+      dd.style.display='block'; return;
+    }
+    var html='';
+    results.forEach(function(m){
+      var tagCls=m.status==='active'?'tg':m.status==='no-agreement'?'tr':m.status==='overdue'?'to':'tg';
+      var tagTxt=m.status==='active'?'Active':m.status==='no-agreement'?'\u26a0 Agreement':m.status==='overdue'?'Overdue':'Active';
+      html+='<div class="sd-item" onclick="selectSearchMember(\''+m.id+'\')">'+
+        '<div class="sd-av">'+m.init+'</div>'+
+        '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+' \u00b7 '+m.plan+'</div></div>'+
+        '<div style="margin-left:auto;"><span class="tag '+tagCls+'">'+tagTxt+'</span></div></div>';
+    });
+    dd.innerHTML=html; dd.style.display='block';
   });
-  dd.innerHTML=html; dd.style.display='block';
 }
 
 function onSearchKey(e){
@@ -2445,7 +2447,11 @@ function onSvcMain(v){
   if(!mCI){$('ci-tog-main').checked=true; mCI=true; $('ci-bar-main').classList.add('on'); $('ci-sub-main').textContent='Checked in at '+now();}
   var isCls=(p[0]==='class');
   $('cls-panel-main').style.display=isCls?'block':'none';
-  if(!isCls){mPickedCls=null; $('instr-ov-main').classList.remove('show'); document.querySelectorAll('#cls-list-main .cls-row').forEach(function(r){r.classList.remove('picked');});}
+  if(isCls){
+    renderBookableClassList('cls-list-main','pickClsMain');
+  } else {
+    mPickedCls=null; $('instr-ov-main').classList.remove('show'); document.querySelectorAll('#cls-list-main .cls-row').forEach(function(r){r.classList.remove('picked');});
+  }
   calcMain(); updDots();
 }
 
@@ -2527,10 +2533,12 @@ function renderFnbMain(){
 }
 
 // ── CLASS BOOKING ──
-function pickClsMain(el,time,name,instr){
+function pickClsMain(el,classId){
+  var c=CLS_DATA[classId]; if(!c) return;
   document.querySelectorAll('#cls-list-main .cls-row').forEach(function(r){r.classList.remove('picked');});
-  el.classList.add('picked'); mPickedCls={time:time,name:name,instr:instr};
-  $('sched-nm-main').textContent=instr; $('instr-sel-main').value='';
+  el.classList.add('picked');
+  mPickedCls={id:classId,time:c.time,name:c.name,instr:c.instr};
+  $('sched-nm-main').textContent=c.instr||'—'; $('instr-sel-main').value='';
   $('instr-ov-main').classList.add('show'); updDots();
 }
 
@@ -2579,35 +2587,321 @@ function doConfirmMain(){
   if(mSvcAmt>0) parts.push('Invoice \u20b9'+mSvcAmt.toLocaleString('en-IN'));
   if(getFnbMain()>0) parts.push('F&B \u20b9'+getFnbMain().toLocaleString('en-IN'));
   if(mPickedCls) parts.push(mPickedCls.name+' at '+mPickedCls.time);
-  showSuccess(curMbr.name.split(' ')[0]+' processed!', parts.join(' \u00b7 ')||'Action recorded.');
+
+  var finish=function(){
+    showSuccess(curMbr.name.split(' ')[0]+' processed!', parts.join(' \u00b7 ')||'Action recorded.');
+  };
+
+  if(mPickedCls&&mPickedCls.id){
+    var btn=$('cfm-btn-main');
+    if(btn){btn.disabled=true;btn.textContent='Booking class\u2026';}
+    reserveClassesForMember(memberYoActivId(curMbr), mPickedCls.id)
+      .then(function(){
+        if(CLS_DATA[mPickedCls.id]){
+          CLS_DATA[mPickedCls.id].rosterLoaded=false;
+          CLS_DATA[mPickedCls.id].bookings=(CLS_DATA[mPickedCls.id].bookings||0)+1;
+          renderClassSchedule();
+        }
+        finish();
+      })
+      .catch(function(err){
+        console.error('Class reserve failed', err);
+        showSuccess('Class booking failed', err.message||'Could not reserve class in YoActiv.');
+      })
+      .finally(function(){
+        if(btn){btn.disabled=false;btn.textContent='Confirm & Process \u2192';}
+      });
+    return;
+  }
+  finish();
 }
 
 
 // ═══ CLASSES.JS ═══
 // ── CLASSES SCREEN ──
+function formatClsTime(t){
+  if(!t) return '';
+  var parts=String(t).split(':');
+  if(parts.length<2) return t;
+  return parts[0]+':'+parts[1];
+}
+
+function istNowMinutes(){
+  var parts=new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:false
+  }).formatToParts(new Date());
+  var h=0, m=0;
+  parts.forEach(function(p){
+    if(p.type==='hour') h=parseInt(p.value,10);
+    if(p.type==='minute') m=parseInt(p.value,10);
+  });
+  return h*60+m;
+}
+
+function timeToMinutes(t){
+  var parts=String(t||'').split(':');
+  if(parts.length<2) return null;
+  var h=parseInt(parts[0],10), m=parseInt(parts[1],10);
+  if(isNaN(h)||isNaN(m)) return null;
+  return h*60+m;
+}
+
+function isClassLive(c){
+  var now=istNowMinutes();
+  var start=timeToMinutes(c.start_time||c.time);
+  var end=timeToMinutes(c.end_time);
+  if(start===null) return false;
+  if(end===null) end=start+90;
+  return now>=start && now<end;
+}
+
+function resetClsDetail(){
+  _selectedClsId=null;
+  $('cls-d-title').textContent='Select a class';
+  $('cls-d-sub').textContent='';
+  $('cls-d-instr').textContent='—';
+  if($('cls-instr-ovr')) $('cls-instr-ovr').value='';
+  $('cls-roster-wrap').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Select a class to view roster</div>';
+  document.querySelectorAll('#screen-classes .cls-row').forEach(function(r){r.classList.remove('picked');});
+}
+
+function renderClsRoster(c){
+  var wrap=$('cls-roster-wrap');
+  if(!wrap) return;
+  var roster=c.roster||[];
+  if(!roster.length){
+    wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">No bookings yet</div>';
+    return;
+  }
+  var html='';
+  roster.forEach(function(m, idx){
+    var ciTag=m.ci
+      ?'<span class="tag tg" style="font-size:10px;">\u2713 In</span>'
+      :'<span class="tag" style="font-size:10px;background:var(--subtle);color:var(--muted);">Pending</span>';
+    var cancelBtn=m.class_book_id
+      ?'<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;margin-left:6px;" onclick="cancelRosterBooking(\''+_selectedClsId+'\','+idx+')">Cancel</button>'
+      :'';
+    html+='<div class="ros-item"><div class="ros-av">'+(m.i||'MB')+'</div>'+
+      '<div style="flex:1;"><div>'+(m.n||'Member')+'</div>'+
+      (m.phone?'<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+m.phone+'</div>':'')+
+      '</div><div style="margin-left:auto;display:flex;align-items:center;">'+ciTag+cancelBtn+'</div></div>';
+  });
+  wrap.innerHTML=html;
+}
+
+function cancelRosterBooking(classId, rosterIdx){
+  var c=CLS_DATA[classId];
+  if(!c||!c.roster||!c.roster[rosterIdx]) return;
+  var m=c.roster[rosterIdx];
+  if(!m.class_book_id||!m.user_id){
+    showSuccess('Cannot cancel','Missing YoActiv booking id for this member.');
+    return;
+  }
+  if(!confirm('Cancel booking for '+(m.n||'member')+'?')) return;
+  cancelClassReservation(m.user_id, m.class_book_id)
+    .then(function(){
+      c.rosterLoaded=false;
+      c.bookings=Math.max(0,(c.bookings||0)-1);
+      showSuccess('Booking cancelled', (m.n||'Member')+' removed from '+(c.name||'class')+'.');
+      if(_selectedClsId===classId){
+        $('cls-d-sub').textContent=(c.bookings||0)+'/'+(c.capacity||0)+' booked';
+        loadClassRoster(classId);
+      }
+      renderClassSchedule();
+    })
+    .catch(function(err){
+      console.error('Reserve cancel failed', err);
+      showSuccess('Cancel failed', err.message||'Could not cancel booking in YoActiv.');
+    });
+}
+
+function loadClassRoster(id){
+  var c=CLS_DATA[id];
+  if(!c||!currentLocation) return;
+  if(c.rosterLoaded){
+    renderClsRoster(c);
+    return;
+  }
+  if(_rosterLoadingForId===id) return;
+  _rosterLoadingForId=id;
+  $('cls-roster-wrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Loading roster…</div>';
+  var gymId=currentLocation.gymId||currentLocation.id;
+  apiFetch('/api/class-enrollments/?gym_id='+encodeURIComponent(gymId)+'&class_id='+encodeURIComponent(id))
+    .then(function(r){
+      if(!r.ok) return r.json().then(function(err){ throw new Error((err&&err.detail)||('HTTP '+r.status)); });
+      return r.json();
+    })
+    .then(function(data){
+      if(!CLS_DATA[id]) return;
+      var enrollments=(data&&data.enrollments)||[];
+      CLS_DATA[id].roster=enrollments.map(function(e){
+        return {
+          n:e.name||'Member',
+          i:initialsFromName(e.name),
+          phone:e.mobile||'',
+          ci:!!e.checked_in,
+          user_id:e.user_id||'',
+          class_book_id:e.class_book_id||''
+        };
+      });
+      CLS_DATA[id].rosterLoaded=true;
+      if(typeof data.enrollments!=='undefined' && enrollments.length!==(CLS_DATA[id].bookings||0)){
+        CLS_DATA[id].bookings=enrollments.length;
+      }
+      if(_selectedClsId===id){
+        $('cls-d-sub').textContent=(CLS_DATA[id].bookings||0)+'/'+(CLS_DATA[id].capacity||0)+' booked';
+        renderClsRoster(CLS_DATA[id]);
+      }
+    })
+    .catch(function(err){
+      console.error('Class roster load failed', err);
+      if(CLS_DATA[id]) CLS_DATA[id].rosterLoaded=false;
+      if(_selectedClsId===id){
+        $('cls-roster-wrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Could not load roster</div>';
+      }
+    })
+    .finally(function(){
+      if(_rosterLoadingForId===id) _rosterLoadingForId=null;
+    });
+}
+
 function openCls(id){
   var c=CLS_DATA[id]; if(!c) return;
-  $('cls-d-title').textContent=c.name+' \u2014 '+c.time;
-  $('cls-d-sub').textContent=c.instr+' \u00b7 '+c.roster.length+'/'+c.capacity+' booked';
-  $('cls-d-instr').textContent=c.instr;
-  $('cls-instr-ovr').value='';
-  var html='';
-  if(!c.roster.length){
-    html='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">No bookings yet</div>';
+  _selectedClsId=id;
+  var endLabel=c.end_time?('–'+formatClsTime(c.end_time)):'';
+  $('cls-d-title').textContent=c.name+' \u2014 '+c.time+endLabel;
+  $('cls-d-sub').textContent=(c.bookings||0)+'/'+(c.capacity||0)+' booked';
+  $('cls-d-instr').textContent=c.instr||'—';
+  if($('cls-instr-ovr')) $('cls-instr-ovr').value='';
+  document.querySelectorAll('#screen-classes .cls-row').forEach(function(r){
+    r.classList.toggle('picked', r.getAttribute('data-cls-id')===id);
+  });
+  if(c.rosterLoaded){
+    renderClsRoster(c);
   } else {
-    c.roster.forEach(function(m){
-      var timer='';
-      if(m.ci&&m.min>0){
-        var cls=m.min>90?'t-over':m.min>75?'t-warn':'t-ok';
-        var rem=m.min>90?'+'+(m.min-90)+'m over':'('+(90-m.min)+'m left)';
-        timer='<span class="timer-b '+cls+'">'+m.min+'m '+rem+'</span>';
-      }
-      var ciTag=m.ci?'<span class="tag tg" style="font-size:10px;">\u2713 In</span>':'<span class="tag" style="font-size:10px;background:var(--subtle);color:var(--muted);">Pending</span>';
-      html+='<div class="ros-item"><div class="ros-av">'+m.i+'</div><div style="flex:1;"><div>'+m.n+'</div></div>'+timer+'<div style="margin-left:auto;">'+ciTag+'</div></div>';
-    });
+    loadClassRoster(id);
   }
-  $('cls-roster-wrap').innerHTML=html;
-  document.querySelectorAll('#screen-classes .cls-row').forEach(function(r){r.classList.remove('picked');});
+}
+
+function renderClassSchedule(){
+  var list=$('cls-schedule-list');
+  var homeList=$('home-cls-list');
+  var dateEl=$('cls-schedule-date');
+  var homeDate=$('home-cls-date');
+  if(dateEl) dateEl.textContent=_clsScheduleDate||'';
+  if(homeDate) homeDate.textContent=_clsScheduleDate||'';
+  var ids=Object.keys(CLS_DATA).sort(function(a,b){
+    var ta=timeToMinutes(CLS_DATA[a].start_time||CLS_DATA[a].time);
+    var tb=timeToMinutes(CLS_DATA[b].start_time||CLS_DATA[b].time);
+    if(ta===null&&tb===null) return 0;
+    if(ta===null) return 1;
+    if(tb===null) return -1;
+    if(ta!==tb) return ta-tb;
+    return String(CLS_DATA[a].name||'').localeCompare(String(CLS_DATA[b].name||''));
+  });
+  if(!ids.length){
+    var empty='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">No classes scheduled today</div>';
+    if(list) list.innerHTML=empty;
+    if(homeList) homeList.innerHTML=empty;
+    return;
+  }
+  var html='';
+  var homeHtml='';
+  ids.forEach(function(id){
+    var c=CLS_DATA[id];
+    var booked=c.bookings||0;
+    var cap=c.capacity||0;
+    var pct=cap>0?Math.min(100,Math.round(booked/cap*100)):0;
+    var full=cap>0&&booked>=cap;
+    var slotCls=full?'slots-full':'slots-ok';
+    var barColor=full?'var(--red)':'var(--green)';
+    var live=isClassLive(c)?' live':'';
+    var row='<div class="cls-row'+live+'" data-cls-id="'+id+'" onclick="openCls(\''+id+'\')">'+
+      '<div class="c-time">'+c.time+'</div>'+
+      '<div><div class="c-name">'+c.name+'</div><div class="c-instr">'+(c.instr||'—')+'</div></div>'+
+      '<div class="c-right"><div class="c-slots '+slotCls+'">'+booked+'/'+cap+'</div>'+
+      '<div class="fill-bar"><div class="fill-in" style="width:'+pct+'%;background:'+barColor+';"></div></div></div></div>';
+    html+=row;
+    homeHtml+='<div class="cls-row'+live+'" onclick="goTo(\'classes\');openCls(\''+id+'\')">'+
+      '<div class="c-time">'+c.time+'</div>'+
+      '<div><div class="c-name">'+c.name+'</div><div class="c-instr">'+(c.instr||'—')+'</div></div>'+
+      '<div class="c-right"><div class="c-slots '+slotCls+'">'+booked+'/'+cap+'</div>'+
+      '<div class="fill-bar"><div class="fill-in" style="width:'+pct+'%;background:'+barColor+';"></div></div></div></div>';
+  });
+  if(list) list.innerHTML=html;
+  if(homeList) homeList.innerHTML=homeHtml;
+}
+
+function loadClassSchedule(force){
+  var list=$('cls-schedule-list');
+  if(!currentLocation||!(currentLocation.gymId||currentLocation.id)){
+    if(list) list.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Select a location to load today\'s schedule</div>';
+    return;
+  }
+  var gymId=currentLocation.gymId||currentLocation.id;
+  if(!force && _clsScheduleLoadedForGym===gymId && Object.keys(CLS_DATA).length){
+    renderClassSchedule();
+    renderBookableClassList('cls-list-main','pickClsMain');
+    renderBookableClassList('qi-cls-list','qiPickCls');
+    renderBookableClassList('wi-cls-list','wiSelectCls');
+    return;
+  }
+  if(_isLoadingClassSchedule) return;
+  _isLoadingClassSchedule=true;
+  if(list) list.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Loading schedule…</div>';
+  if($('home-cls-list') && !Object.keys(CLS_DATA).length){
+    $('home-cls-list').innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading schedule…</div>';
+  }
+  apiFetch('/api/class-schedule/?gym_id='+encodeURIComponent(gymId))
+    .then(function(r){
+      if(!r.ok) return r.json().then(function(err){ throw new Error((err&&err.detail)||('HTTP '+r.status)); });
+      return r.json();
+    })
+    .then(function(data){
+      CLS_DATA={};
+      _clsScheduleDate=(data&&data.date)||null;
+      _clsScheduleLoadedForGym=gymId;
+      var classes=(data&&data.classes)||[];
+      classes.forEach(function(item){
+        var id=String(item.class_id||'');
+        if(!id) return;
+        CLS_DATA[id]={
+          name:item.name||'',
+          time:formatClsTime(item.start_time),
+          end_time:item.end_time||'',
+          start_time:item.start_time||'',
+          instr:item.staff_name||'',
+          capacity:item.capacity||0,
+          bookings:item.bookings||0,
+          class_list_id:item.class_list_id||'',
+          allow_book:!!item.allow_book,
+          allow_cancel:item.allow_cancel!==false,
+          online_booking:!!item.online_booking,
+          roster:[],
+          rosterLoaded:false
+        };
+      });
+      renderClassSchedule();
+      renderBookableClassList('cls-list-main','pickClsMain');
+      renderBookableClassList('qi-cls-list','qiPickCls');
+      renderBookableClassList('wi-cls-list','wiSelectCls');
+      resetClsDetail();
+    })
+    .catch(function(err){
+      console.error('Class schedule load failed', err);
+      CLS_DATA={};
+      _clsScheduleDate=null;
+      _clsScheduleLoadedForGym=null;
+      var fail='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Could not load schedule</div>';
+      if(list) list.innerHTML=fail;
+      if($('home-cls-list')) $('home-cls-list').innerHTML=fail;
+      if($('home-cls-date')) $('home-cls-date').textContent='';
+      if($('cls-list-main')) $('cls-list-main').innerHTML=fail;
+      if($('qi-cls-list')) $('qi-cls-list').innerHTML=fail;
+      if($('wi-cls-list')) $('wi-cls-list').innerHTML=fail;
+      resetClsDetail();
+    })
+    .finally(function(){ _isLoadingClassSchedule=false; });
 }
 
 function markAllPresent(){
@@ -2615,22 +2909,37 @@ function markAllPresent(){
 }
 
 // ── WALK-IN GROUP — STEP-BASED ──
+// Class-selection step is skipped: walk-in binds to the class already open on
+// the Classes screen (_selectedClsId). Restore the picker (wi-panel-1 / wiSelectCls
+// / renderBookableClassList for wi-cls-list) when we group same class types on
+// the Django layer so staff can choose among instances of a type.
 var wiGroup=[], wiSelCls=null, wiClsCapacity=0, wiClsFilled=0;
 var WI_PRICE=800;
 
 function showWalkinGroup(){
-  wiGroup=[]; wiSelCls=null;
-  document.querySelectorAll('#wi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
-  $('wi-cls-selected').style.display='none';
-  $('wi-next-1').disabled=true;
+  var classId=_selectedClsId;
+  var c=classId?CLS_DATA[classId]:null;
+  if(!c){
+    showSuccess('Select a class first','Open a class from today\'s schedule, then use + Walk-in.');
+    return;
+  }
+
+  wiGroup=[];
+  wiClsCapacity=c.capacity||0;
+  wiClsFilled=c.bookings||0;
+  wiSelCls={id:classId,time:c.time,name:c.name,instr:c.instr};
+  if($('wi-step2-cls-label')) $('wi-step2-cls-label').textContent=c.name+' \u2014 '+c.time;
+
   $('wi-search').value=''; $('wi-search-results').style.display='none';
   $('wi-roster').innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Search and add members above</div>';
   $('wi-cap-warning').style.display='none';
   $('wi-next-2').disabled=true;
   $('wi-payer-groups').innerHTML='';
   document.querySelectorAll('#wi-pay-grid .pm').forEach(function(b,i){b.classList.toggle('sel',i===0);});
-  wiShowStep(1);
+  wiShowStep(2);
   showModal('modal-walkin');
+  // Prefetch YoActiv members so walk-in search matches the top bar.
+  fetchMembersForCurrentGym(false);
 }
 
 function wiShowStep(n){
@@ -2645,12 +2954,12 @@ function wiShowStep(n){
 }
 
 function wiGoStep(n){
-  if(n===1){ wiShowStep(1); return; }
+  // Step 1 (class pick) disabled — see note above showWalkinGroup.
+  if(n===1){ wiShowStep(2); return; }
   if(n===2){ if(!wiSelCls) return; wiShowStep(2); return; }
   if(n===3){
     if(!wiSelCls||!wiGroup.length) return;
     wiRenderPayment(); wiShowStep(3);
-    // update labels
     $('wi-step3-cls').textContent=wiSelCls.name+' \u2014 '+wiSelCls.time;
     $('wi-step3-count').textContent=wiGroup.length;
     $('wi-count').textContent=wiGroup.length;
@@ -2658,6 +2967,7 @@ function wiGoStep(n){
   }
 }
 
+/* Disabled with class-selection step — restore when Django groups class types.
 function wiClearCls(){
   wiSelCls=null;
   document.querySelectorAll('#wi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
@@ -2665,41 +2975,53 @@ function wiClearCls(){
   $('wi-next-1').disabled=true;
 }
 
-function wiSelectCls(el,time,name,instr,filled,cap){
+function wiSelectCls(el,classId){
+  var c=CLS_DATA[classId]; if(!c) return;
   document.querySelectorAll('#wi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
   el.classList.add('picked');
-  wiSelCls={time:time,name:name,instr:instr};
-  wiClsCapacity=cap; wiClsFilled=filled;
-  $('wi-sel-cls-name').textContent=name+' \u2014 '+time;
-  $('wi-sel-cls-info').textContent=instr+' \u00b7 '+(cap-filled)+' slots remaining';
+  wiClsCapacity=c.capacity||0; wiClsFilled=c.bookings||0;
+  wiSelCls={id:classId,time:c.time,name:c.name,instr:c.instr};
+  $('wi-sel-cls-name').textContent=c.name+' \u2014 '+c.time;
+  $('wi-sel-cls-info').textContent=(c.instr||'—')+' \u00b7 '+Math.max(0,wiClsCapacity-wiClsFilled)+' slots remaining';
   $('wi-cls-selected').style.display='block';
   $('wi-next-1').disabled=false;
-  // update step 2 reminder label
-  if($('wi-step2-cls-label')) $('wi-step2-cls-label').textContent=name+' \u2014 '+time;
+  if($('wi-step2-cls-label')) $('wi-step2-cls-label').textContent=c.name+' \u2014 '+c.time;
 }
+*/
 
 function wiSearch(v){
   var dd=$('wi-search-results');
   if(!v||v.length<2){dd.style.display='none'; return;}
-  var results=searchMembers(v).slice(0,5);
-  if(!results.length){dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';dd.style.display='block';return;}
-  var html='';
-  results.forEach(function(m){
-    var already=wiGroup.find(function(g){return g.id===m.id;});
-    var agOk=m.agreement==='valid';
-    html+='<div class="sd-item" '+(already?'style="opacity:.5;pointer-events:none;"':'')+' onclick="wiAddMember(\''+m.id+'\')">'+
-      '<div class="sd-av">'+m.init+'</div>'+
-      '<div><div class="sd-name">'+m.name+(already?' \u2014 added':'')+'</div><div class="sd-meta">'+m.phone+'</div></div>'+
-      '<div style="margin-left:auto;"><span class="tag '+(agOk?'tg':'tr')+'" style="font-size:10px;">'+(agOk?'\u2713':'\u26a0')+'</span></div></div>';
+  ensureMembersForSearch(v, function(query, opts){
+    if(opts&&opts.loading){
+      dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">Loading members…</div>';
+      dd.style.display='block';
+      return;
+    }
+    var results=searchMembers(query).slice(0,8);
+    if(!results.length){
+      dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';
+      dd.style.display='block';
+      return;
+    }
+    var html='';
+    results.forEach(function(m){
+      var already=wiGroup.find(function(g){return g.id===m.id;});
+      var agOk=m.agreement==='valid';
+      html+='<div class="sd-item" '+(already?'style="opacity:.5;pointer-events:none;"':'')+' onclick="wiAddMember(\''+m.id+'\')">'+
+        '<div class="sd-av">'+m.init+'</div>'+
+        '<div><div class="sd-name">'+m.name+(already?' \u2014 added':'')+'</div><div class="sd-meta">'+(m.phone||'')+(m.plan?' \u00b7 '+m.plan:'')+'</div></div>'+
+        '<div style="margin-left:auto;"><span class="tag '+(agOk?'tg':'tr')+'" style="font-size:10px;">'+(agOk?'\u2713':'\u26a0')+'</span></div></div>';
+    });
+    dd.innerHTML=html; dd.style.display='block';
   });
-  dd.innerHTML=html; dd.style.display='block';
 }
 
 function wiAddMember(id){
   $('wi-search-results').style.display='none'; $('wi-search').value='';
   if(wiGroup.find(function(g){return g.id===id;})) return;
   var m=getMember(id); if(!m) return;
-  wiGroup.push({id:m.id,init:m.init,name:m.name,agreement:m.agreement,balance:m.balance,payerId:'self'});
+  wiGroup.push({id:m.id,yoactiv_id:memberYoActivId(m),init:m.init,name:m.name,agreement:m.agreement,balance:m.balance,payerId:'self'});
   wiRenderRoster(); wiCheckNext2();
 }
 
@@ -2779,13 +3101,46 @@ function wiPickPay(btn,m){
 
 function wiConfirm(){
   if(!wiSelCls||!wiGroup.length) return;
+  if(!wiSelCls.id){
+    showSuccess('Class booking failed','Selected class is missing a YoActiv class id.');
+    return;
+  }
+  var btn=$('wi-confirm-btn');
+  if(btn){btn.disabled=true;btn.textContent='Booking\u2026';}
   var names=wiGroup.map(function(g){return g.name;}).join(', ');
-  closeModal('modal-walkin');
-  showSuccess(
-    '\u2713 Group Booked \u2014 '+wiGroup.length+' members',
-    'Class: '+wiSelCls.name+' at '+wiSelCls.time+'\nMembers: '+names+'\nIndividual invoices raised.'
-  );
-  wiGroup=[]; wiSelCls=null;
+  var chain=Promise.resolve();
+  var failures=[];
+  wiGroup.forEach(function(g){
+    chain=chain.then(function(){
+      return reserveClassesForMember(g.yoactiv_id||memberYoActivId(g), wiSelCls.id)
+        .catch(function(err){
+          failures.push((g.name||'Member')+': '+(err.message||'failed'));
+        });
+    });
+  });
+  chain.then(function(){
+    closeModal('modal-walkin');
+    if(CLS_DATA[wiSelCls.id]){
+      CLS_DATA[wiSelCls.id].rosterLoaded=false;
+      CLS_DATA[wiSelCls.id].bookings=(CLS_DATA[wiSelCls.id].bookings||0)+Math.max(0,wiGroup.length-failures.length);
+      renderClassSchedule();
+      if(_selectedClsId===wiSelCls.id) loadClassRoster(wiSelCls.id);
+    }
+    if(failures.length){
+      showSuccess(
+        'Partial group booking',
+        'Booked '+(wiGroup.length-failures.length)+'/'+wiGroup.length+'.\n'+failures.join('\n')
+      );
+    } else {
+      showSuccess(
+        '\u2713 Group Booked \u2014 '+wiGroup.length+' members',
+        'Class: '+wiSelCls.name+' at '+wiSelCls.time+'\nMembers: '+names
+      );
+    }
+    wiGroup=[]; wiSelCls=null;
+  }).finally(function(){
+    if(btn){btn.disabled=false;btn.textContent='Confirm & Check In All \u2192';}
+  });
 }
 
 
@@ -2795,15 +3150,26 @@ var qiMbr=null, qiSvcAmt=0, qiFnbMap={}, qiCls=null, _qiSelectedVariationId=null
 function qiSearch(v){
   var dd=$('qi-dropdown');
   if(!v||v.length<2){dd.style.display='none';return;}
-  var results=searchMembers(v).slice(0,5);
-  if(!results.length){dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';dd.style.display='block';return;}
-  var html='';
-  results.forEach(function(m){
-    html+='<div class="sd-item" onclick="qiLoadMember(\''+m.id+'\')">'+
-      '<div class="sd-av">'+m.init+'</div>'+
-      '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+'</div></div></div>';
+  ensureMembersForSearch(v, function(query, opts){
+    if(opts&&opts.loading){
+      dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">Loading members…</div>';
+      dd.style.display='block';
+      return;
+    }
+    var results=searchMembers(query).slice(0,8);
+    if(!results.length){
+      dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';
+      dd.style.display='block';
+      return;
+    }
+    var html='';
+    results.forEach(function(m){
+      html+='<div class="sd-item" onclick="qiLoadMember(\''+m.id+'\')">'+
+        '<div class="sd-av">'+m.init+'</div>'+
+        '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+(m.phone||'')+(m.plan?' \u00b7 '+m.plan:'')+'</div></div></div>';
+    });
+    dd.innerHTML=html; dd.style.display='block';
   });
-  dd.innerHTML=html; dd.style.display='block';
 }
 
 function qiLoadByEnter(){
@@ -2840,7 +3206,11 @@ function qiOnSvc(v){
   $('qi-inv-bdg').textContent='\u20b9'+price.toLocaleString('en-IN');
   $('qi-inv-bdg').style.cssText='background:rgba(200,240,60,.1);color:var(--accent);border:1px solid rgba(200,240,60,.2);border-radius:10px;padding:2px 8px;font-size:11px;';
   $('qi-cls-panel').style.display=(p[0]==='class')?'block':'none';
-  if(p[0]!=='class'){qiCls=null; $('qi-instr-ov').style.display='none'; document.querySelectorAll('#qi-cls-panel .cls-row').forEach(function(r){r.classList.remove('picked');});}
+  if(p[0]==='class'){
+    renderBookableClassList('qi-cls-list','qiPickCls');
+  } else {
+    qiCls=null; $('qi-instr-ov').style.display='none'; document.querySelectorAll('#qi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
+  }
   qiCalc();
 }
 
@@ -2862,10 +3232,12 @@ function qiFnb(el){
   qiCalc();
 }
 
-function qiPickCls(el,time,name,instr){
-  document.querySelectorAll('#qi-cls-panel .cls-row').forEach(function(r){r.classList.remove('picked');});
-  el.classList.add('picked'); qiCls={time:time,name:name,instr:instr};
-  $('qi-sched-nm').textContent=instr; $('qi-instr-ov').style.display='block';
+function qiPickCls(el,classId){
+  var c=CLS_DATA[classId]; if(!c) return;
+  document.querySelectorAll('#qi-cls-list .cls-row').forEach(function(r){r.classList.remove('picked');});
+  el.classList.add('picked');
+  qiCls={id:classId,time:c.time,name:c.name,instr:c.instr};
+  $('qi-sched-nm').textContent=c.instr||'—'; $('qi-instr-ov').style.display='block';
 }
 
 function qiPickPay(btn,m){
@@ -2897,7 +3269,31 @@ function qiCancelPOS(){ hide('qi-ps2'); flex('qi-ps1'); $('qi-cfm-btn').disabled
 function qiConfirm(){
   if(!qiMbr) return;
   if(_qiPayMethod==='online'){startRazorpayPayment('qi');return;}
-  showSuccess('Invoice Processed!','Quick invoice for '+qiMbr.name+' completed.');
+  var finish=function(){
+    showSuccess('Invoice Processed!','Quick invoice for '+qiMbr.name+' completed.');
+  };
+  if(qiCls&&qiCls.id){
+    var btn=$('qi-cfm-btn');
+    if(btn){btn.disabled=true;btn.textContent='Booking class\u2026';}
+    reserveClassesForMember(memberYoActivId(qiMbr), qiCls.id)
+      .then(function(){
+        if(CLS_DATA[qiCls.id]){
+          CLS_DATA[qiCls.id].rosterLoaded=false;
+          CLS_DATA[qiCls.id].bookings=(CLS_DATA[qiCls.id].bookings||0)+1;
+          renderClassSchedule();
+        }
+        finish();
+      })
+      .catch(function(err){
+        console.error('Class reserve failed', err);
+        showSuccess('Class booking failed', err.message||'Could not reserve class in YoActiv.');
+      })
+      .finally(function(){
+        if(btn){btn.disabled=false;btn.textContent='Confirm & Process \u2192';}
+      });
+    return;
+  }
+  finish();
 }
 
 function qiCIChange(el){
@@ -2926,15 +3322,26 @@ var MSG_TEMPLATES={
 function msgSearch(v){
   var dd=$('msg-member-results');
   if(!v||v.length<2){dd.style.display='none';return;}
-  var results=searchMembers(v).slice(0,5);
-  if(!results.length){dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';dd.style.display='block';return;}
-  var html='';
-  results.forEach(function(m){
-    html+='<div class="sd-item" onclick="msgSelectMember(\''+m.id+'\')">'+
-      '<div class="sd-av">'+m.init+'</div>'+
-      '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+m.phone+' \u00b7 '+m.email+'</div></div></div>';
+  ensureMembersForSearch(v, function(query, opts){
+    if(opts&&opts.loading){
+      dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">Loading members…</div>';
+      dd.style.display='block';
+      return;
+    }
+    var results=searchMembers(query).slice(0,8);
+    if(!results.length){
+      dd.innerHTML='<div style="padding:9px 12px;font-size:12px;color:var(--muted);">No members found</div>';
+      dd.style.display='block';
+      return;
+    }
+    var html='';
+    results.forEach(function(m){
+      html+='<div class="sd-item" onclick="msgSelectMember(\''+m.id+'\')">'+
+        '<div class="sd-av">'+m.init+'</div>'+
+        '<div><div class="sd-name">'+m.name+'</div><div class="sd-meta">'+(m.phone||'')+(m.email?' \u00b7 '+m.email:'')+'</div></div></div>';
+    });
+    dd.innerHTML=html; dd.style.display='block';
   });
-  dd.innerHTML=html; dd.style.display='block';
 }
 
 function msgSelectMember(id){

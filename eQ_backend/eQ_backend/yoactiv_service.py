@@ -97,6 +97,83 @@ class YoActivClient:
         """Fetch all users in the branch from YoActiv."""
         return self.post("Users/GetUserList", json={}, timeout=timeout)
 
+    def get_class_schedule(self, date_str: str, *, timeout=None):
+        """Fetch the class schedule for a date via Classes/Schedule.
+
+        date_str must be YYYY-MM-DD.
+        """
+        return self.post("Classes/Schedule", json={"Date": date_str}, timeout=timeout)
+
+    def get_class_enrollments(self, date_str: str, class_id, *, timeout=None):
+        """Fetch enrollments for a class instance via Classes/Enrollments.
+
+        date_str must be YYYY-MM-DD. class_id is the YoActiv Class_Id.
+        """
+        try:
+            enrollment_id = int(class_id)
+        except (TypeError, ValueError):
+            enrollment_id = class_id
+        return self.post(
+            "Classes/Enrollments",
+            json={"Date": date_str, "Id": enrollment_id},
+            timeout=timeout,
+        )
+
+    def reserve_classes(self, member_id, reserves, *, timeout=None):
+        """Book a member into one or more class instances via Classes/Reserve.
+
+        reserves is a list of dicts with Class_Date (YYYY-MM-DD date only) and Class_Id.
+        """
+        try:
+            mid = int(member_id)
+        except (TypeError, ValueError):
+            mid = member_id
+        normalized = []
+        for item in reserves or []:
+            if not isinstance(item, dict):
+                continue
+            class_id = item.get("Class_Id", item.get("class_id"))
+            class_date = item.get("Class_Date", item.get("class_date"))
+            if class_id in (None, "") or not class_date:
+                continue
+            try:
+                class_id = int(class_id)
+            except (TypeError, ValueError):
+                pass
+            # YoActiv expects a calendar date only (e.g. 2026-07-11), never a datetime.
+            date_only = str(class_date).strip().replace("/", "-")
+            if "T" in date_only:
+                date_only = date_only.split("T", 1)[0]
+            elif " " in date_only:
+                date_only = date_only.split(" ", 1)[0]
+            # Normalize D-M-YYYY / DD-MM-YYYY to YYYY-MM-DD when needed.
+            parts = date_only.split("-")
+            if len(parts) == 3 and len(parts[0]) <= 2 and len(parts[2]) == 4:
+                day, month, year = parts[0].zfill(2), parts[1].zfill(2), parts[2]
+                date_only = f"{year}-{month}-{day}"
+            normalized.append({"Class_Date": date_only, "Class_Id": class_id})
+        return self.post(
+            "Classes/Reserve",
+            json={"Member_Id": mid, "Reserve": normalized},
+            timeout=timeout,
+        )
+
+    def cancel_reservation(self, member_id, class_book_id, *, timeout=None):
+        """Cancel a class booking via Classes/ReserveCancel."""
+        try:
+            mid = int(member_id)
+        except (TypeError, ValueError):
+            mid = member_id
+        try:
+            book_id = int(class_book_id)
+        except (TypeError, ValueError):
+            book_id = class_book_id
+        return self.post(
+            "Classes/ReserveCancel",
+            json={"Member_Id": mid, "ClassBook_Id": book_id},
+            timeout=timeout,
+        )
+
     def save_bill(self, *, service_variation_id, start_date, end_date, amount,
                   paid, transaction_id, purchase_date, country_code="+91",
                   mobile, sales_staff_id=0, pt_staff_id=0, timeout=None):
