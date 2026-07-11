@@ -217,7 +217,7 @@ export default function LogRouteFormScreen() {
       const testerUser = staffUsers.find((u) => u.name === tester);
       await createBoulder({
         wall: wallId,
-        color: colourLabel.toLowerCase(),
+        color: colour,
         setter_grade: grade,
         difficulty: difficulty.toLowerCase() || undefined,
         climbing_style: climbingStyle.toLowerCase() || undefined,

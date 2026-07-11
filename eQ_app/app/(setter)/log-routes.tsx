@@ -9,11 +9,11 @@
 import { Button, ChevronLeftIcon, LogRouteListItem, ThemedText } from '@/components';
 import { CalendarIcon } from '@/components/icons/CalendarIcon';
 import { Theme } from '@/constants';
-import { deleteBoulder, getBoulders, updateZone, Boulder } from '@/services/api';
+import { deleteBoulder, getBoulders, updateZone, resetZone, Boulder } from '@/services/api';
 import { getErrorMessage } from '@/services/errors';
 import logger from '@/services/logger';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -176,11 +176,14 @@ export default function LogRoutesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // IDs of DB routes the user has removed locally (committed on Mark as Set)
+  const pendingDeletes = useRef<Set<number>>(new Set());
 
   // Date picker
   const [dateparts, setDateparts] = useState(() => parseIso(nextReset || null));
   const [showPicker, setShowPicker] = useState(false);
-  const [savingDate, setSavingDate] = useState(false);
+  // Track whether the user changed the date so we know to save it
+  const dateChanged = useRef(false);
 
   const displayDate = isoToDisplay(toIso(dateparts.year, dateparts.month, dateparts.day));
 
@@ -199,69 +202,28 @@ export default function LogRoutesScreen() {
     }
   }, [wallId]);
 
-  useEffect(() => { loadRoutes(); }, [loadRoutes]);
+  useFocusEffect(
+    useCallback(() => { loadRoutes(); }, [loadRoutes]),
+  );
 
   const handleRefresh = useCallback(() => { setRefreshing(true); loadRoutes(); }, [loadRoutes]);
 
-  const handleDateDone = useCallback(async () => {
+  const handleDateDone = useCallback(() => {
     setShowPicker(false);
-    if (!wallId) return;
-    setSavingDate(true);
-    try {
-      await updateZone(wallId, { next_reset: toIso(dateparts.year, dateparts.month, dateparts.day) });
-    } catch (err) {
-      logger.error('[LogRoutes] date update failed', err);
-      Alert.alert('Error', getErrorMessage(err));
-    } finally {
-      setSavingDate(false);
-    }
-  }, [wallId, dateparts]);
+    dateChanged.current = true;
+  }, []);
 
   const handleDelete = useCallback((boulder: Boulder) => {
-    Alert.alert(
-      'Delete Route',
-      `Delete ${boulder.setter_grade} ${boulder.color} route?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteBoulder(boulder.id);
-              setRoutes((prev) => prev.filter((b) => b.id !== boulder.id));
-            } catch (err) {
-              logger.error('[LogRoutes] delete failed', err);
-              Alert.alert('Error', getErrorMessage(err));
-            }
-          },
-        },
-      ],
-    );
+    // Stage the deletion locally — committed on Mark as Set
+    pendingDeletes.current.add(boulder.id);
+    setRoutes((prev) => prev.filter((b) => b.id !== boulder.id));
   }, []);
 
   const handleClearAll = useCallback(() => {
     if (routes.length === 0) return;
-    Alert.alert(
-      'Clear List',
-      'Delete all routes in this list?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Promise.all(routes.map((b) => deleteBoulder(b.id)));
-              setRoutes([]);
-            } catch (err) {
-              logger.error('[LogRoutes] clear all failed', err);
-              Alert.alert('Error', getErrorMessage(err));
-            }
-          },
-        },
-      ],
-    );
+    // Stage all current routes for deletion — committed on Mark as Set
+    routes.forEach((b) => pendingDeletes.current.add(b.id));
+    setRoutes([]);
   }, [routes]);
 
   const handleAddRoute = useCallback(() => {
@@ -270,6 +232,44 @@ export default function LogRoutesScreen() {
       params: { zoneId: String(wallId), zoneName: zoneName ?? '' },
     });
   }, [router, wallId, zoneName]);
+
+  const [markingSet, setMarkingSet] = useState(false);
+  const handleMarkAsSet = useCallback(() => {
+    if (!wallId) return;
+    Alert.alert(
+      'Mark as Set',
+      'This will record today as the last set date and deactivate all active routes in this zone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Mark as Set',
+          style: 'default',
+          onPress: async () => {
+            setMarkingSet(true);
+            try {
+              // Commit staged deletions
+              if (pendingDeletes.current.size > 0) {
+                await Promise.all([...pendingDeletes.current].map((id) => deleteBoulder(id)));
+                pendingDeletes.current.clear();
+              }
+              await resetZone(wallId);
+              // Save the date override AFTER resetZone so it isn't overwritten
+              // by the computed next_reset the backend calculates during reset.
+              if (dateChanged.current) {
+                await updateZone(wallId, { next_reset: toIso(dateparts.year, dateparts.month, dateparts.day) });
+              }
+              router.back();
+            } catch (err) {
+              logger.error('[LogRoutes] mark as set failed', err);
+              Alert.alert('Error', getErrorMessage(err));
+            } finally {
+              setMarkingSet(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [wallId, router, dateparts]);
 
   const handleEdit = useCallback((boulder: Boulder) => {
     router.push({
@@ -334,9 +334,7 @@ export default function LogRoutesScreen() {
               <ThemedText variant="body1" style={styles.dateValue}>
                 {displayDate || 'Select date'}
               </ThemedText>
-              {savingDate
-                ? <ActivityIndicator size="small" color={Theme.colors.primary[500]} />
-                : <CalendarIcon />}
+              <CalendarIcon />
             </TouchableOpacity>
           </View>
 
@@ -385,6 +383,9 @@ export default function LogRoutesScreen() {
       {/* Add Route button */}
       <View style={styles.footer}>
         <Button text="+ Add route" onPress={handleAddRoute} fullWidth />
+        {markingSet
+          ? <ActivityIndicator color={Theme.colors.primary[500]} />
+          : <Button text="Mark as Set" onPress={handleMarkAsSet} fullWidth variant="secondary" />}
       </View>
     </SafeAreaView>
   );
@@ -517,6 +518,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.neutral[300],
+    gap: 12,
   },
 });
 

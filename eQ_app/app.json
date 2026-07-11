@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "eQ_app",
-    "slug": "eQ_app",
+    "slug": "eq-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anshthayil.eqapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -43,6 +47,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "EXPO_PUBLIC_API_URL": "https://eq-backend.jointadventure.in/api",
+      "eas": {
+        "projectId": "d44ba927-7d0b-4dc8-9746-aea38cd3300d"
+      }
     }
   }
 }

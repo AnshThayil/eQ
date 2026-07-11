@@ -864,7 +864,7 @@ const styles = StyleSheet.create<{
     paddingVertical: 12,
   },
   errorText: {
-    color: '#c00',
+    color: '#fff',
     fontSize: 14,
   },
   emptyContainer: {
